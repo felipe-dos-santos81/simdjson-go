@@ -3229,6 +3229,9 @@ func BenchmarkParse(b *testing.B) {
 			var p Parser
 			b.SetBytes(int64(len(data)))
 			b.ReportAllocs()
+			if _, err := p.Parse(data); err != nil {
+				b.Fatal(err)
+			}
 			for b.Loop() {
 				if _, err := p.Parse(data); err != nil {
 					b.Fatal(err)
