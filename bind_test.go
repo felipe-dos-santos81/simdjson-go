@@ -56,7 +56,7 @@ func sameUnmarshal(in []byte, t reflect.Type, opts ...Option) string {
 	cw, cg := errClass(errWant), errClass(errGot)
 	// Documented deviation: invalid input is always a SyntacticError here,
 	// while v2 may first report a semantic error it meets earlier.
-	if cg == "syntactic" && errWant != nil && !jsontext.Value(in).IsValid() {
+	if cg == "syntactic" && errWant != nil && !jsontext.Value(in).IsValid(jsontext.AllowDuplicateNames(true)) {
 		return ""
 	}
 	if cw != cg {
@@ -347,5 +347,29 @@ func TestMarshalMatchesV2(t *testing.T) {
 				t.Errorf("Marshal(%#v): %s", v, d)
 			}
 		}
+	}
+}
+
+type appender struct{}
+
+func (*appender) UnmarshalJSON(b []byte) error { _ = append(b, 'X'); return nil }
+
+// TestCallerDataIsSafe checks that an UnmarshalJSON method appending to its
+// argument cannot overwrite the input, and that a cached struct-plan error is
+// not shared between calls.
+func TestCallerDataIsSafe(t *testing.T) {
+	in := []byte(`[1,2]`)
+	var a []appender
+	if err := Unmarshal(in, &a); err != nil || string(in) != `[1,2]` {
+		t.Errorf("err = %v, input now %s", err, in)
+	}
+	type unexported struct{ x int }
+	var se *jsonv2.SemanticError
+	if _, err := Marshal(unexported{}); !errors.As(err, &se) {
+		t.Fatalf("err = %v, want a SemanticError", err)
+	}
+	se.GoType = nil
+	if _, err := Marshal(unexported{}); !errors.As(err, &se) || se.GoType == nil {
+		t.Errorf("second err = %v: the cached error was shared", err)
 	}
 }

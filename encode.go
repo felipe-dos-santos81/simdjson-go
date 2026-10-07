@@ -503,7 +503,7 @@ func makeStructEncoder(t reflect.Type) encodeFunc {
 		}
 		once.Do(func() { fields, errFs = makeStructFields(t) })
 		if errFs != nil {
-			return errFs
+			return &jsonv2.SemanticError{GoType: errFs.GoType, Err: errFs.Err} // a copy: callers may change it
 		}
 		if err := s.open(); err != nil {
 			return err

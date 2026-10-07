@@ -88,7 +88,8 @@ func addMethods(c *codec) bool {
 			if err := d.checkDups(e); err != nil { // v2 validates the value it passes
 				return err
 			}
-			if err := v.Addr().Interface().(jsonv2.Unmarshaler).UnmarshalJSON(d.raw(e)); err != nil {
+			raw := d.raw(e)
+			if err := v.Addr().Interface().(jsonv2.Unmarshaler).UnmarshalJSON(raw[:len(raw):len(raw)]); err != nil { // appending must not reach the caller's input
 				return d.methodErr(e, t, err)
 			}
 			return nil
