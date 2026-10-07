@@ -12,9 +12,9 @@ func TestStrings(t *testing.T) {
 		{`"abc"`, "abc"},
 		{`"\"\\\/\b\f\n\r\t"`, "\"\\/\b\f\n\r\t"},
 		{`"\u0000"`, "\x00"},
-		{`"Aé€"`, "Aé€"},
-		{`"😀"`, "😀"},
-		{`"😀x"`, "😀x"},
+		{`"\u0041\u00e9\u20ac"`, "Aé€"},
+		{`"\ud83d\ude00"`, "😀"},
+		{`"\ud83d\ude00x"`, "😀x"},
 		{"\"é€😀\"", "é€😀"},
 	}
 	for _, tt := range tests {
@@ -35,7 +35,7 @@ func TestStringsAcrossBlocks(t *testing.T) {
 	for pad := 50; pad < 80; pad++ {
 		x := strings.Repeat("x", pad)
 		for _, tt := range []struct{ esc, want string }{
-			{`\"`, `"`}, {`\\`, `\`}, {`\n`, "\n"}, {`é`, "é"}, {`😀`, "😀"}, {"é", "é"}, {"😀", "😀"},
+			{`\"`, `"`}, {`\\`, `\`}, {`\n`, "\n"}, {`\u00e9`, "é"}, {`\ud83d\ude00`, "😀"}, {"é", "é"}, {"😀", "😀"},
 		} {
 			want := strconv.Quote(x + tt.want + "!")
 			if got := rootValue(t, `"`+x+tt.esc+`!"`); got != want {
