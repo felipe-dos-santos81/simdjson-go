@@ -18,6 +18,14 @@ func mustParse(t *testing.T, s string) Element {
 	return doc.Root()
 }
 
+// A negative index must be rejected without walking the tape: this array's
+// tape is deliberately truncated, so a walk would panic.
+func TestArrayAtNegativeDoesNotWalk(t *testing.T) {
+	doc := &Document{tape: []uint64{'r' << 56, '['<<56 | 1000}}
+	_, err := Array{Element{doc, 1}}.At(-1)
+	checkErr(t, "At(-1)", err, ErrIndexOutOfBounds)
+}
+
 func mustAt(t *testing.T, a Array, i int) Element {
 	t.Helper()
 	e, err := a.At(i)

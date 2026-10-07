@@ -347,7 +347,7 @@ configuration, alongside `BenchmarkStdlib/<file>` (`encoding/json.Unmarshal` int
 | `simdjson_result<T>` | `(T, error)` with sentinel errors | Go idiom |
 | `string_view` everywhere | `StringValue` copies, `StringBytes` zero-copy, object keys copied | Go strings must stay immutable |
 | fast_float port | `strconv.ParseFloat` after JSON grammar check | stdlib already implements Eisel-Lemire |
-| Runtime implementation selection API | Build tag + one `init`-time CPU check | Nothing for users to configure |
+| Runtime implementation selection API | Build tag only (NEON is mandatory on arm64) | Nothing for users to configure |
 | 9 ISA kernels | NEON + pure Go | Scope decision: arm64 is the tuned target; others are correct but scalar |
 | `number_as_string` | `Parser.BigIntAsString` | Only affects big integers in DOM; clearer name |
 

@@ -4,6 +4,7 @@ package simdjson
 // simdjson (doc/tape.md); false is stored as 'f' but reported as TypeBool.
 type Type byte
 
+// The values of Type, as returned by Element.Type.
 const (
 	TypeArray   Type = '['
 	TypeObject  Type = '{'

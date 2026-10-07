@@ -20,7 +20,12 @@ const (
 var bom = []byte{0xEF, 0xBB, 0xBF}
 
 // Document is a parsed JSON document in C++ simdjson's tape format
-// (doc/tape.md). It is owned by the Parser that produced it.
+// (doc/tape.md). It is owned by the Parser that produced it and, with every
+// Element, Array, Object and string bytes obtained from it, is valid until
+// the next call to that Parser's Parse, including a call that fails; using
+// them afterwards may return wrong values or panic. A Document and its
+// Elements may be read from multiple goroutines concurrently as long as no
+// Parse runs on its Parser.
 type Document struct {
 	tape    []uint64
 	strings []byte
@@ -45,7 +50,8 @@ type Parser struct {
 
 // Parse parses b. The returned Document is valid until the next call to
 // p.Parse. b is neither retained nor modified, and needs no padding.
-// A leading UTF-8 byte-order mark is skipped, as in C++.
+// A leading UTF-8 byte-order mark is skipped, as in C++. It returns
+// ErrCapacity if len(b) > 0xFFFFFFFF, or another Err* value if b is not valid JSON.
 func (p *Parser) Parse(b []byte) (*Document, error) {
 	if uint64(len(b)) > maxSize {
 		return nil, ErrCapacity

@@ -9,8 +9,10 @@ import (
 // Root returns the document's top-level value.
 func (d *Document) Root() Element { return Element{doc: d, i: 1} }
 
-// Element is a JSON value inside a Document. It is a small value type,
-// valid until the next Parse on the Document's Parser.
+// Element is a JSON value inside a Document. It is a small value type.
+// Like the Document, every Element, Array, Object and string bytes obtained
+// from it is valid only until the next call to the Parser's Parse, including
+// a call that fails; using one afterwards may return wrong values or panic.
 type Element struct {
 	doc *Document
 	i   int // tape index
@@ -52,6 +54,7 @@ func (e Element) Type() Type {
 	return TypeBool
 }
 
+// Array returns e as an Array, or ErrIncorrectType if it is not an array.
 func (e Element) Array() (Array, error) {
 	if e.tag() != '[' {
 		return Array{}, ErrIncorrectType
@@ -59,6 +62,7 @@ func (e Element) Array() (Array, error) {
 	return Array{e}, nil
 }
 
+// Object returns e as an Object, or ErrIncorrectType if it is not an object.
 func (e Element) Object() (Object, error) {
 	if e.tag() != '{' {
 		return Object{}, ErrIncorrectType
@@ -72,8 +76,8 @@ func (e Element) StringValue() (string, error) {
 	return string(b), err
 }
 
-// StringBytes returns a string value without copying. The bytes are valid
-// until the next Parse and must not be modified.
+// StringBytes returns a string value without copying. The bytes alias the
+// parser's buffer: they are valid until the next Parse and must not be modified.
 func (e Element) StringBytes() ([]byte, error) {
 	if e.tag() != '"' {
 		return nil, ErrIncorrectType
@@ -89,6 +93,8 @@ func (e Element) BigInt() (string, error) {
 	return string(e.rawString()), nil
 }
 
+// Int64 returns an integer as int64: an int64 as is, a uint64 if it is at
+// most math.MaxInt64 (else ErrNumberOutOfRange). Other types give ErrIncorrectType.
 func (e Element) Int64() (int64, error) {
 	switch e.tag() {
 	case 'l':
@@ -102,6 +108,8 @@ func (e Element) Int64() (int64, error) {
 	return 0, ErrIncorrectType
 }
 
+// Uint64 returns an integer as uint64: a uint64 as is, an int64 if it is not
+// negative (else ErrNumberOutOfRange). Other types give ErrIncorrectType.
 func (e Element) Uint64() (uint64, error) {
 	switch e.tag() {
 	case 'u':
@@ -115,7 +123,8 @@ func (e Element) Uint64() (uint64, error) {
 	return 0, ErrIncorrectType
 }
 
-// Float64 returns a number as float64; integers are converted.
+// Float64 returns a number (int64, uint64 or float64) as float64; other types
+// give ErrIncorrectType.
 func (e Element) Float64() (float64, error) {
 	switch e.tag() {
 	case 'd':
@@ -128,6 +137,7 @@ func (e Element) Float64() (float64, error) {
 	return 0, ErrIncorrectType
 }
 
+// Bool returns a boolean value, or ErrIncorrectType if e is not a boolean.
 func (e Element) Bool() (bool, error) {
 	switch e.tag() {
 	case 't':
@@ -138,6 +148,7 @@ func (e Element) Bool() (bool, error) {
 	return false, ErrIncorrectType
 }
 
+// IsNull reports whether e is JSON null.
 func (e Element) IsNull() bool { return e.tag() == 'n' }
 
 // count returns the element count stored in an opening word, saturated at 2^24-1.
@@ -179,6 +190,9 @@ func (a Array) All() iter.Seq2[int, Element] {
 
 // At returns element i, walking the tape (O(i)).
 func (a Array) At(i int) (Element, error) {
+	if i < 0 {
+		return Element{}, ErrIndexOutOfBounds
+	}
 	for k, v := range a.All() {
 		if k == i {
 			return v, nil

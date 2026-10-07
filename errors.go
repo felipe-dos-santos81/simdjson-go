@@ -9,7 +9,7 @@ import (
 // Errors returned by this package, one per C++ simdjson error_code it can
 // produce (the C++ name is in each comment). Match them with errors.Is.
 var (
-	ErrCapacity           = errors.New("simdjson: document larger than 4 GiB")      // CAPACITY
+	ErrCapacity           = errors.New("simdjson: document of 4 GiB or larger")     // CAPACITY
 	ErrTape               = errors.New("simdjson: invalid JSON structure")          // TAPE_ERROR
 	ErrDepth              = errors.New("simdjson: maximum nesting depth exceeded")  // DEPTH_ERROR
 	ErrString             = errors.New("simdjson: invalid string escape")           // STRING_ERROR

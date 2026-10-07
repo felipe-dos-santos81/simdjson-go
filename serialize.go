@@ -93,5 +93,7 @@ func appendQuoted(dst, s []byte) []byte {
 
 // Minify appends src to dst with all whitespace outside strings removed.
 // Like C++ simdjson::minify it does not validate the document; it returns
-// ErrUnclosedString for an unterminated string.
+// ErrUnclosedString for an unterminated string. On error the returned slice
+// holds dst plus whatever was written before the error and must not be
+// treated as minified output.
 func Minify(dst, src []byte) ([]byte, error) { return stage1.Minify(dst, src) }
