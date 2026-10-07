@@ -68,7 +68,8 @@ of `encoding/json`. Decoding runs on the existing simdjson parser and tape; beha
 | Package | The root package `simdjson` | One import for services |
 
 **Out of scope:** `io.Reader`/`io.Writer` forms; v2's `MarshalerTo`/`UnmarshalerFrom` and
-`WithMarshalers`/`WithUnmarshalers` (they need `jsontext` encoders and decoders); the `format:`
+`WithMarshalers`/`WithUnmarshalers` (they need `jsontext` encoders and decoders; this also leaves
+v1's `json.Number` unsupported, since it has only those methods); the `format:`
 tag option; `embed` of anything but a struct (v2's map and `jsontext.Value` fallbacks for unknown
 names); `StringifyNumbers`, `FormatDurationAsNano` and the other v2 options not listed in §3;
 filling `ByteOffset` in errors; an On-Demand decoder (sub-project 3).
@@ -116,8 +117,9 @@ struct, return an error the first time the type is used, rather than behaving di
 **Interfaces honoured:** `json.Marshaler`, `json.Unmarshaler`, `encoding.TextAppender`,
 `encoding.TextMarshaler`, `encoding.TextUnmarshaler`, with v2's precedence (§4, §5). Values are
 made addressable so pointer-receiver methods are called, as v2 does. A type implementing only
-`MarshalerTo` or `UnmarshalerFrom` returns an "unsupported" error; one implementing both
-`UnmarshalJSON` and `UnmarshalJSONFrom` uses `UnmarshalJSON` (and likewise for marshaling).
+`MarshalerTo` or `UnmarshalerFrom` returns an "unsupported" error, even if it also has
+`MarshalJSON` or `UnmarshalJSON`: v2 would call the `…To`/`…From` method, so calling the other one
+would silently differ from v2.
 `time.Time` and `time.Duration` use v2's built-in rules, not their own methods.
 
 ## 4. Decoding (JSON → Go)
@@ -222,7 +224,9 @@ the wrapped sentinel:
 | A map key that does not encode as a string | `*json.SemanticError` | a `*jsontext.SyntacticError` wrapping `jsontext.ErrNonStringName`, as in v2 |
 | Invalid UTF-8 in a Go string on `Marshal` | `*jsontext.SyntacticError` | our `ErrUTF8` (v2 wraps an unexported error) |
 | Nesting deeper than 10,000 on `Marshal` | `*jsontext.SyntacticError` | our `ErrDepth` |
-| Error from a user `UnmarshalJSON`/`MarshalJSON`/`…Text` method | `*json.SemanticError` | the method's error (passed through if it already is one of these types) |
+| Error from a user `MarshalJSON`/`UnmarshalJSON` method | `*json.SemanticError` | the method's error; a `*json.SemanticError` it returns is merged in (its `JSONPointer` taken as relative), as in v2 |
+| Error from a user text method | `*json.SemanticError` | the method's error; a `*json.SemanticError` it returns (or, from `UnmarshalText`, a `*jsontext.SyntacticError`) is returned as is, as in v2 |
+| `errors.ErrUnsupported` from any user method | `*json.SemanticError` | replaced by "… method may not return errors.ErrUnsupported", as in v2 |
 | `Unmarshal` into a non-pointer or nil pointer | `*json.SemanticError` | as v2 |
 
 **Which error wins.** v2 reads some values whole before checking them, and others token by token.

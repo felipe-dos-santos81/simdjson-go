@@ -60,7 +60,7 @@ out, err := simdjson.Marshal(&u)
 
 They are safe for concurrent use, and decoded values never alias the input.
 
-**Differences from v2:** invalid JSON is always a `SyntacticError` (the whole input is validated first). Not supported: `io.Reader`/`io.Writer` forms, `MarshalerTo`/`UnmarshalerFrom`, the `format:` tag option, `embed` of non-structs, other v2 options, and `ByteOffset` in errors (always 0).
+**Differences from v2:** invalid JSON is always a `SyntacticError` (the whole input is validated first). Not supported: `io.Reader`/`io.Writer` forms, `MarshalerTo`/`UnmarshalerFrom` (and so v1's `json.Number`), the `format:` tag option, `embed` of non-structs, other v2 options, and `ByteOffset` in errors (always 0).
 
 ## Builds
 
