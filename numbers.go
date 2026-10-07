@@ -10,9 +10,10 @@ import (
 func isDigit(c byte) bool { return c-'0' < 10 }
 
 // number parses the number at buf[off] and appends it to the tape. Port of
-// parse_number (include/simdjson/generic/numberparsing.h). Floats are
-// converted by strconv.ParseFloat (Eisel-Lemire) once the JSON grammar is
-// checked; it fails only on overflow to ±Inf, which C++ also rejects.
+// parse_number (include/simdjson/generic/numberparsing.h). While checking the
+// JSON grammar it collects a float's significand (up to 19 significant digits)
+// and decimal exponent for decimalToFloat64; longer significands fall back to
+// strconv.ParseFloat. Both fail only on overflow to ±Inf, which C++ also rejects.
 func (b *builder) number(off int) error {
 	buf := b.buf
 	p := off
@@ -30,12 +31,27 @@ func (b *builder) number(off int) error {
 	if digits == 0 || (buf[start] == '0' && digits > 1) {
 		return ErrNumber
 	}
+	// A float is mant * 10**exp10, where mant holds at most 19 significant
+	// digits; trunc records that more were dropped.
+	mant, sig, exp10, trunc := i, digits, int64(0), digits > 19
+	if i == 0 {
+		sig = 0 // the integer part is a single '0'
+	}
 	isFloat := false
 	if p < len(buf) && buf[p] == '.' {
 		isFloat = true
 		p++
 		frac := p
 		for p < len(buf) && isDigit(buf[p]) {
+			if sig < 19 {
+				mant = 10*mant + uint64(buf[p]-'0')
+				exp10--
+				if mant != 0 {
+					sig++
+				}
+			} else {
+				trunc = true
+			}
 			p++
 		}
 		if p == frac {
@@ -45,20 +61,40 @@ func (b *builder) number(off int) error {
 	if p < len(buf) && (buf[p] == 'e' || buf[p] == 'E') {
 		isFloat = true
 		p++
+		expNeg := p < len(buf) && buf[p] == '-'
 		if p < len(buf) && (buf[p] == '-' || buf[p] == '+') {
 			p++
 		}
-		exp := p
+		exp, e := p, int64(0)
 		for p < len(buf) && isDigit(buf[p]) {
+			if e < 1e12 { // saturate: far beyond any float, and no int64 overflow
+				e = 10*e + int64(buf[p]-'0')
+			}
 			p++
 		}
 		if p == exp {
 			return ErrNumber
 		}
+		if expNeg {
+			e = -e
+		}
+		exp10 += e
 	}
 	if isFloat {
-		f, err := strconv.ParseFloat(unsafe.String(&buf[off], p-off), 64)
-		if err != nil || !terminates(buf, p) {
+		if !terminates(buf, p) {
+			return ErrNumber
+		}
+		var f float64
+		var ok bool
+		if trunc {
+			var err error
+			f, err = strconv.ParseFloat(unsafe.String(&buf[off], p-off), 64)
+			ok = err == nil
+		} else {
+			// Past ±400 every 19-digit mant underflows or overflows anyway.
+			f, ok = decimalToFloat64(mant, int(max(-400, min(400, exp10))), neg)
+		}
+		if !ok {
 			return ErrNumber
 		}
 		b.tape = append(b.tape, word(tagDouble, 0), math.Float64bits(f))

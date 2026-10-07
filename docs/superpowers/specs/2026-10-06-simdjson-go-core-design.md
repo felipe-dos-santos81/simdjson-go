@@ -172,9 +172,12 @@ stage 1 copies only the final partial block into a padded stack buffer (as C++
     `ErrNumber`.
   - Integers: port of the simdjson fast path. Fits int64 → `'l'`; else fits uint64 → `'u'`;
     else → `ErrBigInt`, or a `'Z'` big-integer string when `Parser.BigIntAsString` is set.
-  - Any number with `.` or `e/E` is a float: `strconv.ParseFloat(unsafe.String(...), 64)`
-    on the already-validated bytes (Go's `strconv` implements Eisel-Lemire, so fast_float is
-    not ported). Result ±Inf → `ErrNumber`. Underflow yields ±0 / subnormals, as C++.
+  - Any number with `.` or `e/E` is a float. While validating it, stage 2 collects up to 19
+    significant digits and the decimal exponent and converts them with `decimalToFloat64`, a
+    port of the Go standard library's unrounded-scaling `parseFloat64` (`fastfloat.go`,
+    `pow10tab.go`; BSD, see `LICENSE-GO`). Longer significands fall back to
+    `strconv.ParseFloat` on the validated bytes. Results are bit-identical to
+    `strconv.ParseFloat`. Result ±Inf → `ErrNumber`. Underflow yields ±0 / subnormals, as C++.
 
 ### 5.6 Tape format (identical to C++ `doc/tape.md`)
 
@@ -349,7 +352,7 @@ configuration, alongside `BenchmarkStdlib/<file>` (`encoding/json.Unmarshal` int
 | Input needs 64 bytes padding | No padding; input never copied | Go has no safe over-read; bounds checks are cheap |
 | `simdjson_result<T>` | `(T, error)` with sentinel errors | Go idiom |
 | `string_view` everywhere | `StringValue` copies, `StringBytes` zero-copy, object keys copied | Go strings must stay immutable |
-| fast_float port | `strconv.ParseFloat` after JSON grammar check | stdlib already implements Eisel-Lemire |
+| fast_float port | Port of Go's unrounded-scaling `parseFloat64` on the digits stage 2 already scanned; `strconv.ParseFloat` past 19 significant digits | Same results as `strconv`, without scanning the digits twice |
 | Runtime implementation selection API | Build tag only (NEON is mandatory on arm64) | Nothing for users to configure |
 | 9 ISA kernels | NEON + pure Go | Scope decision: arm64 is the tuned target; others are correct but scalar |
 | `number_as_string` | `Parser.BigIntAsString` | Only affects big integers in DOM; clearer name |

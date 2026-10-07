@@ -17,6 +17,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `internal/stage1/kernel_arm64.go` | NEON kernel (`//go:build arm64 && goexperiment.simd && !purego`) |
 | `internal/stage1/kernel_purego.go` | Portable kernel for every other build (the exact negation of the tag above) |
 | `stage2.go`, `strings.go`, `numbers.go` | Stage 2: build the tape, unescape strings, parse numbers |
+| `fastfloat.go`, `pow10tab.go` | Decimal→float64 conversion adapted from Go's `internal/strconv` (BSD, `LICENSE-GO`); regenerate the table with `go generate` (`pow10gen.go`) |
 | `parser.go`, `tape.go`, `errors.go` | `Parser`, `Document`, tape tags, sentinel errors |
 | `element.go`, `pointer.go`, `serialize.go` | DOM API, JSON Pointer, `AppendJSON` and `Minify` |
 | `*_test.go` | Unit, corpus (`corpus_test.go`), fuzz (`fuzz_test.go`) and benchmark tests |

@@ -85,4 +85,4 @@ This is sub-project 1 of 5: the core and the DOM. Planned next are streams (`Par
 
 ## License
 
-Apache-2.0 or MIT, at your option, the same as C++ simdjson. See [`LICENSE`](LICENSE), [`LICENSE-MIT`](LICENSE-MIT) and [`NOTICE`](NOTICE).
+Apache-2.0 or MIT, at your option, the same as C++ simdjson. See [`LICENSE`](LICENSE), [`LICENSE-MIT`](LICENSE-MIT) and [`NOTICE`](NOTICE). The float conversion is adapted from the Go standard library under [`LICENSE-GO`](LICENSE-GO).
