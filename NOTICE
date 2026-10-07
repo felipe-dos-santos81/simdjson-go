@@ -7,3 +7,8 @@ License 2.0 (LICENSE) or the MIT License (LICENSE-MIT), at your option.
 fastfloat.go, pow10gen.go and pow10tab.go are adapted from the Go standard
 library (src/internal/strconv), Copyright 2025-2026 The Go Authors, available
 under the BSD-style license in LICENSE-GO.
+
+Parts of typeplan.go, decode.go, encode.go, time.go and strcache.go are
+adapted from the Go standard library (src/encoding/json/v2 and
+src/encoding/json/internal/jsonwire), Copyright 2020-2023 The Go Authors,
+available under the BSD-style license in LICENSE-GO.
