@@ -2,7 +2,6 @@ package simdjson
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -172,8 +171,8 @@ func TestParseErrors(t *testing.T) {
 	for _, tt := range tests {
 		var p Parser
 		doc, err := p.Parse([]byte(tt.in))
-		if !errors.Is(err, tt.want) || doc != nil {
-			t.Errorf("Parse(%q) = %v, %v; want nil, %v", tt.in, doc, err, tt.want)
+		if checkErr(t, strconv.Quote(tt.in), err, tt.want) && doc != nil {
+			t.Errorf("Parse(%q) returned a document with an error", tt.in)
 		}
 	}
 }
@@ -204,9 +203,7 @@ func TestMaxDepth(t *testing.T) {
 	if _, err := p.Parse([]byte(`{"a":[1]}`)); err != nil {
 		t.Errorf("MaxDepth 3, depth 2: %v", err)
 	}
-	if _, err := p.Parse([]byte(`[[[1]]]`)); !errors.Is(err, ErrDepth) {
-		t.Errorf("MaxDepth 3, depth 3: err = %v, want ErrDepth", err)
-	}
+	checkErr(t, "MaxDepth 3, depth 3", errOf(p.Parse([]byte(`[[[1]]]`))), ErrDepth)
 }
 
 // Nothing recurses per nesting level, so a deep document parses, serializes
@@ -234,9 +231,7 @@ func TestByteOrderMark(t *testing.T) {
 	if got, want := parseTape(t, &p, "\xEF\xBB\xBF"+doc), parseTape(t, &p, doc); !slices.Equal(got, want) {
 		t.Errorf("with BOM %q, without %q", got, want)
 	}
-	if _, err := p.Parse([]byte("\xEF\xBB\xBF")); !errors.Is(err, ErrEmpty) {
-		t.Errorf("BOM only: err = %v, want ErrEmpty", err)
-	}
+	checkErr(t, "BOM only", errOf(p.Parse([]byte("\xEF\xBB\xBF"))), ErrEmpty)
 }
 
 func TestNoReadPastLength(t *testing.T) {
@@ -255,17 +250,13 @@ func TestNoReadPastLength(t *testing.T) {
 	for _, in := range []string{"[1" + filler + "]", `{"key":1` + filler + "}"} {
 		b := []byte(in)
 		n := strings.Index(in, "1") + 1
-		if _, err := p.Parse(b[:n]); !errors.Is(err, ErrTape) {
-			t.Errorf("Parse(%q) err = %v, want ErrTape", b[:n], err)
-		}
+		checkErr(t, strconv.Quote(string(b[:n])), errOf(p.Parse(b[:n])), ErrTape)
 	}
 	brackets := []byte("[][[[[[[[[[[[[[[[[[") // C++ document_tests padded_with_open_bracket
 	if _, err := p.Parse(brackets[:2]); err != nil {
 		t.Errorf("[]: %v", err)
 	}
-	if _, err := p.Parse(brackets[2:4]); !errors.Is(err, ErrTape) {
-		t.Errorf("[[: err = %v, want ErrTape", err)
-	}
+	checkErr(t, "[[", errOf(p.Parse(brackets[2:4])), ErrTape)
 }
 
 func TestParserReuse(t *testing.T) {

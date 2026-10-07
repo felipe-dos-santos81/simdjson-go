@@ -1,7 +1,6 @@
 package simdjson
 
 import (
-	"errors"
 	"math"
 	"strconv"
 	"testing"
@@ -38,9 +37,7 @@ func TestIntegers(t *testing.T) {
 func TestBigInt(t *testing.T) {
 	var p Parser
 	for _, in := range []string{`{"val":123456789012345678901}`, `{"val":18446744073709551616}`} {
-		if _, err := p.Parse([]byte(in)); !errors.Is(err, ErrBigInt) {
-			t.Errorf("default %s: err = %v, want ErrBigInt", in, err)
-		}
+		checkErr(t, "default "+in, errOf(p.Parse([]byte(in))), ErrBigInt)
 	}
 	p.BigIntAsString = true
 	for _, digits := range []string{"123456789012345678901", "-12345678901234567890", "18446744073709551616", "99999999999999999999"} {
@@ -52,9 +49,7 @@ func TestBigInt(t *testing.T) {
 		t.Errorf("array with big int: %q", got)
 	}
 	for _, in := range []string{`{"val":123456789012345678901x}`, `{"val":-123456789012345678901x}`, "123456789012345678901x"} {
-		if _, err := p.Parse([]byte(in)); !errors.Is(err, ErrNumber) {
-			t.Errorf("%s: err = %v, want ErrNumber", in, err)
-		}
+		checkErr(t, in, errOf(p.Parse([]byte(in))), ErrNumber)
 	}
 }
 
@@ -104,8 +99,6 @@ func TestFloats(t *testing.T) {
 func TestNumberErrors(t *testing.T) {
 	for _, in := range []string{"1e400", "-1e400", "1e99999999999999999999", "1.", "1.e5", "1e", "1e+", "01", "-", "-a", "1.5.2", "1ee5", "2x"} {
 		var p Parser
-		if _, err := p.Parse([]byte(in)); !errors.Is(err, ErrNumber) {
-			t.Errorf("%s: err = %v, want ErrNumber", in, err)
-		}
+		checkErr(t, in, errOf(p.Parse([]byte(in))), ErrNumber)
 	}
 }

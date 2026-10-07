@@ -50,7 +50,11 @@ func checkCorpus(t *testing.T, sub, ok, bad string) {
 		if strings.Contains(name, "EXCLUDE") {
 			continue
 		}
-		_, err := p.Parse(readTestdata(t, sub, name))
+		data, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = p.Parse(data)
 		switch {
 		case strings.HasPrefix(name, ok) && err != nil:
 			t.Errorf("%s: %v", name, err)
@@ -96,19 +100,20 @@ func TestExamples(t *testing.T) {
 		if diff := sameAsStdlib(doc.Root(), data); diff != "" {
 			t.Errorf("%s: differs from encoding/json: %s", f, diff)
 		}
-		if diff := roundTripDiff(&q, doc.Root(), data); diff != "" {
+		out := doc.Root().AppendJSON(nil)
+		if diff := roundTripDiff(&q, out, data); diff != "" {
 			t.Errorf("%s: %s", f, diff)
 		}
-		if diff := minifyDiff(&q, doc.Root(), data); diff != "" {
+		if diff := minifyDiff(&q, out, data); diff != "" {
 			t.Errorf("%s: %s", f, diff)
 		}
 	}
 }
 
-// roundTripDiff reports how Parse(AppendJSON(e)) differs from data (spec §6:
-// it must be an equal tree, and stable), or "". q is a scratch Parser.
-func roundTripDiff(q *Parser, e Element, data []byte) string {
-	out := e.AppendJSON(nil)
+// roundTripDiff reports how Parse(out) differs from data, where out is
+// AppendJSON of data's root (spec §6: an equal tree, and stable), or "".
+// q is a scratch Parser.
+func roundTripDiff(q *Parser, out, data []byte) string {
 	again, err := q.Parse(out)
 	switch {
 	case err != nil:
@@ -122,14 +127,15 @@ func roundTripDiff(q *Parser, e Element, data []byte) string {
 	return ""
 }
 
-// minifyDiff reports how Minify(data) parses differently from e, or "".
-func minifyDiff(q *Parser, e Element, data []byte) string {
+// minifyDiff reports how Minify(data) parses differently from out, the
+// AppendJSON of data's root, or "".
+func minifyDiff(q *Parser, out, data []byte) string {
 	min, err := Minify(nil, data)
 	if err != nil {
 		return fmt.Sprintf("Minify: %v", err)
 	}
 	m, err := q.Parse(min)
-	if err != nil || !bytes.Equal(m.Root().AppendJSON(nil), e.AppendJSON(nil)) {
+	if err != nil || !bytes.Equal(m.Root().AppendJSON(nil), out) {
 		return fmt.Sprintf("Minify output %.80q changed the document (%v)", min, err)
 	}
 	return ""

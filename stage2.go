@@ -95,7 +95,6 @@ objectContinue:
 		goto objectField
 	case '}':
 		b.endContainer()
-		b.stack = b.stack[:len(b.stack)-1]
 		goto valueEnd
 	}
 	return ErrTape
@@ -140,7 +139,6 @@ arrayContinue:
 		goto arrayValue
 	case ']':
 		b.endContainer()
-		b.stack = b.stack[:len(b.stack)-1]
 		goto valueEnd
 	}
 	return ErrTape
@@ -186,11 +184,12 @@ func closer(open byte) byte {
 	return ']'
 }
 
-// endContainer closes the innermost scope: it writes the closing word
+// endContainer closes and pops the innermost scope: it writes the closing word
 // (pointing at the opening one) and the opening word (index after the closing
 // word, element count saturated to 24 bits).
 func (b *builder) endContainer() {
 	s := b.stack[len(b.stack)-1]
+	b.stack = b.stack[:len(b.stack)-1]
 	b.tape = append(b.tape, word(closer(s.open), uint64(s.tapeIndex)))
 	count := min(s.count, 0xFFFFFF)
 	b.tape[s.tapeIndex] = word(s.open, uint64(count)<<32|uint64(len(b.tape)))

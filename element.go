@@ -109,11 +109,11 @@ func (e Element) integer() (v uint64, signed bool, err error) {
 // most math.MaxInt64 (else ErrNumberOutOfRange). Other types give ErrIncorrectType.
 func (e Element) Int64() (int64, error) {
 	v, signed, err := e.integer()
-	if err == nil && !signed && v > math.MaxInt64 {
-		err = ErrNumberOutOfRange
-	}
 	if err != nil {
 		return 0, err
+	}
+	if !signed && v > math.MaxInt64 {
+		return 0, ErrNumberOutOfRange
 	}
 	return int64(v), nil
 }
@@ -122,11 +122,11 @@ func (e Element) Int64() (int64, error) {
 // negative (else ErrNumberOutOfRange). Other types give ErrIncorrectType.
 func (e Element) Uint64() (uint64, error) {
 	v, signed, err := e.integer()
-	if err == nil && signed && int64(v) < 0 {
-		err = ErrNumberOutOfRange
-	}
 	if err != nil {
 		return 0, err
+	}
+	if signed && int64(v) < 0 {
+		return 0, ErrNumberOutOfRange
 	}
 	return v, nil
 }
@@ -138,10 +138,10 @@ func (e Element) Float64() (float64, error) {
 		return math.Float64frombits(e.value()), nil
 	}
 	v, signed, err := e.integer()
-	switch {
-	case err != nil:
+	if err != nil {
 		return 0, err
-	case signed:
+	}
+	if signed {
 		return float64(int64(v)), nil
 	}
 	return float64(v), nil

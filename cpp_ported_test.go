@@ -438,9 +438,10 @@ func powerOfTen(i int) float64 {
 // the sign check).
 func TestPowersOfTen(t *testing.T) {
 	var p Parser
-	for _, sign := range []float64{1, -1} {
-		for i := -1000; i <= 308; i++ {
-			want := math.Copysign(powerOfTen(i), sign)
+	for i := -1000; i <= 308; i++ {
+		p10 := powerOfTen(i)
+		for _, sign := range []float64{1, -1} {
+			want := math.Copysign(p10, sign)
 			in := fmt.Sprintf("1e%d", i)
 			if sign < 0 {
 				in = "-" + in

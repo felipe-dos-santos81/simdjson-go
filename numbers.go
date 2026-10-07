@@ -49,8 +49,8 @@ func (b *builder) number(off int) error {
 				if mant != 0 {
 					sig++
 				}
-			} else {
-				trunc = true
+			} else if buf[p] != '0' {
+				trunc = true // a dropped zero does not change the value
 			}
 			p++
 		}
@@ -67,7 +67,9 @@ func (b *builder) number(off int) error {
 		}
 		expStart, e := p, int64(0)
 		for p < len(buf) && isDigit(buf[p]) {
-			if e < 1e12 { // saturate: far beyond any float, and no int64 overflow
+			// Saturate above maxSize+400: leading fraction zeros can lower exp10
+			// by up to maxSize, and an exponent must still be able to cancel them.
+			if e <= maxSize+400 {
 				e = 10*e + int64(buf[p]-'0')
 			}
 			p++
@@ -91,7 +93,8 @@ func (b *builder) number(off int) error {
 			f, err = strconv.ParseFloat(unsafe.String(&buf[off], p-off), 64)
 			ok = err == nil
 		} else {
-			// Past ±400 every 19-digit mant underflows or overflows anyway.
+			// decimalToFloat64 already maps |exp10| > 345 to ±0 or overflow; the
+			// clamp only keeps the int64 exponent within int on 32-bit builds.
 			f, ok = decimalToFloat64(mant, int(max(-400, min(400, exp10))), neg)
 		}
 		if !ok {

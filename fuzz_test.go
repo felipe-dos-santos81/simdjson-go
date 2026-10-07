@@ -40,7 +40,7 @@ func FuzzParse(f *testing.F) {
 			t.Fatalf("Parse(%q) differs from encoding/json: %s", in, diff)
 		}
 		var q Parser
-		if diff := roundTripDiff(&q, doc.Root(), in); diff != "" {
+		if diff := roundTripDiff(&q, doc.Root().AppendJSON(nil), in); diff != "" {
 			t.Fatalf("Parse(%q): %s", in, diff)
 		}
 	})
@@ -57,7 +57,7 @@ func FuzzMinify(f *testing.F) {
 		if err != nil {
 			return
 		}
-		if diff := minifyDiff(&q, doc.Root(), in); diff != "" {
+		if diff := minifyDiff(&q, doc.Root().AppendJSON(nil), in); diff != "" {
 			t.Fatalf("Minify(%q): %s", in, diff)
 		}
 	})
