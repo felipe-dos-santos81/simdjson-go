@@ -92,16 +92,16 @@ simdjson-go/
   tape.go                         tape tags, word encode/decode
   element.go                      Document, Element, Array, Object, Type
   pointer.go                      JSON Pointer (RFC 6901)
-  serialize.go                    AppendJSON / MarshalJSON
-  minify.go                       Minify
+  serialize.go                    AppendJSON / MarshalJSON / Minify (wraps stage1.Minify)
   errors.go                       sentinel errors
   internal/stage1/
-    stage1.go                     Index(): block loop, scanner, flattening, final checks
+    stage1.go                     Index() and Minify(): block loop, scanner, flattening, final checks
     kernel_generic.go             classify() via 256-entry byte-class table (always compiled; it is
                                   the reference the NEON kernel is tested against)
     kernel_purego.go              uses the generic kernel + utf8.Valid  (!arm64 || !goexperiment.simd || purego)
     kernel_arm64.go               NEON classify + lookup4 UTF-8         (arm64 && goexperiment.simd && !purego)
   scripts/fetch-testdata.sh       downloads pinned corpora into testdata/ (gitignored)
+  scripts/check.sh                runs the §8.4 build matrix
   testdata/                       (generated; see §8.2)
   docs/superpowers/specs/         this file
 ```
@@ -118,7 +118,7 @@ Parse(b []byte)
   │        classify(block) → masks{backslash, quote, ws, op, ctrl}
   │        scanner: escapes (odd-backslash carry), in-string = prefix_xor(quote) ^ carry,
   │                 pseudo-structurals, ctrl-inside-string accumulator
-  │        flatten structural bits → []uint32 offsets (bits.TrailingZeros64, unrolled)
+  │        flatten structural bits → []uint32 offsets (bits.TrailingZeros64)
   │        UTF-8: lookup4 per block (SIMD) / utf8.Valid(b) once (pure Go)
   │        final: ErrEmpty, ErrUnclosedString, ErrUnescapedChars, ErrUTF8
   └─ stage 2 over indices ── iterative state machine with explicit depth stack
@@ -151,12 +151,16 @@ stage 1 copies only the final partial block into a padded stack buffer (as C++
 ### 5.5 Stage 2
 
 - Port of `json_iterator.h` + `tape_builder.h` as a loop with an explicit stack of open
-  scopes (tape index, element count, array/object). Each `{`/`[` increments depth and fails
-  with `ErrDepth` when depth ≥ `MaxDepth` (C++ rule), so at most `MaxDepth−1` (default 1023)
-  nested arrays/objects are accepted.
+  scopes (tape index, element count, array/object). Each non-empty `{`/`[` increments depth
+  and fails with `ErrDepth` when depth ≥ `MaxDepth` (C++ rule), so at most `MaxDepth−1`
+  (default 1023) nested non-empty arrays/objects are accepted. Empty `{}`/`[]` are written
+  directly without opening a scope (C++ `visit_empty_array`), so they do not count.
 - Grammar errors (missing/extra commas or colons, non-string keys, mismatched brackets,
   trailing content after the root value) return the same error code the C++ DOM returns for
-  that input, as established by the ported tests.
+  that input, as established by the ported tests. One C++ quirk is kept: inside an array or
+  object, a value starting with any byte below `'0'` is handed to the number parser
+  (`ErrNumber`, because C++ tests `(c - '0') < 10` in `int` arithmetic), while at the root it
+  is `ErrTape`.
 - **Atoms:** `true`/`false`/`null` must be followed by whitespace, a structural character, or
   end of input; otherwise `ErrTAtom` / `ErrFAtom` / `ErrNAtom`.
 - **Strings:** unescape `\" \\ \/ \b \f \n \r \t \uXXXX` (surrogate pairs combined; a lone or
@@ -186,8 +190,9 @@ Each word is `tag<<56 | payload`, little-endian.
 | `l` / `u` / `d` | 2 | second word = int64 / uint64 / float64 bits |
 | `t` / `f` / `n` | 1 | 0 |
 
-Buffers are sized up front like C++ (tape: `len(b)+3` words; strings: `5*len(b)/3 + 64`
-bytes) so stage 2 never grows them; they are kept on the `Parser` and reused (grow-only).
+Buffers are pre-sized like C++ (tape: `len(b)+3` words; strings: `5*len(b)/3 + 64` bytes)
+and written with `append`, so an estimate miss costs a reallocation, never a bug; they are
+kept on the `Parser` and reused (grow-only).
 
 ## 6. Public API
 
@@ -201,6 +206,7 @@ type Parser struct {
 }
 // Parse parses b. The returned Document is valid until the next call to p.Parse.
 // A Parser must not be used by more than one goroutine at a time.
+// A leading UTF-8 byte-order mark (EF BB BF) is skipped, as in C++.
 // len(b) > 0xFFFFFFFF (C++ SIMDJSON_MAXSIZE_BYTES) → ErrCapacity.
 func (p *Parser) Parse(b []byte) (*Document, error)
 
@@ -216,6 +222,8 @@ const (
 func (t Type) String() string
 
 type Element struct{ /* *Document + tape index; cheap value type */ }
+// The zero Element (returned next to errors) never panics: Type() is 0 ("unknown"),
+// getters return ErrIncorrectType, IsNull is false, AppendJSON writes null.
 func (e Element) Type() Type
 func (e Element) Array() (Array, error)              // ErrIncorrectType if not an array
 func (e Element) Object() (Object, error)
@@ -285,8 +293,10 @@ Not ported (no Go equivalent or not reachable): `MEMALLOC` (Go panics on OOM), `
 
 `basictests`, `errortests`, `integer_tests`, `big_integer_tests`, `numberparsingcheck`,
 `stringparsingcheck`, `pointercheck`, `document_tests`, `unpadded_tests`, `jsoncheck`,
-`minefieldcheck`, plus `tests/minify_tests.cpp` and `tests/unicode_tests.cpp`. Each becomes a
-table-driven Go test keeping the original inputs and expected errors. Tests for C++-only
+`minefieldcheck`, plus `tests/minify_tests.cpp` and `tests/unicode_tests.cpp` (its invalid
+UTF-8 sequences). Each becomes a table-driven Go test keeping the original inputs and
+expected errors; expected error codes not stated in the C++ tests are taken from running C++
+simdjson v5.0.2 on the same input. Tests for C++-only
 features (ranges, trivially-copyable, single-header, compile-time) are not ported.
 
 ### 8.2 Corpora
@@ -306,9 +316,11 @@ skip.
 
 ### 8.3 Differential and fuzz tests (Go native fuzzing)
 
-- `FuzzParse`: `Parse(b)` succeeds ⇔ `json.Valid(b) && utf8.Valid(b)`, nesting ≤ 1023, no
-  integer outside int64/uint64, and no float that overflows to ±Inf. On success, the tree equals `encoding/json`'s and
-  `AppendJSON` round-trips. Seeded from the corpora.
+- `FuzzParse`: with a leading BOM stripped, `Parse(b)` succeeds ⇔ `json.Valid(b) &&
+  utf8.Valid(b)`, at most 1023 nested non-empty containers, no integer outside
+  int64/uint64, no float that overflows to ±Inf, and every `\u` escape is a valid code point
+  or surrogate pair (`encoding/json` silently replaces bad surrogates). On success, the tree
+  equals `encoding/json`'s and `AppendJSON` round-trips. Seeded with hand-picked edge cases.
 - `FuzzClassify` (arm64 SIMD build only): the NEON `classify` equals `kernel_generic`'s for
   arbitrary 64-byte blocks; same for UTF-8 validity vs `utf8.Valid`.
 - `FuzzMinify`: for inputs that `Parse` accepts, `Parse(Minify(b))` yields an equal tree.
@@ -317,8 +329,9 @@ skip.
 
 `go test ./...` (pure Go), `go test -tags purego ./...`, `GOEXPERIMENT=simd go test ./...`
 (native arm64 NEON locally), `GOARCH=amd64 go test ./...` (pure Go under Rosetta 2),
-`go vet ./...`, and
-`GOARCH=386 go test ./...` / `GOARCH=wasm` build as non-tuned-platform smoke checks.
+`go vet ./...`, `gofmt -l`, and type-checking for non-tuned platforms with
+`GOOS=linux GOARCH=386 go vet ./...` and `GOOS=wasip1 GOARCH=wasm go vet ./...` (darwin/386
+does not exist, so 32-bit tests cannot run locally). `scripts/check.sh` runs all of these.
 
 ### 8.5 Benchmarks
 
