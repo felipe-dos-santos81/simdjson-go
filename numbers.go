@@ -104,7 +104,13 @@ func (b *builder) number(off int) error {
 			f, ok = decimalToFloat64(mant, int(max(-maxExp10, min(maxExp10, exp10))), neg)
 		}
 		if !ok {
-			return ErrNumber
+			if !b.binding {
+				return ErrNumber
+			}
+			f = math.Inf(1) // v2 rejects the overflow only when it decodes the value
+			if neg {
+				f = -f
+			}
 		}
 		b.tape = append(b.tape, word(tagDouble, 0), math.Float64bits(f))
 		return nil

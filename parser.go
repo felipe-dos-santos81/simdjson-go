@@ -34,6 +34,8 @@ func tapeWords(n, s int) int { return min(n+3, 2*s+2) }
 type Document struct {
 	tape    []uint64
 	strings []byte
+	offs    []uint32 // binding mode only: input offset per tape index (see builder.mark)
+	dups    []uint32 // binding mode only: sorted tape indices of each object's first repeated name
 }
 
 // Parser parses JSON documents. The zero value is ready to use. A Parser
@@ -48,9 +50,17 @@ type Parser struct {
 	// TypeBigInt (their raw digits) instead of failing with ErrBigInt.
 	BigIntAsString bool
 
+	// binding selects the encoding/json/v2 behaviour Unmarshal needs: input
+	// offsets (Document.offs) and repeated object names (Document.dups) are
+	// recorded, floats that overflow parse as ±Inf, and empty arrays and
+	// objects count toward MaxDepth.
+	binding bool
+
 	indices []uint32
 	stack   []scope
 	doc     Document
+	keys    []nameKey // binding mode scratch (builder.checkNames)
+	seen    []uint32  // binding mode scratch (builder.checkNames)
 }
 
 // Parse parses b. The returned Document is valid until the next call to
@@ -74,12 +84,24 @@ func (p *Parser) Parse(b []byte) (*Document, error) {
 		stack:          p.stack[:0],
 		maxDepth:       p.MaxDepth,
 		bigIntAsString: p.BigIntAsString,
+		binding:        p.binding,
+	}
+	if p.binding {
+		bd.offs = slices.Grow(p.doc.offs[:0], cap(bd.tape))[:cap(bd.tape)]
+		bd.dups = p.doc.dups[:0]
+		bd.keys, bd.seen = p.keys[:0], p.seen
 	}
 	if bd.maxDepth <= 0 {
 		bd.maxDepth = defaultMaxDepth
 	}
 	err = bd.walk()
 	p.doc.tape, p.doc.strings, p.stack = bd.tape, bd.strs, bd.stack
+	if p.binding {
+		p.doc.offs = bd.offs[:len(bd.tape)]
+		slices.Sort(bd.dups) // objects close inner first
+		p.doc.dups = bd.dups
+		p.keys, p.seen = bd.keys, bd.seen
+	}
 	if err != nil {
 		return nil, err
 	}
