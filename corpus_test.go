@@ -150,6 +150,9 @@ func sameTree(e Element, v any) string {
 			return "field count"
 		}
 		for k, ev := range last {
+			if _, ok := v[k]; !ok {
+				return "unexpected key " + strconv.Quote(k)
+			}
 			if d := sameTree(ev, v[k]); d != "" {
 				return strconv.Quote(k) + ": " + d
 			}
