@@ -111,6 +111,8 @@ func TestExamples(t *testing.T) {
 		out := doc.Root().AppendJSON(nil)
 		if again, err := q.Parse(out); err != nil || !bytes.Equal(again.Root().AppendJSON(nil), out) {
 			t.Errorf("%s: AppendJSON does not round-trip (%v)", f, err)
+		} else if diff := sameAsStdlib(again.Root(), data); diff != "" {
+			t.Errorf("%s: AppendJSON changed the value: %s", f, diff) // spec §6: Parse(AppendJSON(x)) is an equal tree
 		}
 		min, err := Minify(nil, data)
 		if err != nil {
