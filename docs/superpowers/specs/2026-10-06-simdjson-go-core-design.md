@@ -1,0 +1,345 @@
+# simdjson-go — Sub-project 1: Core + DOM — Design
+
+- **Date:** 2026-10-06
+- **Status:** Draft, awaiting review
+- **Reference:** C++ simdjson v5.0.2-9-ge9cdb8751 at `~/code/theirs/simdjson`
+
+## 1. Goal
+
+A pure-Go (no cgo), idiomatic port of simdjson's parsing core and DOM API. The C++ code is
+the reference for algorithms, the tape format, error semantics and test corpora — not a
+line-by-line translation.
+
+### Success criteria
+
+1. Every file in the pinned `simdjson-data` corpora (`jsonchecker/`, `jsonchecker/minefield/`)
+   is accepted or rejected exactly as the C++ DOM parser does (rules in §8.2).
+2. Ported C++ DOM tests (§8.1) pass on: pure Go, amd64 AVX2 kernel, arm64 NEON kernel.
+3. `Parse` on `twitter.json` is ≥ 3× faster than `encoding/json.Unmarshal` into `any`,
+   measured with `testing.B` on the same machine (arm64 NEON build; amd64 AVX2 build when an
+   x86-64 machine is available).
+4. Fuzzing (§8.3) runs 10 minutes per target without a finding.
+
+## 2. Assumptions (stated by the designer, accepted by the user)
+
+| Topic | Decision |
+|---|---|
+| Purpose | Production-quality Go library; C++ simdjson is the behavioural oracle |
+| Toolchain | Go 1.27 (`go 1.27` in `go.mod`); installed: go1.27.1 darwin/arm64 |
+| Targets | Tuned for amd64 and arm64; every other `GOARCH` runs the pure-Go path |
+| Module path | `simdjson-go` (rename later with `go mod edit -module`) |
+| Package name | `simdjson` |
+| License | Port of Apache-2.0 / MIT code: ship both `LICENSE` files plus `NOTICE` crediting the simdjson authors |
+| Prior art | `minio/simdjson-go` exists (amd64-only, DOM-style); this is an independent port targeting v5 parity, arm64 and (later) On-Demand |
+
+## 3. Roadmap and scope
+
+The full library is split into sub-projects, each with its own spec → plan → build cycle.
+
+| # | Sub-project | Content |
+|---|---|---|
+| **1** | **Core + DOM (this spec)** | Stage 1, stage 2, tape, DOM API, JSON Pointer, `Minify`, DOM→JSON serialization, errors |
+| 2 | Streams | `ParseMany` (NDJSON / concatenated documents), stage 1 pipelined in a goroutine |
+| 3 | On-Demand | Lazy forward-only API over the structural index |
+| 4 | Data binding | `Unmarshal`/`Marshal` via `reflect`, prettify (replaces C++ `std_deserialize`, p2996 reflection, builder) |
+| 5 | Extras (only if needed) | JSONPath, fractured_json |
+
+**Out of scope for this sub-project:** everything in rows 2–5; AVX-512 and SSE4.2 kernels
+(x86 without AVX2 uses pure Go); NaN/Infinity literals (C++ compile-time option, off by
+default); case-insensitive key lookup; file loading helpers (callers use `os.ReadFile`);
+error byte offsets (C++ DOM has none).
+
+**Never ported (C++-only):** compile-time accessors, `key_selector` templates, constexpr
+parsing, ppc64 / LoongArch (lsx, lasx) / RISC-V (rvv-vls) kernels, runtime
+implementation-selection API, padded-string types.
+
+## 4. SIMD strategy
+
+**Chosen: pure Go by default + `simd/archsimd` kernels behind a build tag.**
+
+- Kernel files carry `//go:build goexperiment.simd && !purego`; build the fast path with
+  `GOEXPERIMENT=simd go build`. Without the experiment (or with `-tags purego`) the pure-Go
+  kernel is used. `purego` follows the Go standard library convention.
+- Verified in the local toolchain (`$GOROOT/src/simd/archsimd`): amd64 has `Equal`,
+  `PermuteOrZero` (PSHUFB), `ToBits` (PMOVMSKB); arm64 has `Equal`, `LookupOrZero` (VTBL),
+  `ShiftAllRight`, `ConcatEven/ConcatOdd`, but no mask→uint64 movemask, so the arm64 kernel
+  builds the 64-bit mask with a short narrowing/shift sequence.
+- archsimd calls are compiler intrinsics, inlined into Go code — no per-block assembly call
+  overhead.
+- Risk: archsimd is experimental and outside the Go 1 compatibility promise. It is confined
+  to `internal/stage1`. If it breaks or stalls, the same kernel functions can be
+  re-implemented in Go assembly without touching anything else.
+
+Rejected: hand-written Go assembly as the primary path (≈3× the code, not inlinable, hard to
+review — kept as the fallback plan above); cgo wrapper around C++ (not a rewrite).
+
+## 5. Architecture
+
+### 5.1 Layout
+
+```
+simdjson-go/
+  go.mod                          module simdjson-go; go 1.27
+  LICENSE, LICENSE-MIT, NOTICE
+  parser.go                       Parser, Parse, stage 2 driver
+  stage2.go                       structural walk → tape; atoms, depth stack
+  strings.go                      string unescaping into the string buffer
+  numbers.go                      number grammar + conversion
+  tape.go                         tape tags, word encode/decode
+  element.go                      Document, Element, Array, Object, Type
+  pointer.go                      JSON Pointer (RFC 6901)
+  serialize.go                    AppendJSON / MarshalJSON
+  minify.go                       Minify
+  errors.go                       sentinel errors
+  internal/stage1/
+    stage1.go                     Index(): block loop, scanner, flattening, final checks
+    kernel_generic.go             classify() via 256-entry byte-class table; utf8 via utf8.Valid
+    kernel_amd64_simd.go          AVX2 classify + lookup4 UTF-8   (goexperiment.simd && !purego)
+    kernel_arm64_simd.go          NEON classify + lookup4 UTF-8   (goexperiment.simd && !purego)
+    kernel_select_*.go            build-tag glue choosing the above
+  scripts/fetch-testdata.sh       downloads pinned corpora into testdata/ (gitignored)
+  testdata/                       (generated; see §8.2)
+  docs/superpowers/specs/         this file
+```
+
+Rationale: stage 1 is the only SIMD-dependent code, so it alone is an internal package with a
+tiny surface. Stage 2, tape and DOM share unexported types, so they live in the root package.
+
+### 5.2 Data flow
+
+```
+Parse(b []byte)
+  └─ stage1.Index(b, &p.indices) ── for each 64-byte block (last partial block copied into a
+  │                                 [64]byte filled with spaces):
+  │        classify(block) → masks{backslash, quote, ws, op, ctrl}
+  │        scanner: escapes (odd-backslash carry), in-string = prefix_xor(quote) ^ carry,
+  │                 pseudo-structurals, ctrl-inside-string accumulator
+  │        flatten structural bits → []uint32 offsets (bits.TrailingZeros64, unrolled)
+  │        UTF-8: lookup4 per block (SIMD) / utf8.Valid(b) once (pure Go)
+  │        final: ErrEmpty, ErrUnclosedString, ErrUnescapedChars, ErrUTF8
+  └─ stage 2 over indices ── iterative state machine with explicit depth stack
+           writes tape []uint64 + string buffer []byte → *Document
+```
+
+### 5.3 Stage 1 kernel contract
+
+```go
+// internal/stage1 — one implementation per build configuration.
+type masks struct{ backslash, quote, ws, op, ctrl uint64 } // bit i ↔ block[i]
+func classify(block *[64]byte) masks
+```
+
+- `ws` = space, `\t`, `\n`, `\r`. `op` = `{ } [ ] : ,`. `ctrl` = bytes `< 0x20`.
+- amd64 selects AVX2 vs generic once at `init` (`archsimd.X86.AVX2()`) into a package bool;
+  the per-block branch is perfectly predicted. arm64 NEON is always available.
+- `prefix_xor` uses the 6-step shift-xor cascade (no carry-less multiply needed).
+- UTF-8 validation is a separate per-block function with carried state on SIMD builds (port
+  of `utf8_lookup4_algorithm.h`); the pure-Go build calls `utf8.Valid` once on the input.
+- Kernel correctness is defined as bit-for-bit equality with `kernel_generic.go`.
+
+### 5.4 Padding: not required
+
+C++ requires `SIMDJSON_PADDING` (64) readable bytes after the input. This port does not:
+stage 1 copies only the final partial block into a padded stack buffer (as C++
+`buf_block_reader` already does), and stage 2 uses bounds-checked reads. Callers pass any
+`[]byte`; it is never copied, retained or modified.
+
+### 5.5 Stage 2
+
+- Port of `json_iterator.h` + `tape_builder.h` as a loop with an explicit stack of open
+  scopes (tape index, element count, array/object). Each `{`/`[` increments depth and fails
+  with `ErrDepth` when depth ≥ `MaxDepth` (C++ rule), so at most `MaxDepth−1` (default 1023)
+  nested arrays/objects are accepted.
+- Grammar errors (missing/extra commas or colons, non-string keys, mismatched brackets,
+  trailing content after the root value) return the same error code the C++ DOM returns for
+  that input, as established by the ported tests.
+- **Atoms:** `true`/`false`/`null` must be followed by whitespace, a structural character, or
+  end of input; otherwise `ErrTAtom` / `ErrFAtom` / `ErrNAtom`.
+- **Strings:** unescape `\" \\ \/ \b \f \n \r \t \uXXXX` (surrogate pairs combined; a lone or
+  malformed surrogate → `ErrString`). Runs without escapes are found with an 8-byte SWAR scan
+  for `"` and `\` (`binary.LittleEndian.Uint64` loads, bytewise tail) and copied with `copy`.
+- **Numbers:**
+  - Grammar validated by a port of simdjson's scanner (no leading zeros, digits required
+    around `.` and after `e`, must be followed by whitespace / structural / end) → else
+    `ErrNumber`.
+  - Integers: port of the simdjson fast path. Fits int64 → `'l'`; else fits uint64 → `'u'`;
+    else → `ErrBigInt`, or a `'Z'` big-integer string when `Parser.BigIntAsString` is set.
+  - Any number with `.` or `e/E` is a float: `strconv.ParseFloat(unsafe.String(...), 64)`
+    on the already-validated bytes (Go's `strconv` implements Eisel-Lemire, so fast_float is
+    not ported). Result ±Inf → `ErrNumber`. Underflow yields ±0 / subnormals, as C++.
+
+### 5.6 Tape format (identical to C++ `doc/tape.md`)
+
+Each word is `tag<<56 | payload`, little-endian.
+
+| Tag | Words | Payload |
+|---|---|---|
+| `r` | 1 at each end | first: index one past the last word; last: 0 |
+| `{` / `[` | 1 | `count<<32 \| index-after-matching-close`; `count` saturates at 2²⁴−1 |
+| `}` / `]` | 1 | index of matching open |
+| `"` | 1 | offset in string buffer; buffer entry = 4-byte LE length, bytes, `0x00` |
+| `Z` | 1 | same as `"`, holds raw digits (with `-` if negative) |
+| `l` / `u` / `d` | 2 | second word = int64 / uint64 / float64 bits |
+| `t` / `f` / `n` | 1 | 0 |
+
+Buffers are sized up front like C++ (tape: `len(b)+3` words; strings: `5*len(b)/3 + 64`
+bytes) so stage 2 never grows them; they are kept on the `Parser` and reused (grow-only).
+
+## 6. Public API
+
+```go
+package simdjson
+
+type Parser struct {
+    MaxDepth       int  // 0 means 1024 (C++ DEFAULT_MAX_DEPTH)
+    BigIntAsString bool // integers outside int64/uint64 become TypeBigInt instead of ErrBigInt
+    // unexported reusable buffers
+}
+// Parse parses b. The returned Document is valid until the next call to p.Parse.
+// A Parser must not be used by more than one goroutine at a time.
+// len(b) > 0xFFFFFFFF (C++ SIMDJSON_MAXSIZE_BYTES) → ErrCapacity.
+func (p *Parser) Parse(b []byte) (*Document, error)
+
+type Document struct{ /* unexported */ }
+func (d *Document) Root() Element
+
+type Type byte
+const (
+    TypeArray Type = '['; TypeObject Type = '{'; TypeInt64 Type = 'l'; TypeUint64 Type = 'u'
+    TypeFloat64 Type = 'd'; TypeString Type = '"'; TypeBool Type = 't'; TypeNull Type = 'n'
+    TypeBigInt Type = 'Z'
+)
+func (t Type) String() string
+
+type Element struct{ /* *Document + tape index; cheap value type */ }
+func (e Element) Type() Type
+func (e Element) Array() (Array, error)              // ErrIncorrectType if not an array
+func (e Element) Object() (Object, error)
+func (e Element) StringValue() (string, error)       // allocates a copy
+func (e Element) StringBytes() ([]byte, error)       // zero-copy; valid until next Parse
+func (e Element) Int64() (int64, error)
+func (e Element) Uint64() (uint64, error)
+func (e Element) Float64() (float64, error)
+func (e Element) Bool() (bool, error)
+func (e Element) IsNull() bool
+func (e Element) BigInt() (string, error)            // raw digits of a TypeBigInt
+func (e Element) AtPointer(ptr string) (Element, error)
+func (e Element) AppendJSON(dst []byte) []byte
+func (e Element) MarshalJSON() ([]byte, error)       // json.Marshaler interop
+
+type Array struct{ /* unexported */ }
+func (a Array) Len() int                             // tape count; counts by walking if saturated
+func (a Array) At(i int) (Element, error)            // ErrIndexOutOfBounds; O(i) via tape jumps
+func (a Array) All() iter.Seq2[int, Element]
+
+type Object struct{ /* unexported */ }
+func (o Object) Len() int                            // same saturation rule as Array.Len
+func (o Object) Get(key string) (Element, error)     // first exact match on unescaped key; ErrNoSuchField
+func (o Object) All() iter.Seq2[string, Element]     // keys are allocated copies (safe to retain)
+
+// Minify appends src with whitespace outside strings removed. Like C++, it does not
+// validate grammar or UTF-8; it returns ErrUnclosedString for an unterminated string.
+func Minify(dst, src []byte) ([]byte, error)
+```
+
+**Numeric conversions (match C++ `element-inl.h`):**
+
+| Getter | `'l'` | `'u'` | `'d'` | other |
+|---|---|---|---|---|
+| `Int64` | value | value if ≤ MaxInt64, else `ErrNumberOutOfRange` | `ErrIncorrectType` | `ErrIncorrectType` |
+| `Uint64` | value if ≥ 0, else `ErrNumberOutOfRange` | value | `ErrIncorrectType` | `ErrIncorrectType` |
+| `Float64` | `float64(v)` | `float64(v)` | value | `ErrIncorrectType` |
+
+**JSON Pointer (RFC 6901):** `""` is the element itself; tokens are `/`-separated with `~1`→`/`
+and `~0`→`~`; array tokens are decimal without leading zeros. Errors (`ErrInvalidJSONPointer`,
+`ErrIndexOutOfBounds`, `ErrNoSuchField`, `ErrIncorrectType`) follow the ported `pointercheck`
+tests.
+
+**Serialization:** `AppendJSON` emits minified JSON. Strings escape `"` `\` and bytes `< 0x20`
+(`\b \f \n \r \t`, others `\u00XX`), nothing else. Integers via `strconv.AppendInt/AppendUint`.
+Floats via `strconv.AppendFloat(dst, f, 'g', -1, 64)`, appending `.0` when the result has no
+`.`/`e` so the value re-parses as a float. Big integers are emitted as raw digits. Required
+property: `Parse(AppendJSON(x))` yields an equal tree, including element types.
+
+## 7. Errors
+
+Sentinel values created with `errors.New`, matched with `errors.Is`. One-to-one with the C++
+`error_code` values reachable in this sub-project:
+
+`ErrCapacity`, `ErrTape`, `ErrDepth`, `ErrString`, `ErrTAtom`, `ErrFAtom`, `ErrNAtom`,
+`ErrNumber`, `ErrBigInt`, `ErrUTF8`, `ErrEmpty`, `ErrUnescapedChars`, `ErrUnclosedString`,
+`ErrIncorrectType`, `ErrNumberOutOfRange`, `ErrIndexOutOfBounds`, `ErrNoSuchField`,
+`ErrInvalidJSONPointer`.
+
+Not ported (no Go equivalent or not reachable): `MEMALLOC` (Go panics on OOM), `UNINITIALIZED`,
+`IO_ERROR`, `INSUFFICIENT_PADDING`, `UNSUPPORTED_ARCHITECTURE`, On-Demand / stream codes
+(added by later sub-projects as needed).
+
+## 8. Testing
+
+### 8.1 Ported C++ tests (`tests/dom/*.cpp`)
+
+`basictests`, `errortests`, `integer_tests`, `big_integer_tests`, `numberparsingcheck`,
+`stringparsingcheck`, `pointercheck`, `document_tests`, `unpadded_tests`, `jsoncheck`,
+`minefieldcheck`, plus `tests/minify_tests.cpp` and `tests/unicode_tests.cpp`. Each becomes a
+table-driven Go test keeping the original inputs and expected errors. Tests for C++-only
+features (ranges, trivially-copyable, single-header, compile-time) are not ported.
+
+### 8.2 Corpora
+
+`scripts/fetch-testdata.sh` downloads
+`github.com/simdjson/simdjson-data` @ `351949906abde446f0314bf79606fb5d884f5be7` (the commit the
+C++ build pins; 34 MB unpacked, so `testdata/` is gitignored). Corpus tests call a helper
+that `t.Fatal`s with "run scripts/fetch-testdata.sh" when the data is absent — never a silent
+skip.
+
+- `jsonchecker/`: names containing `EXCLUDE` are skipped; `pass*` must parse; `fail*` must fail.
+- `jsonchecker/minefield/`: `y_` must parse, `n_` must fail, `i_` is ignored.
+- `jsonexamples/` (all `.json` files, recursively): must parse; tree equal to
+  `encoding/json` decoding (`UseNumber`; each `json.Number` converted with
+  `strconv.ParseInt` / `ParseUint` / `ParseFloat` according to the element's type and compared
+  exactly); `AppendJSON` round-trips.
+
+### 8.3 Differential and fuzz tests (Go native fuzzing)
+
+- `FuzzParse`: `Parse(b)` succeeds ⇔ `json.Valid(b) && utf8.Valid(b)`, nesting ≤ 1023, no
+  integer outside int64/uint64, and no float that overflows to ±Inf. On success, the tree equals `encoding/json`'s and
+  `AppendJSON` round-trips. Seeded from the corpora.
+- `FuzzClassify` (SIMD builds only): every kernel's `classify` equals `kernel_generic`'s for
+  arbitrary 64-byte blocks; same for UTF-8 validity vs `utf8.Valid`.
+- `FuzzMinify`: for inputs that `Parse` accepts, `Parse(Minify(b))` yields an equal tree.
+
+### 8.4 Build matrix
+
+`go test ./...` (pure Go), `go test -tags purego ./...`, `GOEXPERIMENT=simd go test ./...`
+(native arm64 NEON locally), `GOARCH=amd64 GOEXPERIMENT=simd go test ./...` (AVX2 under
+Rosetta 2 if it reports AVX2; otherwise on any x86-64 Linux machine), `go vet ./...`, and
+`GOARCH=386 go test ./...` / `GOARCH=wasm` build as non-tuned-platform smoke checks.
+
+### 8.5 Benchmarks
+
+`BenchmarkParse/<file>` over `jsonexamples/` (`b.SetBytes(len)`; reports GB/s) for each build
+configuration, alongside `BenchmarkStdlib/<file>` (`encoding/json.Unmarshal` into `any`), plus
+`BenchmarkStage1` and `BenchmarkMinify`. Results are compared with `benchstat`.
+
+## 9. Deviations from C++ (summary)
+
+| C++ | Go port | Why |
+|---|---|---|
+| Input needs 64 bytes padding | No padding; input never copied | Go has no safe over-read; bounds checks are cheap |
+| `simdjson_result<T>` | `(T, error)` with sentinel errors | Go idiom |
+| `string_view` everywhere | `StringValue` copies, `StringBytes` zero-copy, object keys copied | Go strings must stay immutable |
+| fast_float port | `strconv.ParseFloat` after JSON grammar check | stdlib already implements Eisel-Lemire |
+| Runtime implementation selection API | Build tag + one `init`-time CPU check | Nothing for users to configure |
+| 9 ISA kernels | AVX2, NEON, pure Go | archsimd supports amd64/arm64 only |
+| `number_as_string` | `Parser.BigIntAsString` | Only affects big integers in DOM; clearer name |
+
+## 10. Risks
+
+| Risk | Mitigation |
+|---|---|
+| archsimd API churns or regresses between Go releases | Pin Go version in CI; kernel surface is two functions per ISA; Go-assembly fallback |
+| arm64 lacks movemask; emulation eats the gain | Benchmark NEON vs pure Go early (first milestone after the generic stage 1 is correct) |
+| Bounds checks slow stage 2 | Profile; restructure loops for BCE (`_ = b[i+7]` hints) before considering `unsafe` |
+| Stage 2 error codes differ from C++ on odd inputs | Ported `errortests` + minefield corpus pin the observable behaviour |
+| `encoding/json` oracle differs (e.g. it allows invalid UTF-8, depth 10000) | Oracle is adjusted explicitly in §8.3, not by ignoring failures |
