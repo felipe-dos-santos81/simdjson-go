@@ -98,7 +98,7 @@ simdjson-go/
     stage1.go                     Index() and Minify(): block loop, scanner, flattening, final checks
     kernel_generic.go             classify() via 256-entry byte-class table (always compiled; it is
                                   the reference the NEON kernel is tested against)
-    kernel_purego.go              uses the generic kernel + utf8.Valid  (!arm64 || !goexperiment.simd || purego)
+    kernel_fallback.go            uses the generic kernel + utf8.Valid  (!arm64 || !goexperiment.simd || purego)
     kernel_arm64.go               NEON classify + lookup4 UTF-8         (arm64 && goexperiment.simd && !purego)
   scripts/fetch-testdata.sh       downloads pinned corpora into testdata/ (gitignored)
   Makefile                        `make check` runs the §8.4 build matrix

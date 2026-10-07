@@ -15,7 +15,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `internal/stage1/` | Stage 1: classify 64-byte blocks, find structural characters, validate UTF-8, `Minify` |
 | `internal/stage1/kernel_generic.go` | Portable classifier; the reference the NEON kernel must equal |
 | `internal/stage1/kernel_arm64.go` | NEON kernel (`//go:build arm64 && goexperiment.simd && !purego`) |
-| `internal/stage1/kernel_purego.go` | Portable kernel for every other build (the exact negation of the tag above) |
+| `internal/stage1/kernel_fallback.go` | Portable kernel for every other build (the exact negation of the tag above) |
 | `stage2.go`, `strings.go`, `numbers.go` | Stage 2: build the tape, unescape strings, parse numbers |
 | `fastfloat.go`, `pow10tab.go` | Decimal→float64 conversion adapted from Go's `internal/strconv` (BSD, `LICENSE-GO`); regenerate the table with `go generate` (`pow10gen.go`) |
 | `parser.go`, `tape.go`, `errors.go` | `Parser`, `Document`, tape tags, sentinel errors |
