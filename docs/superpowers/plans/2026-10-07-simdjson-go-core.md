@@ -2764,7 +2764,10 @@ func testdataDir(t testing.TB, sub string) string {
 
 // C++ tests/dom/jsoncheck.cpp
 func TestJSONChecker(t *testing.T) {
-	files, _ := filepath.Glob(filepath.Join(testdataDir(t, "jsonchecker"), "*.json"))
+	files, err := filepath.Glob(filepath.Join(testdataDir(t, "jsonchecker"), "*.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(files) == 0 {
 		t.Fatal("no files")
 	}
@@ -2790,7 +2793,10 @@ func TestJSONChecker(t *testing.T) {
 
 // C++ tests/dom/minefieldcheck.cpp (JSONTestSuite): y_ must parse, n_ must fail, i_ is ignored.
 func TestMinefield(t *testing.T) {
-	files, _ := filepath.Glob(filepath.Join(testdataDir(t, "jsonchecker/minefield"), "*.json"))
+	files, err := filepath.Glob(filepath.Join(testdataDir(t, "jsonchecker/minefield"), "*.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(files) == 0 {
 		t.Fatal("no files")
 	}
@@ -2816,12 +2822,14 @@ func TestMinefield(t *testing.T) {
 // (C++ numberparsingcheck, stringparsingcheck and minify_tests).
 func TestExamples(t *testing.T) {
 	var files []string
-	filepath.WalkDir(testdataDir(t, "jsonexamples"), func(path string, d fs.DirEntry, err error) error {
+	if err := filepath.WalkDir(testdataDir(t, "jsonexamples"), func(path string, d fs.DirEntry, err error) error {
 		if err == nil && strings.HasSuffix(path, ".json") {
 			files = append(files, path)
 		}
 		return err
-	})
+	}); err != nil {
+		t.Fatal(err)
+	}
 	if len(files) == 0 {
 		t.Fatal("no files")
 	}
