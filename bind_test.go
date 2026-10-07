@@ -286,6 +286,39 @@ func TestManyObjectsWithDuplicates(t *testing.T) {
 	}
 }
 
+// TestCollidingNames checks that names sharing their length, first and last
+// bytes do not make the duplicate-name check quadratic.
+func TestCollidingNames(t *testing.T) {
+	object := func(n int, dup bool) []byte {
+		var b strings.Builder
+		b.WriteString("{")
+		for i := range n {
+			fmt.Fprintf(&b, `"aaaaaaaa%08dbbbbbbbb":0,`, i)
+		}
+		last := n
+		if dup {
+			last = n / 2
+		}
+		fmt.Fprintf(&b, `"aaaaaaaa%08dbbbbbbbb":0}`, last)
+		return []byte(b.String())
+	}
+	for _, dup := range []bool{false, true} {
+		in := object(40000, dup)
+		start := time.Now()
+		var v struct{ X int }
+		err := Unmarshal(in, &v)
+		if elapsed := time.Since(start); elapsed > 2*time.Second {
+			t.Errorf("dup=%v: Unmarshal of %d bytes took %v", dup, len(in), elapsed)
+		}
+		if want := map[bool]string{false: "ok", true: "syntactic:duplicate"}[dup]; errClass(err) != want {
+			t.Errorf("dup=%v: err = %v, want class %q", dup, err, want)
+		}
+		if d := sameUnmarshal(object(200, dup), reflect.TypeFor[struct{ X int }]()); d != "" {
+			t.Error(d)
+		}
+	}
+}
+
 func TestMarshalMatchesV2(t *testing.T) {
 	ts := time.Date(2026, 10, 7, 12, 0, 0, 500, time.FixedZone("x", 2*3600))
 	in := Inner{X: 1, Y: "y"}

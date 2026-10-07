@@ -1,6 +1,9 @@
 package simdjson
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"hash/maphash"
+)
 
 // scope is an open array or object.
 type scope struct {
@@ -22,17 +25,11 @@ type builder struct {
 	stack          []scope
 	maxDepth       int
 	bigIntAsString bool
-	binding        bool      // see Parser.binding
-	offs           []uint32  // binding mode: offs[i] is the input offset behind tape word i
-	dups           []uint32  // binding mode: first repeated name per object (see checkNames)
-	keys           []nameKey // binding mode: names of the open objects, innermost last
-	seen           []uint32  // scratch for checkNames: hash table of keys indices + 1
-}
-
-// nameKey is an object name seen in binding mode: its tape index and hash.
-type nameKey struct {
-	i    uint32
-	hash uint64
+	binding        bool     // see Parser.binding
+	offs           []uint32 // binding mode: offs[i] is the input offset behind tape word i
+	dups           []uint32 // binding mode: first repeated name per object (see checkNames)
+	keys           []uint32 // binding mode: tape indices of the names of the open objects, innermost last
+	seen           []uint32 // scratch for checkNames: hash table of keys indices + 1
 }
 
 // mark records, in binding mode, that the tape word written next starts at
@@ -289,24 +286,25 @@ func (b *builder) atom(off int, lit string) bool {
 func terminates(buf []byte, p int) bool { return p == len(buf) || isStructuralOrSpace[buf[p]] }
 
 // addKey records the name just written to the tape (binding mode).
-func (b *builder) addKey() {
-	i := uint32(len(b.tape) - 1)
-	b.keys = append(b.keys, nameKey{i, nameHash(b.name(i))})
-}
+func (b *builder) addKey() { b.keys = append(b.keys, uint32(len(b.tape)-1)) }
+
+// nameSeed seeds the hash of checkNames, so that no input can choose names
+// that collide.
+var nameSeed = maphash.MakeSeed()
 
 // checkNames records, in binding mode, the first name of the closing object
 // (whose names start at b.keys[start]) that repeats an earlier one:
-// encoding/json/v2 rejects duplicate names in every object. Names are
-// compared by hash first: pairwise in small objects, through a hash table in
-// larger ones.
+// encoding/json/v2 rejects duplicate names in every object. Small objects
+// compare their names pairwise, larger ones go through a hash table.
 func (b *builder) checkNames(start uint32) {
 	keys := b.keys[start:]
 	b.keys = b.keys[:start]
 	if len(keys) <= 8 {
 		for j := 1; j < len(keys); j++ {
+			name := b.name(keys[j])
 			for _, k := range keys[:j] {
-				if k.hash == keys[j].hash && string(b.name(k.i)) == string(b.name(keys[j].i)) {
-					b.dups = append(b.dups, keys[j].i)
+				if string(b.name(k)) == string(name) {
+					b.dups = append(b.dups, keys[j])
 					return
 				}
 			}
@@ -323,33 +321,17 @@ func (b *builder) checkNames(start uint32) {
 	seen := b.seen[:size]
 	clear(seen)
 	for j, k := range keys {
-		h := int(k.hash) & (size - 1)
+		name := b.name(k)
+		h := int(maphash.Bytes(nameSeed, name)) & (size - 1)
 		for seen[h] != 0 {
-			if prev := keys[seen[h]-1]; prev.hash == k.hash && string(b.name(prev.i)) == string(b.name(k.i)) {
-				b.dups = append(b.dups, k.i)
+			if string(b.name(keys[seen[h]-1])) == string(name) {
+				b.dups = append(b.dups, k)
 				return
 			}
 			h = (h + 1) & (size - 1)
 		}
 		seen[h] = uint32(j + 1)
 	}
-}
-
-// nameHash is a cheap hash of an object name for checkNames, which compares
-// the names themselves on a match: its length and first and last 8 bytes.
-func nameHash(s []byte) uint64 {
-	h := uint64(len(s)) * 0x9E3779B97F4A7C15
-	if len(s) >= 8 {
-		h ^= binary.LittleEndian.Uint64(s)
-		h *= 0xBF58476D1CE4E5B9
-		h ^= binary.LittleEndian.Uint64(s[len(s)-8:])
-	} else {
-		for _, c := range s {
-			h = h<<8 | uint64(c)
-		}
-	}
-	h *= 0x94D049BB133111EB
-	return h ^ h>>31
 }
 
 // name returns the unescaped name of the string word at tape index i.

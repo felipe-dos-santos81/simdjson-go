@@ -59,8 +59,8 @@ type Parser struct {
 	indices []uint32
 	stack   []scope
 	doc     Document
-	keys    []nameKey // binding mode scratch (builder.checkNames)
-	seen    []uint32  // binding mode scratch (builder.checkNames)
+	keys    []uint32 // binding mode scratch (builder.checkNames)
+	seen    []uint32 // binding mode scratch (builder.checkNames)
 }
 
 // Parse parses b. The returned Document is valid until the next call to
