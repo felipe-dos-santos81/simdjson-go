@@ -985,9 +985,9 @@ func TestStrings(t *testing.T) {
 		{`"abc"`, "abc"},
 		{`"\"\\\/\b\f\n\r\t"`, "\"\\/\b\f\n\r\t"},
 		{`"\u0000"`, "\x00"},
-		{`"Aé€"`, "Aé€"},
-		{`"😀"`, "😀"},
-		{`"😀x"`, "😀x"},
+		{`"\u0041\u00e9\u20ac"`, "Aé€"},
+		{`"\ud83d\ude00"`, "😀"},
+		{`"\ud83d\ude00x"`, "😀x"},
 		{"\"é€😀\"", "é€😀"},
 	}
 	for _, tt := range tests {
@@ -1008,7 +1008,7 @@ func TestStringsAcrossBlocks(t *testing.T) {
 	for pad := 50; pad < 80; pad++ {
 		x := strings.Repeat("x", pad)
 		for _, tt := range []struct{ esc, want string }{
-			{`\"`, `"`}, {`\\`, `\`}, {`\n`, "\n"}, {`é`, "é"}, {`😀`, "😀"}, {"é", "é"}, {"😀", "😀"},
+			{`\"`, `"`}, {`\\`, `\`}, {`\n`, "\n"}, {`\u00e9`, "é"}, {`\ud83d\ude00`, "😀"}, {"é", "é"}, {"😀", "😀"},
 		} {
 			want := strconv.Quote(x + tt.want + "!")
 			if got := rootValue(t, `"`+x+tt.esc+`!"`); got != want {
@@ -1954,7 +1954,7 @@ func TestArray(t *testing.T) {
 }
 
 func TestObject(t *testing.T) {
-	o, _ := mustParse(t, `{"1":1,"2":{"x":[]},"3":1,"1":"dup","kéy":true}`).Object()
+	o, _ := mustParse(t, `{"1":1,"2":{"x":[]},"3":1,"1":"dup","k\u00e9y":true}`).Object()
 	if o.Len() != 5 {
 		t.Errorf("Len = %d", o.Len())
 	}
@@ -2306,7 +2306,7 @@ func TestAppendJSON(t *testing.T) {
 		{`{"a" : "x\"y\\z\/\u0001\u001f\b\f\n\r\t" }`, `{"a":"x\"y\\z/\u0001\u001f\b\f\n\r\t"}`},
 		{`[1.0, 0.1, -0.0, 1e21, 1e-7, 1E+2, 2.5]`, `[1.0,0.1,-0.0,1e+21,1e-07,100.0,2.5]`},
 		{`[true,false,null,{},[]]`, `[true,false,null,{},[]]`},
-		{`"é😀"`, `"é😀"`},
+		{`"\u00e9\ud83d\ude00"`, `"é😀"`},
 		// C++ document_tests stable_test: minified input round-trips exactly.
 		{`{"Image":{"Width":800,"Height":600,"Title":"View from 15th Floor","Thumbnail":{"Url":"http://www.example.com/image/481989943","Height":125,"Width":100},"Animated":false,"IDs":[116,943.3,234,38793]}}`,
 			`{"Image":{"Width":800,"Height":600,"Title":"View from 15th Floor","Thumbnail":{"Url":"http://www.example.com/image/481989943","Height":125,"Width":100},"Animated":false,"IDs":[116,943.3,234,38793]}}`},
@@ -3007,7 +3007,7 @@ import (
 )
 
 var fuzzSeeds = []string{
-	`{"a":[1,2.5,"x",true,null,{}]}`, `[]`, `"é😀"`, `-0`, `1e400`, "\xEF\xBB\xBF{}",
+	`{"a":[1,2.5,"x",true,null,{}]}`, `[]`, `"\u00e9\ud83d\ude00"`, `-0`, `1e400`, "\xEF\xBB\xBF{}",
 	`[1,]`, `{"a":1,"a":2}`, `"\ud800"`, `18446744073709551616`, `[[[[1]]]]`, "\"\x01\"",
 }
 
