@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE-GO file.
 
 // Copied from the Go standard library (src/internal/strconv/pow10gen.go);
-// only the generated package name and license file name differ.
+// only the generated package name, type name and license file name differ.
 
 //go:build ignore
 
@@ -102,5 +102,5 @@ const (
 
 // pow10Tab holds 128-bit mantissas of powers of 10.
 // The values are scaled so the high bit is always set.
-var pow10Tab = [...]pmHiLo{
+var pow10Tab = [...]pow10Entry{
 `

@@ -7,6 +7,10 @@
 // helpers it uses); see https://research.swtch.com/fp. Stage 2 has already
 // scanned the digits, so it calls this instead of strconv.ParseFloat, which
 // would scan them again.
+//
+// Renamed from upstream for readability: bool2 → btoi, pmHiLo → pow10Entry,
+// unmin → minUnrounded. Everything else keeps its upstream name and shape so
+// the code can be diffed against uscale.go.
 
 package simdjson
 
@@ -18,7 +22,7 @@ import (
 // decimalToFloat64 rounds d * 10**p to the nearest float64, negated if neg.
 // d can have at most 19 digits. ok is false if the result rounds to ±Inf.
 func decimalToFloat64(d uint64, p int, neg bool) (f float64, ok bool) {
-	sign := bool2[uint64](neg) << 63
+	sign := btoi[uint64](neg) << 63
 	switch {
 	case d == 0, p < -345: // zero, or d < 1e19 underflows to ±0
 		return math.Float64frombits(sign), true
@@ -40,15 +44,15 @@ func decimalToFloat64(d uint64, p int, neg bool) (f float64, ok bool) {
 	//		u = u.rsh(1)
 	//		e = e - 1
 	//	}
-	s := bool2[int](u >= unmin(1<<53))
+	s := btoi[int](u >= minUnrounded(1<<53))
 	u = u>>s | u&1
 	e = e - s
 
 	return pack64(sign|u.round(), -e)
 }
 
-// bool2 converts b to an integer: 1 for true, 0 for false.
-func bool2[T ~int | ~uint64](b bool) T {
+// btoi converts b to an integer: 1 for true, 0 for false.
+func btoi[T ~int | ~uint64](b bool) T {
 	if b {
 		return 1
 	}
@@ -73,8 +77,8 @@ type unrounded uint64
 
 func (u unrounded) round() uint64 { return uint64((u + 1 + (u>>2)&1) >> 2) }
 
-// unmin returns the minimum unrounded that rounds to x.
-func unmin(x uint64) unrounded { return unrounded(x<<2 - 2) }
+// minUnrounded returns the minimum unrounded that rounds to x.
+func minUnrounded(x uint64) unrounded { return unrounded(x<<2 - 2) }
 
 // log2Pow10(x) returns ⌊log₂ 10**x⌋ = ⌊x * log₂ 10⌋.
 func log2Pow10(x int) int {
@@ -82,8 +86,8 @@ func log2Pow10(x int) int {
 	return (x * 108853) >> 15
 }
 
-// A pmHiLo represents hi<<64 - lo.
-type pmHiLo struct {
+// A pow10Entry is a 128-bit power-of-ten mantissa, stored as hi<<64 - lo.
+type pow10Entry struct {
 	hi uint64
 	lo uint64
 }
@@ -111,6 +115,6 @@ func uscale(x uint64, c *scaler) unrounded {
 		return unrounded(hi>>s | 1)
 	}
 	mid2, _ := bits.Mul64(x, c.pmLo)
-	hi -= bool2[uint64](mid < mid2)
-	return unrounded(hi>>s | bool2[uint64](mid-mid2 > 1))
+	hi -= btoi[uint64](mid < mid2)
+	return unrounded(hi>>s | btoi[uint64](mid-mid2 > 1))
 }

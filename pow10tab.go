@@ -15,7 +15,7 @@ const (
 
 // pow10Tab holds 128-bit mantissas of powers of 10.
 // The values are scaled so the high bit is always set.
-var pow10Tab = [...]pmHiLo{
+var pow10Tab = [...]pow10Entry{
 	{0xfa8fd5a0081c0289, 0xe8cd3796329f1bac}, // 1e-348 * 2**1284
 	{0x9c99e58405118196, 0xf18042bddfa3714b}, // 1e-347 * 2**1280
 	{0xc3c05ee50655e1fb, 0xade0536d578c4d9e}, // 1e-346 * 2**1277

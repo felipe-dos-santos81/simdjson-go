@@ -93,48 +93,58 @@ func (e Element) BigInt() (string, error) {
 	return string(e.rawString()), nil
 }
 
+// integer returns an integer element's 64 bits and whether they hold an int64
+// rather than a uint64. Other types give ErrIncorrectType.
+func (e Element) integer() (v uint64, signed bool, err error) {
+	switch e.tag() {
+	case tagInt64:
+		return e.value(), true, nil
+	case tagUint64:
+		return e.value(), false, nil
+	}
+	return 0, false, ErrIncorrectType
+}
+
 // Int64 returns an integer as int64: an int64 as is, a uint64 if it is at
 // most math.MaxInt64 (else ErrNumberOutOfRange). Other types give ErrIncorrectType.
 func (e Element) Int64() (int64, error) {
-	switch e.tag() {
-	case tagInt64:
-		return int64(e.value()), nil
-	case tagUint64:
-		if v := e.value(); v <= math.MaxInt64 {
-			return int64(v), nil
-		}
-		return 0, ErrNumberOutOfRange
+	v, signed, err := e.integer()
+	if err == nil && !signed && v > math.MaxInt64 {
+		err = ErrNumberOutOfRange
 	}
-	return 0, ErrIncorrectType
+	if err != nil {
+		return 0, err
+	}
+	return int64(v), nil
 }
 
 // Uint64 returns an integer as uint64: a uint64 as is, an int64 if it is not
 // negative (else ErrNumberOutOfRange). Other types give ErrIncorrectType.
 func (e Element) Uint64() (uint64, error) {
-	switch e.tag() {
-	case tagUint64:
-		return e.value(), nil
-	case tagInt64:
-		if v := int64(e.value()); v >= 0 {
-			return uint64(v), nil
-		}
-		return 0, ErrNumberOutOfRange
+	v, signed, err := e.integer()
+	if err == nil && signed && int64(v) < 0 {
+		err = ErrNumberOutOfRange
 	}
-	return 0, ErrIncorrectType
+	if err != nil {
+		return 0, err
+	}
+	return v, nil
 }
 
 // Float64 returns a number (int64, uint64 or float64) as float64; other types
 // give ErrIncorrectType.
 func (e Element) Float64() (float64, error) {
-	switch e.tag() {
-	case tagDouble:
+	if e.tag() == tagDouble {
 		return math.Float64frombits(e.value()), nil
-	case tagInt64:
-		return float64(int64(e.value())), nil
-	case tagUint64:
-		return float64(e.value()), nil
 	}
-	return 0, ErrIncorrectType
+	v, signed, err := e.integer()
+	switch {
+	case err != nil:
+		return 0, err
+	case signed:
+		return float64(int64(v)), nil
+	}
+	return float64(v), nil
 }
 
 // Bool returns a boolean value, or ErrIncorrectType if e is not a boolean.
