@@ -200,14 +200,15 @@ kept on the `Parser` and reused (grow-only).
 package simdjson
 
 type Parser struct {
-    MaxDepth       int  // 0 means 1024 (C++ DEFAULT_MAX_DEPTH)
+    MaxDepth       int  // 0 or negative means 1024 (C++ DEFAULT_MAX_DEPTH); capped at 1<<20
     BigIntAsString bool // integers outside int64/uint64 become TypeBigInt instead of ErrBigInt
     // unexported reusable buffers
 }
-// Parse parses b. The returned Document is valid until the next call to p.Parse.
-// A Parser must not be used by more than one goroutine at a time.
+// Parse parses b. The returned Document is valid until the next call to p.Parse,
+// including one that fails. A Parser must not be used by more than one goroutine
+// at a time; a Document may be read concurrently while no Parse runs on its Parser.
 // A leading UTF-8 byte-order mark (EF BB BF) is skipped, as in C++.
-// len(b) > 0xFFFFFFFF (C++ SIMDJSON_MAXSIZE_BYTES) → ErrCapacity.
+// len(b) > 0xFFFFFFFC → ErrCapacity (C++ allows 0xFFFFFFFF; see §9).
 func (p *Parser) Parse(b []byte) (*Document, error)
 
 type Document struct{ /* unexported */ }
@@ -265,7 +266,7 @@ func Minify(dst, src []byte) ([]byte, error)
 **JSON Pointer (RFC 6901):** `""` is the element itself; tokens are `/`-separated with `~1`→`/`
 and `~0`→`~`; array tokens are decimal without leading zeros. Errors (`ErrInvalidJSONPointer`,
 `ErrIndexOutOfBounds`, `ErrNoSuchField`, `ErrIncorrectType`) follow the ported `pointercheck`
-tests.
+tests; an array index that overflows uint64 is `ErrIndexOutOfBounds` (see §9).
 
 **Serialization:** `AppendJSON` emits minified JSON. Strings escape `"` `\` and bytes `< 0x20`
 (`\b \f \n \r \t`, others `\u00XX`), nothing else. Integers via `strconv.AppendInt/AppendUint`.
@@ -320,16 +321,18 @@ skip.
   utf8.Valid(b)`, at most 1023 nested non-empty containers, no integer outside
   int64/uint64, no float that overflows to ±Inf, and every `\u` escape is a valid code point
   or surrogate pair (`encoding/json` silently replaces bad surrogates). On success, the tree
-  equals `encoding/json`'s and `AppendJSON` round-trips. Seeded with hand-picked edge cases.
-- `FuzzClassify` (arm64 SIMD build only): the NEON `classify` equals `kernel_generic`'s for
-  arbitrary 64-byte blocks; same for UTF-8 validity vs `utf8.Valid`.
+  equals `encoding/json`'s, `AppendJSON` round-trips to an equal tree, and the tape has at
+  most `len(b)+3` words. The oracle walks `encoding/json` tokens rather than a decoded map, so
+  duplicate keys cannot hide a value. Seeded with hand-picked edge cases.
+- `FuzzClassify` and `FuzzUTF8` (arm64 SIMD build only): the NEON `classify` equals
+  `kernel_generic`'s for arbitrary 64-byte blocks, and NEON UTF-8 validity equals `utf8.Valid`.
 - `FuzzMinify`: for inputs that `Parse` accepts, `Parse(Minify(b))` yields an equal tree.
 
 ### 8.4 Build matrix
 
 `go test ./...` (pure Go), `go test -tags purego ./...`, `GOEXPERIMENT=simd go test ./...`
 (native arm64 NEON locally), `GOARCH=amd64 go test ./...` (pure Go under Rosetta 2),
-`go vet ./...`, `gofmt -l`, and type-checking for non-tuned platforms with
+`go vet ./...` (plain and `GOEXPERIMENT=simd`), `gofmt -l`, and type-checking for non-tuned platforms with
 `GOOS=linux GOARCH=386 go vet ./...` and `GOOS=wasip1 GOARCH=wasm go vet ./...` (darwin/386
 does not exist, so 32-bit tests cannot run locally). `scripts/check.sh` runs all of these.
 
@@ -350,6 +353,9 @@ configuration, alongside `BenchmarkStdlib/<file>` (`encoding/json.Unmarshal` int
 | Runtime implementation selection API | Build tag only (NEON is mandatory on arm64) | Nothing for users to configure |
 | 9 ISA kernels | NEON + pure Go | Scope decision: arm64 is the tuned target; others are correct but scalar |
 | `number_as_string` | `Parser.BigIntAsString` | Only affects big integers in DOM; clearer name |
+| `SIMDJSON_MAXSIZE_BYTES` = 0xFFFFFFFF | `ErrCapacity` above 0xFFFFFFFC bytes | The tape (≤ `len(b)+3` words) keeps 32-bit indices; C++ truncates them for the densest inputs at its limit |
+| `max_depth` unbounded | `MaxDepth` capped at 1<<20 | `AppendJSON` and `AtPointer` recurse per level; an unbounded depth can exhaust Go's 1 GB stack (fatal, unrecoverable) |
+| Pointer array index wraps around on uint64 overflow | `ErrIndexOutOfBounds` | Wrapping can silently select a real element |
 
 ## 10. Risks
 
