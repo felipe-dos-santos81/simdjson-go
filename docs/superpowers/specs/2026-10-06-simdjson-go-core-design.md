@@ -14,10 +14,9 @@ line-by-line translation.
 
 1. Every file in the pinned `simdjson-data` corpora (`jsonchecker/`, `jsonchecker/minefield/`)
    is accepted or rejected exactly as the C++ DOM parser does (rules in §8.2).
-2. Ported C++ DOM tests (§8.1) pass on: pure Go, amd64 AVX2 kernel, arm64 NEON kernel.
+2. Ported C++ DOM tests (§8.1) pass on: pure Go (arm64 and amd64) and the arm64 NEON kernel.
 3. `Parse` on `twitter.json` is ≥ 3× faster than `encoding/json.Unmarshal` into `any`,
-   measured with `testing.B` on the same machine (arm64 NEON build; amd64 AVX2 build when an
-   x86-64 machine is available).
+   measured with `testing.B` on the same machine (arm64 NEON build).
 4. Fuzzing (§8.3) runs 10 minutes per target without a finding.
 
 ## 2. Assumptions (stated by the designer, accepted by the user)
@@ -26,7 +25,7 @@ line-by-line translation.
 |---|---|
 | Purpose | Production-quality Go library; C++ simdjson is the behavioural oracle |
 | Toolchain | Go 1.27 (`go 1.27` in `go.mod`); installed: go1.27.1 darwin/arm64 |
-| Targets | Tuned for amd64 and arm64; every other `GOARCH` runs the pure-Go path |
+| Targets | SIMD-tuned for arm64 (NEON) only; every other `GOARCH`, including amd64, runs the pure-Go path |
 | Module path | `simdjson-go` (rename later with `go mod edit -module`) |
 | Package name | `simdjson` |
 | License | Port of Apache-2.0 / MIT code: ship both `LICENSE` files plus `NOTICE` crediting the simdjson authors |
@@ -44,8 +43,9 @@ The full library is split into sub-projects, each with its own spec → plan →
 | 4 | Data binding | `Unmarshal`/`Marshal` via `reflect`, prettify (replaces C++ `std_deserialize`, p2996 reflection, builder) |
 | 5 | Extras (only if needed) | JSONPath, fractured_json |
 
-**Out of scope for this sub-project:** everything in rows 2–5; AVX-512 and SSE4.2 kernels
-(x86 without AVX2 uses pure Go); NaN/Infinity literals (C++ compile-time option, off by
+**Out of scope for this sub-project:** everything in rows 2–5; all x86 SIMD kernels (AVX2,
+AVX-512, SSE4.2 — amd64 uses pure Go; an AVX2 kernel can be added later behind the same
+kernel contract); NaN/Infinity literals (C++ compile-time option, off by
 default); case-insensitive key lookup; file loading helpers (callers use `os.ReadFile`);
 error byte offsets (C++ DOM has none).
 
@@ -57,13 +57,17 @@ implementation-selection API, padded-string types.
 
 **Chosen: pure Go by default + `simd/archsimd` kernels behind a build tag.**
 
-- Kernel files carry `//go:build goexperiment.simd && !purego`; build the fast path with
-  `GOEXPERIMENT=simd go build`. Without the experiment (or with `-tags purego`) the pure-Go
-  kernel is used. `purego` follows the Go standard library convention.
-- Verified in the local toolchain (`$GOROOT/src/simd/archsimd`): amd64 has `Equal`,
-  `PermuteOrZero` (PSHUFB), `ToBits` (PMOVMSKB); arm64 has `Equal`, `LookupOrZero` (VTBL),
-  `ShiftAllRight`, `ConcatEven/ConcatOdd`, but no mask→uint64 movemask, so the arm64 kernel
-  builds the 64-bit mask with a short narrowing/shift sequence.
+- The only SIMD kernel is arm64 NEON, in files carrying
+  `//go:build arm64 && goexperiment.simd && !purego`; build the fast path with
+  `GOEXPERIMENT=simd go build`. Every other configuration (no experiment, `-tags purego`, or
+  any other `GOARCH`) uses the pure-Go kernel. `purego` follows the Go standard library
+  convention.
+- Verified in the local toolchain (`$GOROOT/src/simd/archsimd`): arm64 has `Equal`,
+  `LookupOrZero` (VTBL), `ShiftAllRight`, `SubSaturated`, `ConcatShiftBytesRight` (EXT) and
+  `Uint16x8.ConcatAddPairs` (ADDP), but no byte movemask and no byte-wise pairwise add. The
+  kernel therefore byte-permutes each 16-byte input chunk once with VTBL
+  (`[0,8,1,9,…,7,15]`), after which a 3-level 16-bit `ConcatAddPairs` ladder over
+  bit-weighted masks yields each 64-bit mask in natural bit order.
 - archsimd calls are compiler intrinsics, inlined into Go code — no per-block assembly call
   overhead.
 - Risk: archsimd is experimental and outside the Go 1 compatibility promise. It is confined
@@ -93,10 +97,10 @@ simdjson-go/
   errors.go                       sentinel errors
   internal/stage1/
     stage1.go                     Index(): block loop, scanner, flattening, final checks
-    kernel_generic.go             classify() via 256-entry byte-class table; utf8 via utf8.Valid
-    kernel_amd64_simd.go          AVX2 classify + lookup4 UTF-8   (goexperiment.simd && !purego)
-    kernel_arm64_simd.go          NEON classify + lookup4 UTF-8   (goexperiment.simd && !purego)
-    kernel_select_*.go            build-tag glue choosing the above
+    kernel_generic.go             classify() via 256-entry byte-class table (always compiled; it is
+                                  the reference the NEON kernel is tested against)
+    kernel_purego.go              uses the generic kernel + utf8.Valid  (!arm64 || !goexperiment.simd || purego)
+    kernel_arm64.go               NEON classify + lookup4 UTF-8         (arm64 && goexperiment.simd && !purego)
   scripts/fetch-testdata.sh       downloads pinned corpora into testdata/ (gitignored)
   testdata/                       (generated; see §8.2)
   docs/superpowers/specs/         this file
@@ -130,8 +134,8 @@ func classify(block *[64]byte) masks
 ```
 
 - `ws` = space, `\t`, `\n`, `\r`. `op` = `{ } [ ] : ,`. `ctrl` = bytes `< 0x20`.
-- amd64 selects AVX2 vs generic once at `init` (`archsimd.X86.AVX2()`) into a package bool;
-  the per-block branch is perfectly predicted. arm64 NEON is always available.
+- NEON is mandatory on arm64, so there is no runtime CPU check: the build tag alone selects
+  the kernel.
 - `prefix_xor` uses the 6-step shift-xor cascade (no carry-less multiply needed).
 - UTF-8 validation is a separate per-block function with carried state on SIMD builds (port
   of `utf8_lookup4_algorithm.h`); the pure-Go build calls `utf8.Valid` once on the input.
@@ -305,15 +309,15 @@ skip.
 - `FuzzParse`: `Parse(b)` succeeds ⇔ `json.Valid(b) && utf8.Valid(b)`, nesting ≤ 1023, no
   integer outside int64/uint64, and no float that overflows to ±Inf. On success, the tree equals `encoding/json`'s and
   `AppendJSON` round-trips. Seeded from the corpora.
-- `FuzzClassify` (SIMD builds only): every kernel's `classify` equals `kernel_generic`'s for
+- `FuzzClassify` (arm64 SIMD build only): the NEON `classify` equals `kernel_generic`'s for
   arbitrary 64-byte blocks; same for UTF-8 validity vs `utf8.Valid`.
 - `FuzzMinify`: for inputs that `Parse` accepts, `Parse(Minify(b))` yields an equal tree.
 
 ### 8.4 Build matrix
 
 `go test ./...` (pure Go), `go test -tags purego ./...`, `GOEXPERIMENT=simd go test ./...`
-(native arm64 NEON locally), `GOARCH=amd64 GOEXPERIMENT=simd go test ./...` (AVX2 under
-Rosetta 2 if it reports AVX2; otherwise on any x86-64 Linux machine), `go vet ./...`, and
+(native arm64 NEON locally), `GOARCH=amd64 go test ./...` (pure Go under Rosetta 2),
+`go vet ./...`, and
 `GOARCH=386 go test ./...` / `GOARCH=wasm` build as non-tuned-platform smoke checks.
 
 ### 8.5 Benchmarks
@@ -331,7 +335,7 @@ configuration, alongside `BenchmarkStdlib/<file>` (`encoding/json.Unmarshal` int
 | `string_view` everywhere | `StringValue` copies, `StringBytes` zero-copy, object keys copied | Go strings must stay immutable |
 | fast_float port | `strconv.ParseFloat` after JSON grammar check | stdlib already implements Eisel-Lemire |
 | Runtime implementation selection API | Build tag + one `init`-time CPU check | Nothing for users to configure |
-| 9 ISA kernels | AVX2, NEON, pure Go | archsimd supports amd64/arm64 only |
+| 9 ISA kernels | NEON + pure Go | Scope decision: arm64 is the tuned target; others are correct but scalar |
 | `number_as_string` | `Parser.BigIntAsString` | Only affects big integers in DOM; clearer name |
 
 ## 10. Risks
