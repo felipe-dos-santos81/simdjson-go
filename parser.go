@@ -10,8 +10,11 @@ import (
 )
 
 const (
-	defaultMaxDepth = 1024       // C++ DEFAULT_MAX_DEPTH
-	maxSize         = 0xFFFFFFFF // C++ SIMDJSON_MAXSIZE_BYTES
+	defaultMaxDepth = 1024 // C++ DEFAULT_MAX_DEPTH
+	// maxSize is the largest input whose tape (at most len(b)+3 words) keeps
+	// every tape index within 32 bits. C++ allows 0xFFFFFFFF bytes and then
+	// truncates indices for the densest documents.
+	maxSize = 0xFFFFFFFF - 3
 	// maxMaxDepth keeps AppendJSON's and AtPointer's recursion well inside
 	// Go's 1 GB stack limit.
 	maxMaxDepth = 1 << 20
@@ -51,7 +54,7 @@ type Parser struct {
 // Parse parses b. The returned Document is valid until the next call to
 // p.Parse. b is neither retained nor modified, and needs no padding.
 // A leading UTF-8 byte-order mark is skipped, as in C++. It returns
-// ErrCapacity if len(b) > 0xFFFFFFFF, or another Err* value if b is not valid JSON.
+// ErrCapacity if len(b) > 0xFFFFFFFC, or another Err* value if b is not valid JSON.
 func (p *Parser) Parse(b []byte) (*Document, error) {
 	if uint64(len(b)) > maxSize {
 		return nil, ErrCapacity

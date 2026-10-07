@@ -33,6 +33,9 @@ func FuzzParse(f *testing.F) {
 		if err != nil {
 			return
 		}
+		if len(doc.tape) > len(in)+3 { // the bound maxSize relies on
+			t.Fatalf("Parse(%q): %d tape words for %d bytes", in, len(doc.tape), len(in))
+		}
 		if diff := sameAsStdlib(doc.Root(), in); diff != "" {
 			t.Fatalf("Parse(%q) differs from encoding/json: %s", in, diff)
 		}
