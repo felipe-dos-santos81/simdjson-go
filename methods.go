@@ -19,14 +19,15 @@ func addMethods(c *codec) bool {
 	}
 	added := false
 
-	// Encoding: MarshalJSON > AppendText > MarshalText > default.
-	// MarshalerTo cannot be called without a jsontext.Encoder.
+	// Encoding: MarshalJSONTo > MarshalJSON > AppendText > MarshalText >
+	// default. MarshalJSONTo needs a jsontext.Encoder, so a type that has it
+	// is unsupported: v2 would call it, and anything else would differ.
 	if _, ok := implements(t, textMarshalerType); ok {
 		added = true
 		c.enc = func(s *encodeState, v reflect.Value, mode uint8) error {
 			b, err := v.Addr().Interface().(encoding.TextMarshaler).MarshalText()
 			if err != nil {
-				return s.methodErr(t, err)
+				return textMethodErr(&jsonv2.SemanticError{GoType: t}, err, "MarshalText", false)
 			}
 			return s.appendQuoted(t, b)
 		}
@@ -37,7 +38,7 @@ func addMethods(c *codec) bool {
 			b, err := v.Addr().Interface().(encoding.TextAppender).AppendText(s.scratch[:0])
 			s.scratch = b[:0]
 			if err != nil {
-				return s.methodErr(t, err)
+				return textMethodErr(&jsonv2.SemanticError{GoType: t}, err, "AppendText", false)
 			}
 			return s.appendQuoted(t, b)
 		}
@@ -47,7 +48,7 @@ func addMethods(c *codec) bool {
 		c.enc = func(s *encodeState, v reflect.Value, mode uint8) error {
 			b, err := v.Addr().Interface().(jsonv2.Marshaler).MarshalJSON()
 			if err != nil {
-				return s.methodErr(t, err)
+				return jsonMethodErr(&jsonv2.SemanticError{GoType: t}, err, "MarshalJSON")
 			}
 			if mode&modeName != 0 && !isQuoted(b) {
 				return nonStringName(t)
@@ -57,14 +58,16 @@ func addMethods(c *codec) bool {
 			}
 			return nil
 		}
-	} else if _, ok := implements(t, jsonMarshalerToType); ok {
+	}
+	if _, ok := implements(t, jsonMarshalerToType); ok {
 		added = true
 		c.enc = func(s *encodeState, v reflect.Value, mode uint8) error {
 			return &jsonv2.SemanticError{GoType: t, Err: errUnsupportedMethods}
 		}
 	}
 
-	// Decoding: UnmarshalJSON > UnmarshalText > default.
+	// Decoding: UnmarshalJSONFrom > UnmarshalJSON > UnmarshalText > default,
+	// with UnmarshalJSONFrom unsupported as MarshalJSONTo is.
 	if _, ok := implements(t, textUnmarshalerType); ok {
 		added = true
 		c.dec = func(d *decodeState, e Element, v reflect.Value, mode uint8) error {
@@ -77,7 +80,7 @@ func addMethods(c *codec) bool {
 				return d.valueErr(e, t, errNonStringValue)
 			}
 			if err := v.Addr().Interface().(encoding.TextUnmarshaler).UnmarshalText(e.rawString()); err != nil {
-				return d.methodErr(e, t, err)
+				return textMethodErr(d.semanticErr(e, t), err, "UnmarshalText", true)
 			}
 			return nil
 		}
@@ -89,12 +92,15 @@ func addMethods(c *codec) bool {
 				return err
 			}
 			raw := d.raw(e)
-			if err := v.Addr().Interface().(jsonv2.Unmarshaler).UnmarshalJSON(raw[:len(raw):len(raw)]); err != nil { // appending must not reach the caller's input
-				return d.methodErr(e, t, err)
+			// The full slice expression keeps a method that appends to its
+			// argument from writing into the caller's input.
+			if err := v.Addr().Interface().(jsonv2.Unmarshaler).UnmarshalJSON(raw[:len(raw):len(raw)]); err != nil {
+				return jsonMethodErr(d.semanticErr(e, t), err, "UnmarshalJSON")
 			}
 			return nil
 		}
-	} else if _, ok := implements(t, jsonUnmarshalerFromType); ok {
+	}
+	if _, ok := implements(t, jsonUnmarshalerFromType); ok {
 		added = true
 		c.dec = func(d *decodeState, e Element, v reflect.Value, mode uint8) error {
 			return d.semErr(e, t, errUnsupportedMethods)
@@ -103,15 +109,44 @@ func addMethods(c *codec) bool {
 	return added
 }
 
-// methodErr wraps an error from a user's unmarshal method in a
-// SemanticError, unless it already is one or a SyntacticError.
-func (d *decodeState) methodErr(e Element, t reflect.Type, err error) error {
-	var se *jsonv2.SemanticError
-	var sy *jsontext.SyntacticError
-	if errors.As(err, &se) || errors.As(err, &sy) {
-		return err
+// methodErr replaces errors.ErrUnsupported from a user's method, as v2 does:
+// v2 reserves it for its own use.
+func methodErr(err error, method string) error {
+	if errors.Is(err, errors.ErrUnsupported) {
+		return errors.New(method + " method may not return errors.ErrUnsupported")
 	}
-	return &jsonv2.SemanticError{JSONPointer: d.pointer(e), JSONKind: kind(e), GoType: t, Err: err}
+	return err
+}
+
+// textMethodErr is v2's wrapping of an error from a text method: a
+// *SemanticError (or, when decoding, a *SyntacticError) passes through as is;
+// anything else becomes outer's Err.
+func textMethodErr(outer *jsonv2.SemanticError, err error, method string, decoding bool) error {
+	err = methodErr(err, method)
+	switch err.(type) {
+	case *jsonv2.SemanticError:
+		return err
+	case *jsontext.SyntacticError:
+		if decoding {
+			return err
+		}
+	}
+	outer.Err = err
+	return outer
+}
+
+// jsonMethodErr is v2's wrapping of an error from MarshalJSON or
+// UnmarshalJSON: always wrapped in outer, except that a *SemanticError the
+// method returned is merged into it, its JSONPointer taken as relative.
+func jsonMethodErr(outer *jsonv2.SemanticError, err error, method string) error {
+	err = methodErr(err, method)
+	if inner, ok := err.(*jsonv2.SemanticError); ok {
+		merged := *inner
+		merged.JSONPointer = outer.JSONPointer + inner.JSONPointer
+		return &merged
+	}
+	outer.Err = err
+	return outer
 }
 
 // isQuoted reports whether the JSON value b (possibly with surrounding

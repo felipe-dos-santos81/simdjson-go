@@ -15,23 +15,27 @@ import (
 )
 
 // errClass is what Unmarshal and Marshal must agree with v2 on: whether an
-// error occurred, its type, and the exported sentinel it wraps.
+// error occurred, the type of the outermost error, and the exported
+// sentinels it wraps.
 func errClass(err error) string {
-	var sy *jsontext.SyntacticError
-	var se *jsonv2.SemanticError
-	switch {
-	case err == nil:
+	var c string
+	switch err.(type) {
+	case nil:
 		return "ok"
-	case errors.Is(err, jsontext.ErrDuplicateName):
-		return "syntactic:duplicate"
-	case errors.As(err, &sy):
-		return "syntactic"
-	case errors.Is(err, jsonv2.ErrUnknownName):
-		return "semantic:unknown"
-	case errors.As(err, &se):
-		return "semantic"
+	case *jsontext.SyntacticError:
+		c = "syntactic"
+	case *jsonv2.SemanticError:
+		c = "semantic"
+	default:
+		return fmt.Sprintf("other(%T)", err)
 	}
-	return fmt.Sprintf("other(%T)", err)
+	if errors.Is(err, jsontext.ErrDuplicateName) {
+		c += ":duplicate"
+	}
+	if errors.Is(err, jsonv2.ErrUnknownName) {
+		c += ":unknown"
+	}
+	return c
 }
 
 // v2Options maps our options to v2's.
@@ -119,6 +123,19 @@ type Outer struct {
 	skip  int
 }
 
+// Embedded, StrictCase and myByte cover struct-field rules and byte kinds.
+type Embedded struct {
+	In Inner `json:",embed"`
+	Z  int   `json:"z"`
+}
+
+type StrictCase struct {
+	A int `json:"a,case:strict"`
+	B int `json:"b"`
+}
+
+type myByte byte
+
 type Conflict struct {
 	A  int `json:"a"`
 	A2 int `json:"A"`
@@ -139,6 +156,7 @@ var diffTypes = []reflect.Type{
 	reflect.TypeFor[text](), reflect.TypeFor[rawJSON](), reflect.TypeFor[jsonv1.RawMessage](),
 	reflect.TypeFor[Inner](), reflect.TypeFor[Outer](), reflect.TypeFor[*Outer](), reflect.TypeFor[Conflict](),
 	reflect.TypeFor[[]Outer](), reflect.TypeFor[chan int](), reflect.TypeFor[complex128](),
+	reflect.TypeFor[Embedded](), reflect.TypeFor[StrictCase](), reflect.TypeFor[[]myByte](), reflect.TypeFor[[3]myByte](),
 }
 
 var diffInputs = []string{
@@ -147,11 +165,12 @@ var diffInputs = []string{
 	`9223372036854775807`, `9223372036854775808`, `-9223372036854775808`, `-9223372036854775809`,
 	`18446744073709551615`, `18446744073709551616`, `123456789012345678901234567890`, `-123456789012345678901234567890`,
 	`""`, `"x"`, `"1"`, `"-1"`, `"-0"`, `"01"`, `"1.5"`, `"1e2"`, `" 1"`, `"null"`, `"true"`,
-	`"AQID"`, `"AQIDBA=="`, `"AQIDBA"`, `"AQ\nID"`, `"bad"`, `"é"`, `"1.2.3.4"`, `"::1"`,
+	`"AQID"`, `"AQIDBA=="`, `"AQIDBA"`, `"AQ\nID"`, `"bad"`, `"\u00e9"`, `"1.2.3.4"`, `"::1"`,
 	`"2026-10-07T12:00:00Z"`, `"2026-10-07T12:00:00.5+02:00"`, `"2026-10-07T12:00:00+25:00"`, `"2026-10-07T1:00:00Z"`,
 	`[]`, `[1]`, `[1,2]`, `[1,2,3]`, `[[1],[2]]`, `[null]`, `[{"q":1,"q":2}]`,
 	`{}`, `{"a":1}`, `{"A":1}`, `{"a":1,"A":2}`, `{"a":1,"a":2}`, `{"zz":1,"zz":2}`, `{"zz":{"x":1,"x":2}}`,
 	`{"1":"a","2":"b"}`, `{"1":"a","01":"b"}`, `{"0":"a","-0":"b"}`, `{"1.5":1,"1.50":2}`, `{"true":1}`,
+	`{"x":1,"Y":"y","z":2}`, `{"A":1,"B":2}`, `{"a":1,"b":2}`, `[1,2,3]`, `[1,2,256]`,
 	`{"x":1,"Y":"y"}`, `{"x":1,"x":2}`, `{"y":"a","Y":"b"}`, `{"j":true}`, `{"J":true}`, `{"_J-":true}`,
 	`{"g":"1.5","h":"-7"}`, `{"g":1.5}`, `{"h":"07"}`, `{"h":"1e2"}`, `{"g":"-0"}`,
 	`{"d":{"x":3},"e":{"k":{"x":4}},"f":[1,"s",{"t":null}]}`, `{"d":null,"c":[]}`,
@@ -208,6 +227,7 @@ func TestUnmarshalIntoExisting(t *testing.T) {
 			&[]int{9, 9, 9, 9}, ptr(make([]int, 1, 8)), &map[string]int{"a": 1, "z": 26},
 			&map[string]Inner{"k": {X: 1, Y: "keep"}}, ptr(&n), &Outer{A: 5, B: "keep", D: &Inner{Y: "keep"}},
 			ptr(any(map[string]any{"old": true})), ptr(any(&Inner{Y: "keep"})), &[2]int{7, 7},
+			ptr(fmt.Stringer(netip.MustParseAddr("::1"))),
 		}
 	}
 	for _, in := range []string{`[1,2]`, `[]`, `null`, `{"a":2,"b":3}`, `{"k":{"x":2}}`, `3`, `{"x":1}`, `{"d":{"x":2}}`, `[1]`} {
@@ -371,5 +391,115 @@ func TestCallerDataIsSafe(t *testing.T) {
 	se.GoType = nil
 	if _, err := Marshal(unexported{}); !errors.As(err, &se) || se.GoType == nil {
 		t.Errorf("second err = %v: the cached error was shared", err)
+	}
+}
+
+// errMethods returns, from each of its methods, the error its value or input
+// names, to compare how errors from user methods are wrapped with v2.
+type errMethods string
+
+func (m errMethods) err() error {
+	switch m {
+	case "sem":
+		return &jsonv2.SemanticError{JSONPointer: "/inner", Err: errors.New("inner")}
+	case "syn":
+		return &jsontext.SyntacticError{Err: errors.New("syntax")}
+	case "wrapsem":
+		return fmt.Errorf("w: %w", &jsonv2.SemanticError{Err: errors.New("inner")})
+	case "unsupported":
+		return errors.ErrUnsupported
+	case "plain":
+		return errors.New("plain")
+	}
+	return nil
+}
+
+type jsonErrs struct{ errMethods }
+
+func (m jsonErrs) MarshalJSON() ([]byte, error) { return []byte(`"x"`), m.err() }
+func (m *jsonErrs) UnmarshalJSON(b []byte) error {
+	m.errMethods = errMethods(strings.Trim(string(b), `"`))
+	return m.err()
+}
+
+type textErrs struct{ errMethods }
+
+func (m textErrs) MarshalText() ([]byte, error) { return []byte("x"), m.err() }
+func (m *textErrs) UnmarshalText(b []byte) error {
+	m.errMethods = errMethods(b)
+	return m.err()
+}
+
+// TestMethodErrorsMatchV2 checks how errors returned by MarshalJSON,
+// UnmarshalJSON and the text methods are wrapped: type, sentinel and, for
+// SemanticErrors, the JSON Pointer.
+func TestMethodErrorsMatchV2(t *testing.T) {
+	pointer := func(err error) jsontext.Pointer {
+		if se, ok := err.(*jsonv2.SemanticError); ok {
+			return se.JSONPointer
+		}
+		return ""
+	}
+	for _, name := range []string{"", "sem", "syn", "wrapsem", "unsupported", "plain"} {
+		in := []byte(`{"j":"` + name + `","t":"` + name + `"}`)
+		type pair struct {
+			J jsonErrs `json:"j"`
+			T textErrs `json:"t"`
+		}
+		for _, v := range []any{new(struct {
+			J jsonErrs `json:"j"`
+		}), new(struct {
+			T textErrs `json:"t"`
+		}), new(pair)} {
+			got := reflect.New(reflect.TypeOf(v).Elem()).Interface()
+			errWant := jsonv2.Unmarshal(in, v)
+			errGot := Unmarshal(in, got)
+			if errClass(errGot) != errClass(errWant) || pointer(errGot) != pointer(errWant) {
+				t.Errorf("Unmarshal(%s) into %T = %v, v2 %v", in, v, errGot, errWant)
+			}
+		}
+		for _, v := range []any{jsonErrs{errMethods(name)}, textErrs{errMethods(name)}, map[textErrs]int{{errMethods(name)}: 1}} {
+			_, errWant := jsonv2.Marshal(v)
+			_, errGot := Marshal(v)
+			if errClass(errGot) != errClass(errWant) || pointer(errGot) != pointer(errWant) {
+				t.Errorf("Marshal(%#v) = %v, v2 %v", v, errGot, errWant)
+			}
+		}
+	}
+}
+
+// TestMarshalJSONDepth checks that MarshalJSON output counts toward v2's
+// nesting limit of 10,000 levels.
+func TestMarshalJSONDepth(t *testing.T) {
+	for _, tc := range []struct {
+		outer int
+		raw   string
+	}{{9997, `[[1]]`}, {9998, `[[1]]`}, {9998, `[[[1]]]`}, {9999, `1`}, {9999, `[]`}, {10000, `1`}} {
+		var v any = rawJSON{tc.raw}
+		for range tc.outer {
+			v = []any{v}
+		}
+		if d := sameMarshal(v); d != "" {
+			t.Errorf("%d levels around %s: %.200s", tc.outer, tc.raw, d)
+		}
+	}
+}
+
+// bothMethods has JSON methods of both v2 kinds; v2 would call the ...To
+// and ...From ones, which need jsontext, so they are unsupported here.
+type bothMethods struct{}
+
+func (bothMethods) MarshalJSON() ([]byte, error)                   { return []byte(`1`), nil }
+func (bothMethods) MarshalJSONTo(*jsontext.Encoder) error          { return nil }
+func (*bothMethods) UnmarshalJSON([]byte) error                    { return nil }
+func (*bothMethods) UnmarshalJSONFrom(dec *jsontext.Decoder) error { return dec.SkipValue() }
+
+func TestToFromMethodsUnsupported(t *testing.T) {
+	var b bothMethods
+	if err := Unmarshal([]byte(`1`), &b); !errors.Is(err, errUnsupportedMethods) {
+		t.Errorf("Unmarshal = %v, want %v", err, errUnsupportedMethods)
+	}
+	if _, err := Marshal(b); !errors.Is(err, errUnsupportedMethods) {
+		t.Errorf("Marshal = %v, want %v", err, errUnsupportedMethods)
 	}
 }

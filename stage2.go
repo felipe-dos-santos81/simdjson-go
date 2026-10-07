@@ -204,7 +204,11 @@ func (b *builder) push(open byte) error {
 	if len(b.stack)+1 >= b.maxDepth {
 		return ErrDepth
 	}
-	b.stack = append(b.stack, scope{tapeIndex: uint32(len(b.tape)), keyStart: uint32(len(b.keys)), open: open})
+	s := scope{tapeIndex: uint32(len(b.tape)), open: open}
+	if b.binding {
+		s.keyStart = uint32(len(b.keys))
+	}
+	b.stack = append(b.stack, s)
 	b.tape = append(b.tape, 0) // written by endContainer
 	return nil
 }

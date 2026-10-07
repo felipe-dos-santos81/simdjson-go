@@ -79,22 +79,16 @@ func (s *encodeState) semErr(t reflect.Type, err error) error {
 	return &jsonv2.SemanticError{GoType: t, Err: err}
 }
 
-// methodErr wraps an error from a user's marshal method in a SemanticError,
-// unless it already is one.
-func (s *encodeState) methodErr(t reflect.Type, err error) error {
-	if _, ok := err.(*jsonv2.SemanticError); ok {
-		return err
-	}
-	return s.semErr(t, err)
-}
-
-// open counts a new array or object, enforcing v2's depth limit.
-func (s *encodeState) open() error {
+// enter counts a new array or object, enforcing v2's depth limit; leave
+// undoes it when the container is closed.
+func (s *encodeState) enter() error {
 	if s.depth++; s.depth > maxDepth {
 		return &jsontext.SyntacticError{Err: ErrDepth}
 	}
 	return nil
 }
+
+func (s *encodeState) leave() { s.depth-- }
 
 // visit records pointer-like value v past the cycle-check depth; it fails if
 // v is already being encoded.
@@ -193,15 +187,15 @@ func appendFloat(dst []byte, f float64, bits int) []byte {
 		f = float64(float32(f))
 	}
 	abs := math.Abs(f)
-	fmt := byte('f')
+	format := byte('f')
 	if abs != 0 {
 		if bits == 64 && (abs < 1e-6 || abs >= 1e21) ||
 			bits == 32 && (float32(abs) < 1e-6 || float32(abs) >= 1e21) {
-			fmt = 'e'
+			format = 'e'
 		}
 	}
-	dst = strconv.AppendFloat(dst, f, fmt, -1, bits)
-	if fmt == 'e' {
+	dst = strconv.AppendFloat(dst, f, format, -1, bits)
+	if format == 'e' {
 		n := len(dst)
 		if n >= 4 && dst[n-4] == 'e' && dst[n-3] == '-' && dst[n-2] == '0' {
 			dst[n-2] = dst[n-1]
@@ -342,7 +336,7 @@ func makeSequenceEncoder(t reflect.Type) encodeFunc {
 			}
 			defer leave()
 		}
-		if err := s.open(); err != nil {
+		if err := s.enter(); err != nil {
 			return err
 		}
 		s.buf = append(s.buf, '[')
@@ -355,7 +349,7 @@ func makeSequenceEncoder(t reflect.Type) encodeFunc {
 			}
 		}
 		s.buf = append(s.buf, ']')
-		s.depth--
+		s.leave()
 		return nil
 	}
 }
@@ -383,11 +377,11 @@ func makeMapEncoder(t reflect.Type) encodeFunc {
 			return err
 		}
 		defer leave()
-		if err := s.open(); err != nil {
+		if err := s.enter(); err != nil {
 			return err
 		}
 		key.init()
-		unique := !key.nonDefault && uniqueKeyKind(t.Key().Kind())
+		unique := uniqueKeys(key)
 		k := reflect.New(t.Key()).Elem()
 		x := reflect.New(t.Elem()).Elem()
 		s.buf = append(s.buf, '{')
@@ -455,7 +449,7 @@ func makeMapEncoder(t reflect.Type) encodeFunc {
 			}
 		}
 		s.buf = append(s.buf, '}')
-		s.depth--
+		s.leave()
 		return nil
 	}
 }
@@ -489,11 +483,7 @@ func unquote(q []byte) string {
 }
 
 func makeStructEncoder(t reflect.Type) encodeFunc {
-	var (
-		once   sync.Once
-		fields structFields
-		errFs  *jsonv2.SemanticError
-	)
+	c := codecFor(t)
 	return func(s *encodeState, v reflect.Value, mode uint8) error {
 		if mode&modeStringTag != 0 {
 			return s.semErr(t, errInvalidStringTag)
@@ -501,11 +491,11 @@ func makeStructEncoder(t reflect.Type) encodeFunc {
 		if mode&modeName != 0 {
 			return nonStringName(t)
 		}
-		once.Do(func() { fields, errFs = makeStructFields(t) })
+		fields, errFs := c.fields()
 		if errFs != nil {
 			return &jsonv2.SemanticError{GoType: errFs.GoType, Err: errFs.Err} // a copy: callers may change it
 		}
-		if err := s.open(); err != nil {
+		if err := s.enter(); err != nil {
 			return err
 		}
 		s.buf = append(s.buf, '{')
@@ -519,8 +509,8 @@ func makeStructEncoder(t reflect.Type) encodeFunc {
 			if f.omitzero && (f.isZero == nil && fv.IsZero() || f.isZero != nil && f.isZero(fv)) {
 				continue
 			}
-			f.cod.init()
-			if f.omitempty && !f.cod.nonDefault && f.isEmpty != nil && f.isEmpty(fv) {
+			f.codec.init()
+			if f.omitempty && !f.codec.nonDefault && f.isEmpty != nil && f.isEmpty(fv) {
 				continue
 			}
 			start := len(s.buf)
@@ -534,7 +524,7 @@ func makeStructEncoder(t reflect.Type) encodeFunc {
 			if f.string {
 				fmode = modeStringTag
 			}
-			if err := f.cod.encode(s, fv, fmode); err != nil {
+			if err := f.codec.encode(s, fv, fmode); err != nil {
 				return err
 			}
 			if f.omitempty && isEmptyJSON(s.buf[valStart:]) {
@@ -544,7 +534,7 @@ func makeStructEncoder(t reflect.Type) encodeFunc {
 			first = false
 		}
 		s.buf = append(s.buf, '}')
-		s.depth--
+		s.leave()
 		return nil
 	}
 }
@@ -581,7 +571,11 @@ func (s *encodeState) appendCanonical(b []byte) error {
 	}
 	bd := binders.Get().(*binder)
 	defer putBinder(bd)
+	// The value's own nesting counts toward v2's limit, below the s.depth
+	// levels already open (MaxDepth counts the value itself).
+	bd.p.MaxDepth = maxDepth + 1 - s.depth
 	doc, err := bd.p.Parse(b)
+	bd.p.MaxDepth = maxDepth + 1
 	if err != nil {
 		return &jsontext.SyntacticError{Err: err}
 	}

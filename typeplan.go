@@ -31,7 +31,21 @@ type codec struct {
 	dec        decodeFunc
 	enc        encodeFunc
 	nonDefault bool // the type has marshal or unmarshal methods (or is a time type)
+
+	planOnce sync.Once // struct types: the field plan, shared by dec and enc
+	plan     structFields
+	planErr  *jsonv2.SemanticError
 }
+
+// fields returns the field plan of struct type c.typ, built on first use.
+func (c *codec) fields() (*structFields, *jsonv2.SemanticError) {
+	c.planOnce.Do(func() { c.plan, c.planErr = makeStructFields(c.typ) })
+	return &c.plan, c.planErr
+}
+
+// uniqueKeys reports whether a map whose key codec is key gives each key
+// exactly one JSON name (see uniqueKeyKind).
+func uniqueKeys(key *codec) bool { return !key.nonDefault && uniqueKeyKind(key.typ.Kind()) }
 
 // decodeFunc decodes e into the addressable v.
 type decodeFunc func(d *decodeState, e Element, v reflect.Value, mode uint8) error
@@ -123,7 +137,6 @@ type isZeroer interface{ IsZero() bool }
 // structFields is the list of JSON-representable fields of a struct type.
 type structFields struct {
 	flattened    []structField // depth-first order
-	byActualName map[string]*structField
 	byFoldedName map[string][]*structField
 	foldable     bool             // some field is tagged `case:ignore`
 	byLen        [][]*structField // byLen[n]: the fields whose name is n bytes long
@@ -151,7 +164,7 @@ type structField struct {
 	id      int   // breadth-first ID, used for duplicate detection
 	index   []int // according to reflect.Value.FieldByIndex
 	typ     reflect.Type
-	cod     *codec
+	codec   *codec
 	isZero  func(reflect.Value) bool
 	isEmpty func(reflect.Value) bool
 	fieldOptions
@@ -268,7 +281,7 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *jsonv2.Semantic
 				}
 				namesIndex[f.name] = i
 				f.id = len(allFields)
-				f.cod = codecFor(sf.Type)
+				f.codec = codecFor(sf.Type)
 				allFields = append(allFields, f)
 				if f.format != "" {
 					serr = orErrorf(serr, t, "Go struct field %s has `format` tag option, which is not supported", sf.Name)
@@ -314,13 +327,11 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *jsonv2.Semantic
 
 	fs = structFields{
 		flattened:    flattened,
-		byActualName: make(map[string]*structField, len(flattened)),
 		byFoldedName: make(map[string][]*structField, len(flattened)),
 	}
 	for i, f := range fs.flattened {
 		fs.foldable = fs.foldable || f.casing == caseIgnore
 		folded := string(foldName([]byte(f.name)))
-		fs.byActualName[f.name] = &fs.flattened[i]
 		fs.byFoldedName[folded] = append(fs.byFoldedName[folded], &fs.flattened[i])
 	}
 	for i := range fs.flattened {

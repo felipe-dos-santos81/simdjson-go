@@ -281,3 +281,16 @@ func (o Object) Get(key string) (Element, error) {
 	}
 	return Element{}, ErrNoSuchField
 }
+
+// keyIndices iterates over the tape indices of an object's names.
+func (o Object) keyIndices() func(func(int) bool) {
+	return func(yield func(int) bool) {
+		i, end := o.e.span()
+		for i < end {
+			if !yield(i) {
+				return
+			}
+			i = Element{o.e.doc, i + 1}.next()
+		}
+	}
+}

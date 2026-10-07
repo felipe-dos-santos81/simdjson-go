@@ -53,7 +53,7 @@ type binder struct {
 }
 
 var binders = sync.Pool{New: func() any {
-	return &binder{p: Parser{MaxDepth: 10001, BigIntAsString: true, binding: true}}
+	return &binder{p: Parser{MaxDepth: maxDepth + 1, BigIntAsString: true, binding: true}}
 }}
 
 // putBinder returns b to the pool unless it grew large, so one big document
@@ -120,7 +120,14 @@ func kind(e Element) jsontext.Kind {
 
 // semErr reports that e cannot be decoded into Go type t.
 func (d *decodeState) semErr(e Element, t reflect.Type, err error) error {
-	return &jsonv2.SemanticError{JSONPointer: d.pointer(e), JSONKind: kind(e), GoType: t, Err: err}
+	se := d.semanticErr(e, t)
+	se.Err = err
+	return se
+}
+
+// semanticErr is a SemanticError locating e, for decoding into Go type t.
+func (d *decodeState) semanticErr(e Element, t reflect.Type) *jsonv2.SemanticError {
+	return &jsonv2.SemanticError{JSONPointer: d.pointer(e), JSONKind: kind(e), GoType: t}
 }
 
 // valueErr is semErr for decoders that, in v2, read the whole value before
@@ -223,19 +230,6 @@ func (d *decodeState) firstDup(o Element) int {
 		}
 	}
 	return -1
-}
-
-// keyIndices iterates over the tape indices of an object's names.
-func (o Object) keyIndices() func(func(int) bool) {
-	return func(yield func(int) bool) {
-		i, end := o.e.span()
-		for i < end {
-			if !yield(i) {
-				return
-			}
-			i = Element{o.e.doc, i + 1}.next()
-		}
-	}
 }
 
 var (
@@ -767,7 +761,7 @@ func makeMapDecoder(t reflect.Type) decodeFunc {
 		// Keys of a kind with a unique representation are duplicates when
 		// they decode to a key already present (so "0" and "-0" collide as
 		// integers); other keys are compared as names, as in v2.
-		unique := !key.nonDefault && uniqueKeyKind(t.Key().Kind())
+		unique := uniqueKeys(key)
 		var seen reflect.Value // keys from the input, if v had entries before
 		if v.Len() > 0 {
 			seen = reflect.MakeMap(reflect.MapOf(t.Key(), emptyStruct))
@@ -826,11 +820,7 @@ func uniqueKeyKind(k reflect.Kind) bool {
 }
 
 func makeStructDecoder(t reflect.Type) decodeFunc {
-	var (
-		once   sync.Once
-		fields structFields
-		errFs  *jsonv2.SemanticError
-	)
+	c := codecFor(t)
 	return func(d *decodeState, e Element, v reflect.Value, mode uint8) error {
 		if mode&modeStringTag != 0 {
 			return d.semErr(e, t, errInvalidStringTag)
@@ -843,7 +833,7 @@ func makeStructDecoder(t reflect.Type) decodeFunc {
 		default:
 			return d.semErr(e, t, nil)
 		}
-		once.Do(func() { fields, errFs = makeStructFields(t) })
+		fields, errFs := c.fields()
 		if errFs != nil {
 			return &jsonv2.SemanticError{JSONPointer: d.pointer(e), JSONKind: '{', GoType: errFs.GoType, Err: errFs.Err}
 		}
@@ -896,7 +886,7 @@ func makeStructDecoder(t reflect.Type) decodeFunc {
 			if f.string {
 				fmode = modeStringTag
 			}
-			if err := f.cod.decode(d, ve, fv, fmode); err != nil {
+			if err := f.codec.decode(d, ve, fv, fmode); err != nil {
 				return err
 			}
 		}
