@@ -1,87 +1,74 @@
-# Makefile for simdjson-go — Go port of the simdjson parser
-# Targets follow the development loop:
-#   testdata → fmt/vet → test (pure Go, purego, NEON, amd64) → fuzz → bench → check
+# simdjson-go — Go port of the simdjson JSON parser.
+# Builds: pure Go (default), NEON (GOEXPERIMENT=simd, arm64), portable forced (-tags purego).
 SERVICE = simdjson-go
 
-# Variables
-GO = go
-SIMD = GOEXPERIMENT=simd
-CORPORA = testdata/jsonchecker testdata/jsonexamples
+GO        = go
+SIMD      = GOEXPERIMENT=simd
 BENCHSTAT = $(GO) run golang.org/x/perf/cmd/benchstat@latest
 target ?= FuzzParse
-time ?= 60s
-count ?= 6
+time   ?= 60s
+count  ?= 6
 
-# FuzzClassify and FuzzUTF8 compare the NEON kernel with the portable one, so
-# they live in internal/stage1 and exist only in the GOEXPERIMENT=simd build.
+# These fuzz targets compare the NEON kernel with the portable one, so they
+# exist only in the NEON build, in internal/stage1.
 NEON_FUZZ = FuzzClassify FuzzUTF8
 
-.PHONY: help testdata clean \
-        fmt vet \
-        test test-purego test-neon test-amd64 \
-        fuzz \
-        bench benchstat \
-        check
+.PHONY: help testdata clean fmt vet check \
+        test test-neon test-purego test-amd64 \
+        fuzz bench benchstat
 
-# ── Environment ──────────────────────────────────────────────────────────────
+# ── Setup ────────────────────────────────────────────────────────────────────
 
-help: ## Print this help message
-	@printf '\033[01;32m${SERVICE} — Go port of the simdjson parser\033[00;37m\n\n'
+help: ## Show this help
+	@printf '\033[01;32m${SERVICE} — Go port of the simdjson JSON parser\033[00;37m\n\n'
 	@printf "\033[33mUsage:\033[0m\n  make [target] [arg=\"val\"...]\n\n\033[33mTargets:\033[0m\n"
 	@grep -E '^[-a-zA-Z0-9_\.\/]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; \
-		{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+		{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-testdata: ## Download the pinned simdjson-data corpora into testdata/ (skipped when present)
+testdata: ## Download the pinned test corpora (once)
 	@if [ ! -d testdata/jsonchecker ] || [ ! -d testdata/jsonexamples ]; then \
 		./scripts/fetch-testdata.sh; \
-	fi; \
-	echo "Test corpora ready."
+	fi
 
-clean: ## Remove the downloaded corpora and the Go test cache
-	rm -rf $(CORPORA)
-	$(GO) clean -testcache
-	@echo "Cleanup complete."
+clean: ## Delete the downloaded corpora
+	rm -rf testdata/jsonchecker testdata/jsonexamples
 
-# ── Static checks ────────────────────────────────────────────────────────────
+# ── Checks ───────────────────────────────────────────────────────────────────
 
-fmt: ## List files gofmt would change (fails if there are any)
+fmt: ## Fail if any file needs gofmt
 	@test -z "$$(gofmt -l .)" || { gofmt -l .; exit 1; }
 
-vet: ## Run go vet on the pure-Go and NEON builds
+vet: ## go vet the pure-Go and NEON builds
 	$(GO) vet ./...
 	$(SIMD) $(GO) vet ./...
 
+check: testdata ## Full build matrix: gofmt, vet, tests on every build (scripts/check.sh)
+	./scripts/check.sh
+
 # ── Tests ────────────────────────────────────────────────────────────────────
 
-test: testdata ## Run the tests on the pure-Go build (short=1 skips the ~0.5 GB count-saturation test)
+test: testdata ## Test the pure-Go build [short=1]
 	$(GO) test $(if $(short),-short) ./...
 
-test-purego: testdata ## Run the tests with the portable kernel forced (-tags purego)
-	$(GO) test -tags purego $(if $(short),-short) ./...
-
-test-neon: testdata ## Run the tests on the arm64 NEON kernel (GOEXPERIMENT=simd)
+test-neon: testdata ## Test the NEON build [short=1]
 	$(SIMD) $(GO) test $(if $(short),-short) ./...
 
-test-amd64: testdata ## Run the tests as amd64 (Rosetta 2 on Apple silicon)
+test-purego: testdata ## Test with -tags purego [short=1]
+	$(GO) test -tags purego $(if $(short),-short) ./...
+
+test-amd64: testdata ## Test as amd64, via Rosetta 2 on Apple silicon [short=1]
 	GOARCH=amd64 $(GO) test $(if $(short),-short) ./...
 
-# ── Fuzzing ──────────────────────────────────────────────────────────────────
+# ── Fuzzing and benchmarks ───────────────────────────────────────────────────
 
-fuzz: ## Fuzz one target (usage: make fuzz target=FuzzParse time=60s [neon=1]); FuzzClassify/FuzzUTF8 always use NEON
+fuzz: ## Fuzz one target [target=FuzzParse time=60s neon=1]
 	$(if $(or $(neon),$(filter $(target),$(NEON_FUZZ))),$(SIMD) )$(GO) test -run '^$$' -fuzz '^$(target)$$' -fuzztime $(time) \
 		$(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,.)
 
-# ── Benchmarks ───────────────────────────────────────────────────────────────
-
-bench: testdata ## Run benchmarks (usage: make bench [neon=1] [count=6] [bench=Parse/twitter] [out=file.txt])
+bench: testdata ## Run benchmarks [bench=regex count=6 neon=1 out=file]
 	$(if $(neon),$(SIMD) )$(GO) test -run '^$$' -bench '$(or $(bench),.)' -count $(count) . \
 		$(if $(out),> $(out) && cat $(out))
 
-benchstat: ## Compare two benchmark runs (usage: make benchstat old=purego.txt new=neon.txt)
+benchstat: ## Compare two benchmark files [old=a.txt new=b.txt]
 	$(BENCHSTAT) $(old) $(new)
-
-# ── Development ──────────────────────────────────────────────────────────────
-
-check: testdata ## Run the full build matrix (spec §8.4: gofmt, vet, every build) via scripts/check.sh
-	./scripts/check.sh

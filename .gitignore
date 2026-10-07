@@ -1,2 +1,17 @@
+# Test corpora, downloaded by scripts/fetch-testdata.sh (make testdata).
+# testdata/fuzz/ is NOT ignored: commit fuzz regressions found there.
 testdata/jsonchecker/
 testdata/jsonexamples/
+
+# Go build and profiling output
+*.test
+*.prof
+*.out
+
+# Local agent workspaces
+.superpowers/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
