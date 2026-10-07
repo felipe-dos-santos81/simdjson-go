@@ -1,0 +1,5 @@
+simdjson-go
+
+This is a Go port of simdjson (https://github.com/simdjson/simdjson),
+Copyright 2018-2025 The simdjson authors, available under the Apache
+License 2.0 (LICENSE) or the MIT License (LICENSE-MIT), at your option.
