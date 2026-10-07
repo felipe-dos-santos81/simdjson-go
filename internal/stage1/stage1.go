@@ -89,9 +89,6 @@ func Index(buf []byte, idx []uint32) ([]uint32, error) {
 	if len(buf) == 0 {
 		return idx, ErrEmpty
 	}
-	if cap(idx) < len(buf) {
-		idx = make([]uint32, 0, len(buf)) // at most one structural per byte
-	}
 	var (
 		s    scanner
 		u    utf8Checker

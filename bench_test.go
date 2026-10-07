@@ -2,8 +2,6 @@ package simdjson
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"simdjson-go/internal/stage1"
@@ -11,19 +9,10 @@ import (
 
 var benchFiles = []string{"twitter.json", "citm_catalog.json", "canada.json", "github_events.json", "gsoc-2018.json", "update-center.json"}
 
-func benchData(b *testing.B, name string) []byte {
-	b.Helper()
-	data, err := os.ReadFile(filepath.Join("testdata", "jsonexamples", name))
-	if err != nil {
-		b.Fatalf("%v (run scripts/fetch-testdata.sh)", err)
-	}
-	return data
-}
-
 func BenchmarkParse(b *testing.B) {
 	for _, name := range benchFiles {
 		b.Run(name, func(b *testing.B) {
-			data := benchData(b, name)
+			data := readTestdata(b, "jsonexamples", name)
 			var p Parser
 			b.SetBytes(int64(len(data)))
 			b.ReportAllocs()
@@ -42,7 +31,7 @@ func BenchmarkParse(b *testing.B) {
 func BenchmarkStdlib(b *testing.B) {
 	for _, name := range benchFiles {
 		b.Run(name, func(b *testing.B) {
-			data := benchData(b, name)
+			data := readTestdata(b, "jsonexamples", name)
 			b.SetBytes(int64(len(data)))
 			b.ReportAllocs()
 			for b.Loop() {
@@ -56,7 +45,7 @@ func BenchmarkStdlib(b *testing.B) {
 }
 
 func BenchmarkIndex(b *testing.B) {
-	data := benchData(b, "twitter.json")
+	data := readTestdata(b, "jsonexamples", "twitter.json")
 	var idx []uint32
 	b.SetBytes(int64(len(data)))
 	for b.Loop() {
@@ -68,7 +57,7 @@ func BenchmarkIndex(b *testing.B) {
 }
 
 func BenchmarkMinify(b *testing.B) {
-	data := benchData(b, "twitter.json")
+	data := readTestdata(b, "jsonexamples", "twitter.json")
 	var dst []byte
 	b.SetBytes(int64(len(data)))
 	for b.Loop() {

@@ -204,8 +204,8 @@ func (a Array) All() iter.Seq2[int, Element] {
 
 // At returns element i, walking the tape (O(i)).
 func (a Array) At(i int) (Element, error) {
-	if i < 0 {
-		return Element{}, ErrIndexOutOfBounds // without walking the whole array
+	if uint(i) >= uint(a.Len()) { // also rejects negative i, without walking
+		return Element{}, ErrIndexOutOfBounds
 	}
 	for k, v := range a.All() {
 		if k == i {

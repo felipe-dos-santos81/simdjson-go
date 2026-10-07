@@ -3,6 +3,7 @@ package simdjson
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"math"
 	"os"
@@ -23,9 +24,20 @@ func testdataDir(t testing.TB, sub string) string {
 	return dir
 }
 
-// C++ tests/dom/jsoncheck.cpp
-func TestJSONChecker(t *testing.T) {
-	files, err := filepath.Glob(filepath.Join(testdataDir(t, "jsonchecker"), "*.json"))
+// readTestdata returns the contents of testdata/<sub>/<name>.
+func readTestdata(t testing.TB, sub, name string) []byte {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(testdataDir(t, sub), name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
+}
+
+// checkCorpus parses every testdata/<sub>/*.json: names starting with ok must
+// parse, names starting with bad must fail, others (and EXCLUDE files) are ignored.
+func checkCorpus(t *testing.T, sub, ok, bad string) {
+	files, err := filepath.Glob(filepath.Join(testdataDir(t, sub), "*.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,45 +50,21 @@ func TestJSONChecker(t *testing.T) {
 		if strings.Contains(name, "EXCLUDE") {
 			continue
 		}
-		data, err := os.ReadFile(f)
-		if err != nil {
-			t.Fatal(err)
-		}
-		_, err = p.Parse(data)
+		_, err := p.Parse(readTestdata(t, sub, name))
 		switch {
-		case strings.HasPrefix(name, "pass") && err != nil:
+		case strings.HasPrefix(name, ok) && err != nil:
 			t.Errorf("%s: %v", name, err)
-		case strings.HasPrefix(name, "fail") && err == nil:
+		case strings.HasPrefix(name, bad) && err == nil:
 			t.Errorf("%s: parsed, want an error", name)
 		}
 	}
 }
 
+// C++ tests/dom/jsoncheck.cpp
+func TestJSONChecker(t *testing.T) { checkCorpus(t, "jsonchecker", "pass", "fail") }
+
 // C++ tests/dom/minefieldcheck.cpp (JSONTestSuite): y_ must parse, n_ must fail, i_ is ignored.
-func TestMinefield(t *testing.T) {
-	files, err := filepath.Glob(filepath.Join(testdataDir(t, "jsonchecker/minefield"), "*.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(files) == 0 {
-		t.Fatal("no files")
-	}
-	var p Parser
-	for _, f := range files {
-		name := filepath.Base(f)
-		data, err := os.ReadFile(f)
-		if err != nil {
-			t.Fatal(err)
-		}
-		_, err = p.Parse(data)
-		switch {
-		case strings.HasPrefix(name, "y_") && err != nil:
-			t.Errorf("%s: %v", name, err)
-		case strings.HasPrefix(name, "n_") && err == nil:
-			t.Errorf("%s: parsed, want an error", name)
-		}
-	}
-}
+func TestMinefield(t *testing.T) { checkCorpus(t, "jsonchecker/minefield", "y_", "n_") }
 
 // TestExamples parses every jsonexamples file and checks it against
 // encoding/json, the AppendJSON round trip and the Minify round trip
@@ -108,21 +96,43 @@ func TestExamples(t *testing.T) {
 		if diff := sameAsStdlib(doc.Root(), data); diff != "" {
 			t.Errorf("%s: differs from encoding/json: %s", f, diff)
 		}
-		out := doc.Root().AppendJSON(nil)
-		if again, err := q.Parse(out); err != nil || !bytes.Equal(again.Root().AppendJSON(nil), out) {
-			t.Errorf("%s: AppendJSON does not round-trip (%v)", f, err)
-		} else if diff := sameAsStdlib(again.Root(), data); diff != "" {
-			t.Errorf("%s: AppendJSON changed the value: %s", f, diff) // spec §6: Parse(AppendJSON(x)) is an equal tree
+		if diff := roundTripDiff(&q, doc.Root(), data); diff != "" {
+			t.Errorf("%s: %s", f, diff)
 		}
-		min, err := Minify(nil, data)
-		if err != nil {
-			t.Errorf("%s: Minify: %v", f, err)
-			continue
-		}
-		if m, err := q.Parse(min); err != nil || !bytes.Equal(m.Root().AppendJSON(nil), out) {
-			t.Errorf("%s: Minify changed the document (%v)", f, err)
+		if diff := minifyDiff(&q, doc.Root(), data); diff != "" {
+			t.Errorf("%s: %s", f, diff)
 		}
 	}
+}
+
+// roundTripDiff reports how Parse(AppendJSON(e)) differs from data (spec §6:
+// it must be an equal tree, and stable), or "". q is a scratch Parser.
+func roundTripDiff(q *Parser, e Element, data []byte) string {
+	out := e.AppendJSON(nil)
+	again, err := q.Parse(out)
+	switch {
+	case err != nil:
+		return fmt.Sprintf("AppendJSON output %.80q does not parse: %v", out, err)
+	case !bytes.Equal(again.Root().AppendJSON(nil), out):
+		return fmt.Sprintf("AppendJSON output %.80q is not stable", out)
+	}
+	if diff := sameAsStdlib(again.Root(), data); diff != "" {
+		return "AppendJSON changed the value: " + diff
+	}
+	return ""
+}
+
+// minifyDiff reports how Minify(data) parses differently from e, or "".
+func minifyDiff(q *Parser, e Element, data []byte) string {
+	min, err := Minify(nil, data)
+	if err != nil {
+		return fmt.Sprintf("Minify: %v", err)
+	}
+	m, err := q.Parse(min)
+	if err != nil || !bytes.Equal(m.Root().AppendJSON(nil), e.AppendJSON(nil)) {
+		return fmt.Sprintf("Minify output %.80q changed the document (%v)", min, err)
+	}
+	return ""
 }
 
 // sameAsStdlib decodes data with encoding/json (UseNumber) and returns a

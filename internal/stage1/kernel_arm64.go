@@ -44,7 +44,8 @@ func classify(b *[64]byte) masks {
 		op[k] = w.Masked(ops.LookupOrZero(c.Add(three).ShiftAllRight(4)).Equal(c))
 		ctrl[k] = w.Masked(c.Less(lt20))
 	}
-	qb, wo, cc := pack(q, bs), pack(ws, op), pack(ctrl, ctrl)
+	lc := ladder(ctrl)
+	qb, wo, cc := pack(q, bs), pack(ws, op), lc.ConcatAddPairs(lc).ReshapeToUint64s()
 	return masks{
 		quote: qb.GetElem(0), backslash: qb.GetElem(1),
 		ws: wo.GetElem(0), op: wo.GetElem(1),

@@ -70,11 +70,10 @@ func (b *builder) number(off int) error {
 	if neg {
 		longest = 19
 	}
-	switch {
-	case digits > longest,
-		digits == longest && neg && i > math.MaxInt64+1,
-		digits == longest && !neg && (buf[start] != '1' || i <= math.MaxInt64): // wrapped
-		return b.bigInt(off)
+	if digits > longest ||
+		digits == longest && neg && i > math.MaxInt64+1 ||
+		digits == longest && !neg && (buf[start] != '1' || i <= math.MaxInt64) { // wrapped
+		return b.bigInt(off, p)
 	}
 	if !terminates(buf, p) {
 		return ErrNumber
@@ -90,18 +89,11 @@ func (b *builder) number(off int) error {
 	return nil
 }
 
-// bigInt handles an integer outside int64/uint64: ErrBigInt, or with
-// BigIntAsString its raw digits stored like a string under tagBigInt.
-func (b *builder) bigInt(off int) error {
+// bigInt handles the integer buf[off:p] outside int64/uint64: ErrBigInt, or
+// with BigIntAsString its raw digits stored like a string under tagBigInt.
+func (b *builder) bigInt(off, p int) error {
 	if !b.bigIntAsString {
 		return ErrBigInt
-	}
-	p := off
-	if b.buf[p] == '-' {
-		p++
-	}
-	for p < len(b.buf) && isDigit(b.buf[p]) {
-		p++
 	}
 	if !terminates(b.buf, p) {
 		return ErrNumber

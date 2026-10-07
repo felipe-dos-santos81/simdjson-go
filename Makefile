@@ -12,6 +12,8 @@ count  ?= 6
 # These fuzz targets compare the NEON kernel with the portable one, so they
 # exist only in the NEON build, in internal/stage1.
 NEON_FUZZ = FuzzClassify FuzzUTF8
+FUZZ_ENV  = $(if $(or $(neon),$(filter $(target),$(NEON_FUZZ))),$(SIMD))
+FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,.)
 
 .PHONY: help testdata clean fmt vet check \
         test test-neon test-purego test-amd64 \
@@ -39,12 +41,13 @@ clean: ## Delete the downloaded corpora
 fmt: ## Fail if any file needs gofmt
 	@test -z "$$(gofmt -l .)" || { gofmt -l .; exit 1; }
 
-vet: ## go vet the pure-Go and NEON builds
+vet: ## go vet the pure-Go and NEON builds; type-check 32-bit and wasm
 	$(GO) vet ./...
 	$(SIMD) $(GO) vet ./...
+	GOOS=linux GOARCH=386 $(GO) vet ./...
+	GOOS=wasip1 GOARCH=wasm $(GO) vet ./...
 
-check: testdata ## Full build matrix: gofmt, vet, tests on every build (scripts/check.sh)
-	./scripts/check.sh
+check: fmt vet test test-purego test-neon test-amd64 ## Full build matrix (spec §8.4); run before committing
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -63,11 +66,10 @@ test-amd64: testdata ## Test as amd64, via Rosetta 2 on Apple silicon [short=1]
 # ── Fuzzing and benchmarks ───────────────────────────────────────────────────
 
 fuzz: ## Fuzz one target [target=FuzzParse time=60s neon=1]
-	$(if $(or $(neon),$(filter $(target),$(NEON_FUZZ))),$(SIMD) )$(GO) test -run '^$$' -fuzz '^$(target)$$' -fuzztime $(time) \
-		$(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,.)
+	$(FUZZ_ENV) $(GO) test -run '^$$' -fuzz '^$(target)$$' -fuzztime $(time) $(FUZZ_PKG)
 
 bench: testdata ## Run benchmarks [bench=regex count=6 neon=1 out=file]
-	$(if $(neon),$(SIMD) )$(GO) test -run '^$$' -bench '$(or $(bench),.)' -count $(count) . \
+	$(if $(neon),$(SIMD)) $(GO) test -run '^$$' -bench '$(or $(bench),.)' -count $(count) . \
 		$(if $(out),> $(out) && cat $(out))
 
 benchstat: ## Compare two benchmark files [old=a.txt new=b.txt]

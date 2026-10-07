@@ -20,7 +20,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `parser.go`, `tape.go`, `errors.go` | `Parser`, `Document`, tape tags, sentinel errors |
 | `element.go`, `pointer.go`, `serialize.go` | DOM API, JSON Pointer, `AppendJSON` and `Minify` |
 | `*_test.go` | Unit, corpus (`corpus_test.go`), fuzz (`fuzz_test.go`) and benchmark tests |
-| `scripts/` | `fetch-testdata.sh` (pinned corpora), `check.sh` (build matrix) |
+| `scripts/fetch-testdata.sh` | Downloads the pinned corpora (`make testdata`) |
 
 ## Commands
 
@@ -36,7 +36,7 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 
 ## When you change code
 
-- Run `make check`. It covers pure Go, `-tags purego`, NEON, amd64 (under Rosetta), and vet for linux/386 and wasip1/wasm.
+- Run `make check`. It runs gofmt, vet (including linux/386 and wasip1/wasm) and the tests on pure Go, `-tags purego`, NEON and amd64 (under Rosetta).
 - **A stage 1 kernel change** must keep the NEON and portable kernels bit-identical. Run `make fuzz target=FuzzClassify` and `make fuzz target=FuzzUTF8`.
 - **A parsing change** needs `make fuzz target=FuzzParse` (both builds) and the corpus tests passing.
 - **If a fuzzer fails, investigate the parser first.** Do not loosen the oracle in `fuzz_test.go` to make it pass. Each adjustment the oracle makes to `encoding/json` models a documented difference from C++.
@@ -47,5 +47,5 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 
 - **Literal `\u` escapes in tests.** Test inputs such as `` `"é"` `` must keep the backslash. Some editors and tools decode them to `é`, which silently weakens the test. Check with `grep -c 'u00e9'`.
 - **`archsimd` shift direction.** `x.ConcatShiftBytesRight(y, n)` treats `y` as the low half. The byte k positions before `in[i]` is `in.ConcatShiftBytesRight(prev, 16-k)[i]`.
-- **Depth.** Empty `[]` and `{}` don't count toward `MaxDepth`, as in C++. `MaxDepth` is capped at 1<<20 to keep the recursion in `AppendJSON` and `AtPointer` within Go's stack.
+- **Depth.** Empty `[]` and `{}` don't count toward `MaxDepth`, as in C++. Nothing recurses per nesting level (`AppendJSON` and `AtPointer` walk the tape iteratively); keep it that way so a raised `MaxDepth` cannot overflow the stack.
 - **Tape counts.** A container's element count saturates at 0xFFFFFF. `Len()` then walks the tape, so never read the count field directly.

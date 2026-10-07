@@ -1,7 +1,7 @@
 package simdjson
 
 import (
-	"errors"
+	"strconv"
 	"testing"
 )
 
@@ -56,8 +56,7 @@ func TestAtPointer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		e, err := mustParse(t, tt.doc).AtPointer(tt.ptr)
-		if !errors.Is(err, tt.err) || (tt.err == nil) != (err == nil) {
-			t.Errorf("%q: err = %v, want %v", tt.ptr, err, tt.err)
+		if !checkErr(t, strconv.Quote(tt.ptr), err, tt.err) {
 			continue
 		}
 		if err == nil {

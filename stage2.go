@@ -119,7 +119,7 @@ objectContinue:
 		}
 		goto objectField
 	case '}':
-		b.endContainer(tagStartObject, tagEndObject)
+		b.endContainer()
 		goto scopeEnd
 	}
 	return ErrTape
@@ -162,7 +162,7 @@ arrayContinue:
 		b.stack[len(b.stack)-1].count++
 		goto arrayValue
 	case ']':
-		b.endContainer(tagStartArray, tagEndArray)
+		b.endContainer()
 		goto scopeEnd
 	}
 	return ErrTape
@@ -190,10 +190,7 @@ func (b *builder) push(isArray bool) error {
 // c, without opening a scope (C++ visit_empty_array/visit_empty_object), and
 // reports whether it did. Bracket bytes are their own tape tags.
 func (b *builder) empty(c byte) bool {
-	end := byte(']')
-	if c == '{' {
-		end = '}'
-	}
+	end := closer(c)
 	if b.peek() != end {
 		return false
 	}
@@ -203,11 +200,24 @@ func (b *builder) empty(c byte) bool {
 	return true
 }
 
-// endContainer writes the closing word (pointing at the opening one) and the
-// opening word (index after the closing word, element count saturated to 24 bits).
-func (b *builder) endContainer(start, end byte) {
+// closer returns the byte (and tape tag) that closes an array or object.
+func closer(open byte) byte {
+	if open == '{' {
+		return '}'
+	}
+	return ']'
+}
+
+// endContainer closes the innermost scope: it writes the closing word
+// (pointing at the opening one) and the opening word (index after the closing
+// word, element count saturated to 24 bits).
+func (b *builder) endContainer() {
 	s := b.stack[len(b.stack)-1]
-	b.tape = append(b.tape, word(end, uint64(s.tapeIndex)))
+	start := byte(tagStartObject)
+	if s.isArray {
+		start = tagStartArray
+	}
+	b.tape = append(b.tape, word(closer(start), uint64(s.tapeIndex)))
 	count := min(s.count, 0xFFFFFF)
 	b.tape[s.tapeIndex] = word(start, uint64(count)<<32|uint64(len(b.tape)))
 }

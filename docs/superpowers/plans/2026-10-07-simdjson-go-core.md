@@ -20,7 +20,7 @@
 - The tape format is identical to C++ `doc/tape.md`: an 8-bit tag above a 56-bit payload; tags `r [ { ] } " l u d t f n Z`; strings stored as a 4-byte little-endian length, the bytes and a `0x00`.
 - Errors are sentinel values, one per reachable C++ `error_code`, matched with `errors.Is`; which error a bad input yields matches C++ simdjson v5.0.2.
 - `Parse` never copies, retains, modifies or reads past `len(b)` of its input; no padding is required.
-- `MaxDepth` 0 or negative means 1024, values above 1<<20 are capped; at most `MaxDepth−1` nested non-empty arrays/objects; empty `[]`/`{}` do not count.
+- `MaxDepth` 0 or negative means 1024; at most `MaxDepth−1` nested non-empty arrays/objects; empty `[]`/`{}` do not count.
 - `len(b) > 0xFFFFFFFC` → `ErrCapacity` (keeps 32-bit tape indices; C++ allows 0xFFFFFFFF); a leading UTF-8 BOM (`EF BB BF`) is skipped.
 - Test corpora come from `github.com/simdjson/simdjson-data` @ `351949906abde446f0314bf79606fb5d884f5be7` via `scripts/fetch-testdata.sh` into gitignored `testdata/`; corpus tests `t.Fatal` (never skip) when the data is missing.
 - Ship `LICENSE` (Apache-2.0) and `LICENSE-MIT` copied from C++ simdjson, plus `NOTICE`.

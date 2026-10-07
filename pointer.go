@@ -8,33 +8,32 @@ import (
 // AtPointer returns the value at the RFC 6901 JSON Pointer ptr, relative to
 // e. Port of the C++ DOM at_pointer methods, including their error codes.
 func (e Element) AtPointer(ptr string) (Element, error) {
-	if ptr == "" {
-		return e, nil
-	}
-	if ptr[0] != '/' {
-		return Element{}, ErrInvalidJSONPointer
-	}
-	token, rest := ptr[1:], ""
-	if i := strings.IndexByte(token, '/'); i >= 0 {
-		token, rest = token[:i], token[i:]
-	}
-	var child Element
-	var err error
-	switch e.tag() {
-	case tagStartObject:
-		child, err = Object{e}.pointerChild(token)
-	case tagStartArray:
-		child, err = Array{e}.pointerChild(token, rest == "")
-	default:
-		if pointerWellFormed(ptr) { // descending into a scalar (simdjson issue 2154)
-			return Element{}, ErrNoSuchField
+	for ptr != "" {
+		if ptr[0] != '/' {
+			return Element{}, ErrInvalidJSONPointer
 		}
-		return Element{}, ErrInvalidJSONPointer
+		token, rest := ptr[1:], ""
+		if i := strings.IndexByte(token, '/'); i >= 0 {
+			token, rest = token[:i], token[i:]
+		}
+		var err error
+		switch e.tag() {
+		case tagStartObject:
+			e, err = Object{e}.pointerChild(token)
+		case tagStartArray:
+			e, err = Array{e}.pointerChild(token, rest == "")
+		default:
+			if pointerWellFormed(ptr) { // descending into a scalar (simdjson issue 2154)
+				return Element{}, ErrNoSuchField
+			}
+			return Element{}, ErrInvalidJSONPointer
+		}
+		if err != nil {
+			return Element{}, err
+		}
+		ptr = rest
 	}
-	if err != nil || rest == "" {
-		return child, err
-	}
-	return child.AtPointer(rest)
+	return e, nil
 }
 
 // pointerChild returns the field named by the (still ~-escaped) pointer token.
@@ -79,10 +78,11 @@ func (a Array) pointerChild(token string, last bool) (Element, error) {
 
 // unescapePointerToken replaces ~0 with ~ and ~1 with /. Any other use of ~ is invalid.
 func unescapePointerToken(s string) (string, bool) {
-	b := make([]byte, 0, len(s))
+	var b strings.Builder
+	b.Grow(len(s))
 	for i := 0; i < len(s); i++ {
 		if s[i] != '~' {
-			b = append(b, s[i])
+			b.WriteByte(s[i])
 			continue
 		}
 		if i+1 == len(s) {
@@ -90,23 +90,20 @@ func unescapePointerToken(s string) (string, bool) {
 		}
 		switch s[i+1] {
 		case '0':
-			b = append(b, '~')
+			b.WriteByte('~')
 		case '1':
-			b = append(b, '/')
+			b.WriteByte('/')
 		default:
 			return "", false
 		}
 		i++
 	}
-	return string(b), true
+	return b.String(), true
 }
 
-// pointerWellFormed is C++ is_pointer_well_formed: a leading '/' and a valid
-// first ~ escape. ptr must be non-empty.
+// pointerWellFormed is C++ is_pointer_well_formed for a pointer already known
+// to start with '/': its first ~ escape must be valid.
 func pointerWellFormed(ptr string) bool {
-	if ptr[0] != '/' {
-		return false
-	}
 	i := strings.IndexByte(ptr, '~')
 	return i < 0 || i+1 < len(ptr) && (ptr[i+1] == '0' || ptr[i+1] == '1')
 }

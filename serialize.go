@@ -9,32 +9,49 @@ import (
 )
 
 // AppendJSON appends e as minified JSON to dst. Parsing the output yields an
-// equal tree, including element types.
+// equal tree, including element types. It walks the tape in order without
+// recursion, so nesting depth is limited only by memory.
 func (e Element) AppendJSON(dst []byte) []byte {
+	type open struct {
+		object bool
+		n      int // values written so far (keys count too)
+	}
+	var buf [32]open
+	stack := buf[:0]
+	for i, end := e.i, e.next(); i < end; {
+		v := Element{e.doc, i}
+		tag := v.tag()
+		if tag == tagEndArray || tag == tagEndObject {
+			dst = append(dst, tag)
+			stack = stack[:len(stack)-1]
+			i++
+			continue
+		}
+		if len(stack) > 0 {
+			top := &stack[len(stack)-1]
+			switch {
+			case top.object && top.n%2 == 1:
+				dst = append(dst, ':') // after a key
+			case top.n > 0:
+				dst = append(dst, ',')
+			}
+			top.n++
+		}
+		if tag == tagStartArray || tag == tagStartObject {
+			dst = append(dst, tag)
+			stack = append(stack, open{object: tag == tagStartObject})
+			i++
+			continue
+		}
+		dst = v.appendScalar(dst)
+		i = v.next()
+	}
+	return dst
+}
+
+// appendScalar appends a value that is not an array or object.
+func (e Element) appendScalar(dst []byte) []byte {
 	switch e.tag() {
-	case tagStartArray:
-		dst = append(dst, '[')
-		first := true
-		for v := range e.items() {
-			if !first {
-				dst = append(dst, ',')
-			}
-			first = false
-			dst = v.AppendJSON(dst)
-		}
-		return append(dst, ']')
-	case tagStartObject:
-		dst = append(dst, '{')
-		first := true
-		for k, v := range (Object{e}).fields() {
-			if !first {
-				dst = append(dst, ',')
-			}
-			first = false
-			dst = append(appendQuoted(dst, k), ':')
-			dst = v.AppendJSON(dst)
-		}
-		return append(dst, '}')
 	case tagString:
 		return appendQuoted(dst, e.rawString())
 	case tagBigInt:

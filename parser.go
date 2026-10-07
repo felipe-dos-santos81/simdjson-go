@@ -15,9 +15,6 @@ const (
 	// every tape index within 32 bits. C++ allows 0xFFFFFFFF bytes and then
 	// truncates indices for the densest documents.
 	maxSize = 0xFFFFFFFF - 3
-	// maxMaxDepth keeps AppendJSON's and AtPointer's recursion well inside
-	// Go's 1 GB stack limit.
-	maxMaxDepth = 1 << 20
 )
 
 var bom = []byte{0xEF, 0xBB, 0xBF}
@@ -40,7 +37,7 @@ type Document struct {
 type Parser struct {
 	// MaxDepth limits nesting: at most MaxDepth-1 non-empty arrays/objects
 	// may be nested (empty ones do not count, as in C++). 0 or negative means
-	// 1024; values above 1<<20 are treated as 1<<20.
+	// 1024.
 	MaxDepth int
 	// BigIntAsString stores integers that fit neither int64 nor uint64 as
 	// TypeBigInt (their raw digits) instead of failing with ErrBigInt.
@@ -67,7 +64,7 @@ func (p *Parser) Parse(b []byte) (*Document, error) {
 	bd := builder{
 		buf:            b,
 		idx:            p.indices,
-		tape:           slices.Grow(p.doc.tape[:0], len(b)+3),
+		tape:           slices.Grow(p.doc.tape[:0], 2*len(p.indices)+2), // ≤ 2 words per structural, plus the root words
 		strs:           slices.Grow(p.doc.strings[:0], 5*len(b)/3+64),
 		stack:          p.stack[:0],
 		maxDepth:       p.MaxDepth,
@@ -76,7 +73,6 @@ func (p *Parser) Parse(b []byte) (*Document, error) {
 	if bd.maxDepth <= 0 {
 		bd.maxDepth = defaultMaxDepth
 	}
-	bd.maxDepth = min(bd.maxDepth, maxMaxDepth)
 	err = bd.walk()
 	p.doc.tape, p.doc.strings, p.stack = bd.tape, bd.strs, bd.stack
 	if err != nil {

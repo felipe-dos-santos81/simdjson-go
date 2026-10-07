@@ -197,9 +197,8 @@ func TestMaxDepth(t *testing.T) {
 		{nest(1024, "[]"), ErrDepth},
 		{[]byte(strings.Repeat(`{"a":`, 1024) + "1" + strings.Repeat("}", 1024)), ErrDepth},
 	} {
-		if _, err := p.Parse(tt.in); !errors.Is(err, tt.want) || (tt.want == nil) != (err == nil) {
-			t.Errorf("depth case %.20q...: err = %v, want %v", tt.in, err, tt.want)
-		}
+		_, err := p.Parse(tt.in)
+		checkErr(t, fmt.Sprintf("depth case %.20q...", tt.in), err, tt.want)
 	}
 	p.MaxDepth = 3
 	if _, err := p.Parse([]byte(`{"a":[1]}`)); err != nil {
@@ -210,20 +209,22 @@ func TestMaxDepth(t *testing.T) {
 	}
 }
 
-// A huge MaxDepth is clamped to 1<<20 so that AppendJSON's recursion cannot
-// overflow Go's (fatal, unrecoverable) stack limit.
-func TestMaxDepthCeiling(t *testing.T) {
+// Nothing recurses per nesting level, so a deep document parses, serializes
+// and resolves pointers without exhausting the goroutine stack.
+func TestDeepNesting(t *testing.T) {
+	const depth = 1 << 21
 	p := Parser{MaxDepth: math.MaxInt}
-	in := nest(1<<20-1, "1")
+	in := nest(depth, "1")
 	doc, err := p.Parse(in)
 	if err != nil {
-		t.Fatalf("depth 1<<20-1: %v", err)
+		t.Fatal(err)
 	}
 	if got := doc.Root().AppendJSON(nil); string(got) != string(in) {
 		t.Errorf("AppendJSON round trip differs (len %d, want %d)", len(got), len(in))
 	}
-	if _, err := p.Parse(nest(1<<20, "1")); !errors.Is(err, ErrDepth) {
-		t.Errorf("depth 1<<20: err = %v, want ErrDepth", err)
+	v, err := doc.Root().AtPointer(strings.Repeat("/0", depth))
+	if n, _ := v.Int64(); err != nil || n != 1 {
+		t.Errorf("AtPointer = %d, %v", n, err)
 	}
 }
 

@@ -39,14 +39,9 @@ func FuzzParse(f *testing.F) {
 		if diff := sameAsStdlib(doc.Root(), in); diff != "" {
 			t.Fatalf("Parse(%q) differs from encoding/json: %s", in, diff)
 		}
-		out := doc.Root().AppendJSON(nil)
 		var q Parser
-		again, err := q.Parse(out)
-		if err != nil || !bytes.Equal(again.Root().AppendJSON(nil), out) {
-			t.Fatalf("AppendJSON(%q) = %q does not round-trip (%v)", in, out, err)
-		}
-		if diff := sameAsStdlib(again.Root(), in); diff != "" {
-			t.Fatalf("AppendJSON(%q) = %q changed the value: %s", in, out, diff)
+		if diff := roundTripDiff(&q, doc.Root(), in); diff != "" {
+			t.Fatalf("Parse(%q): %s", in, diff)
 		}
 	})
 }
@@ -62,13 +57,8 @@ func FuzzMinify(f *testing.F) {
 		if err != nil {
 			return
 		}
-		min, err := Minify(nil, in)
-		if err != nil {
-			t.Fatalf("Minify(%q): %v", in, err)
-		}
-		m, err := q.Parse(min)
-		if err != nil || !bytes.Equal(m.Root().AppendJSON(nil), doc.Root().AppendJSON(nil)) {
-			t.Fatalf("Minify(%q) = %q changed the document (%v)", in, min, err)
+		if diff := minifyDiff(&q, doc.Root(), in); diff != "" {
+			t.Fatalf("Minify(%q): %s", in, diff)
 		}
 	})
 }
@@ -98,7 +88,7 @@ func oracleAccepts(in []byte) bool {
 				nonEmpty := dec.More()
 				open = append(open, nonEmpty)
 				if nonEmpty {
-					if depth++; depth > 1023 {
+					if depth++; depth > defaultMaxDepth-1 {
 						return false
 					}
 				}

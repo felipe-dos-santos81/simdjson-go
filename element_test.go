@@ -2,6 +2,7 @@ package simdjson
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strings"
 	"testing"
@@ -18,12 +19,14 @@ func mustParse(t *testing.T, s string) Element {
 	return doc.Root()
 }
 
-// A negative index must be rejected without walking the tape: this array's
-// tape is deliberately truncated, so a walk would panic.
-func TestArrayAtNegativeDoesNotWalk(t *testing.T) {
-	doc := &Document{tape: []uint64{'r' << 56, '['<<56 | 1000}}
-	_, err := Array{Element{doc, 1}}.At(-1)
-	checkErr(t, "At(-1)", err, ErrIndexOutOfBounds)
+// An out-of-range index must be rejected without walking the tape: this
+// array claims 2 elements but its tape is truncated, so a walk would panic.
+func TestArrayAtOutOfRangeDoesNotWalk(t *testing.T) {
+	doc := &Document{tape: []uint64{'r' << 56, '['<<56 | 2<<32 | 1000}}
+	for _, i := range []int{-1, 2, 1000} {
+		_, err := Array{Element{doc, 1}}.At(i)
+		checkErr(t, fmt.Sprintf("At(%d)", i), err, ErrIndexOutOfBounds)
+	}
 }
 
 func mustAt(t *testing.T, a Array, i int) Element {
@@ -35,12 +38,15 @@ func mustAt(t *testing.T, a Array, i int) Element {
 	return e
 }
 
-// checkErr fails unless err matches want (nil means success).
-func checkErr(t *testing.T, name string, err, want error) {
+// checkErr fails unless err matches want (nil means success) and reports
+// whether it did.
+func checkErr(t *testing.T, name string, err, want error) bool {
 	t.Helper()
-	if !errors.Is(err, want) || (want == nil) != (err == nil) {
+	if !errors.Is(err, want) {
 		t.Errorf("%s: err = %v, want %v", name, err, want)
+		return false
 	}
+	return true
 }
 
 func errOf[T any](_ T, err error) error { return err }

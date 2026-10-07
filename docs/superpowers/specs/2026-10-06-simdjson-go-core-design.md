@@ -101,7 +101,7 @@ simdjson-go/
     kernel_purego.go              uses the generic kernel + utf8.Valid  (!arm64 || !goexperiment.simd || purego)
     kernel_arm64.go               NEON classify + lookup4 UTF-8         (arm64 && goexperiment.simd && !purego)
   scripts/fetch-testdata.sh       downloads pinned corpora into testdata/ (gitignored)
-  scripts/check.sh                runs the §8.4 build matrix
+  Makefile                        `make check` runs the §8.4 build matrix
   testdata/                       (generated; see §8.2)
   docs/superpowers/specs/         this file
 ```
@@ -200,7 +200,7 @@ kept on the `Parser` and reused (grow-only).
 package simdjson
 
 type Parser struct {
-    MaxDepth       int  // 0 or negative means 1024 (C++ DEFAULT_MAX_DEPTH); capped at 1<<20
+    MaxDepth       int  // 0 or negative means 1024 (C++ DEFAULT_MAX_DEPTH)
     BigIntAsString bool // integers outside int64/uint64 become TypeBigInt instead of ErrBigInt
     // unexported reusable buffers
 }
@@ -334,7 +334,7 @@ skip.
 (native arm64 NEON locally), `GOARCH=amd64 go test ./...` (pure Go under Rosetta 2),
 `go vet ./...` (plain and `GOEXPERIMENT=simd`), `gofmt -l`, and type-checking for non-tuned platforms with
 `GOOS=linux GOARCH=386 go vet ./...` and `GOOS=wasip1 GOARCH=wasm go vet ./...` (darwin/386
-does not exist, so 32-bit tests cannot run locally). `scripts/check.sh` runs all of these.
+does not exist, so 32-bit tests cannot run locally). `make check` runs all of these.
 
 ### 8.5 Benchmarks
 
@@ -354,7 +354,6 @@ configuration, alongside `BenchmarkStdlib/<file>` (`encoding/json.Unmarshal` int
 | 9 ISA kernels | NEON + pure Go | Scope decision: arm64 is the tuned target; others are correct but scalar |
 | `number_as_string` | `Parser.BigIntAsString` | Only affects big integers in DOM; clearer name |
 | `SIMDJSON_MAXSIZE_BYTES` = 0xFFFFFFFF | `ErrCapacity` above 0xFFFFFFFC bytes | The tape (≤ `len(b)+3` words) keeps 32-bit indices; C++ truncates them for the densest inputs at its limit |
-| `max_depth` unbounded | `MaxDepth` capped at 1<<20 | `AppendJSON` and `AtPointer` recurse per level; an unbounded depth can exhaust Go's 1 GB stack (fatal, unrecoverable) |
 | Pointer array index wraps around on uint64 overflow | `ErrIndexOutOfBounds` | Wrapping can silently select a real element |
 
 ## 10. Risks
