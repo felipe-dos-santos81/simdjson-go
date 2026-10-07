@@ -32,6 +32,9 @@ var isStructuralOrSpace = [256]bool{
 // Past the last index it returns 0, like the C++ unpadded sentinel.
 func (b *builder) advance() (byte, int) {
 	if b.pos >= len(b.idx) {
+		// Every current caller fails on the 0 byte, but counting the overrun
+		// keeps it safe regardless: documentEnd requires pos == len(idx), so a
+		// walk that read past the end is never accepted.
 		b.pos++
 		return 0, len(b.buf)
 	}

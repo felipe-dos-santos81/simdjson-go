@@ -46,10 +46,13 @@ func BenchmarkStdlib(b *testing.B) {
 
 func BenchmarkIndex(b *testing.B) {
 	data := readTestdata(b, "jsonexamples", "twitter.json")
-	var idx []uint32
+	idx, err := stage1.Index(data, nil) // warm up: grow idx once
+	if err != nil {
+		b.Fatal(err)
+	}
 	b.SetBytes(int64(len(data)))
+	b.ReportAllocs()
 	for b.Loop() {
-		var err error
 		if idx, err = stage1.Index(data, idx); err != nil {
 			b.Fatal(err)
 		}
@@ -58,10 +61,13 @@ func BenchmarkIndex(b *testing.B) {
 
 func BenchmarkMinify(b *testing.B) {
 	data := readTestdata(b, "jsonexamples", "twitter.json")
-	var dst []byte
+	dst, err := Minify(nil, data) // warm up: grow dst once
+	if err != nil {
+		b.Fatal(err)
+	}
 	b.SetBytes(int64(len(data)))
+	b.ReportAllocs()
 	for b.Loop() {
-		var err error
 		if dst, err = Minify(dst[:0], data); err != nil {
 			b.Fatal(err)
 		}

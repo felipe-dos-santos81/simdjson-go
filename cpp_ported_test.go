@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"math/rand/v2"
 	"strconv"
 	"strings"
 	"testing"
@@ -148,19 +149,13 @@ func TestUnpaddedMalformedAtomsAtEnd(t *testing.T) {
 	}
 }
 
-// xorshift64, the C++ rng of unpadded_tests.cpp.
-type xorshift struct{ s uint64 }
+// rng generates the documents of C++ random_documents. C++ uses xorshift64;
+// any uniform source exercises the same document shapes.
+type rng struct{ *rand.Rand }
 
-func (r *xorshift) next() uint64 {
-	r.s ^= r.s << 13
-	r.s ^= r.s >> 7
-	r.s ^= r.s << 17
-	return r.s
-}
+func (r rng) below(n uint32) uint32 { return r.Uint32N(n) }
 
-func (r *xorshift) below(n uint32) uint32 { return uint32(r.next() % uint64(n)) }
-
-func (r *xorshift) genString(b *strings.Builder) {
+func (r rng) genString(b *strings.Builder) {
 	b.WriteByte('"')
 	for n, i := r.below(24), uint32(0); i < n; i++ {
 		switch r.below(9) {
@@ -187,7 +182,7 @@ func (r *xorshift) genString(b *strings.Builder) {
 	b.WriteByte('"')
 }
 
-func (r *xorshift) genNumber(b *strings.Builder) {
+func (r rng) genNumber(b *strings.Builder) {
 	switch r.below(6) {
 	case 0:
 		fmt.Fprint(b, r.below(1000000))
@@ -202,11 +197,11 @@ func (r *xorshift) genNumber(b *strings.Builder) {
 	case 4:
 		b.WriteString("0")
 	default:
-		fmt.Fprint(b, r.next())
+		fmt.Fprint(b, r.Uint64())
 	}
 }
 
-func (r *xorshift) genValue(b *strings.Builder, depth int) {
+func (r rng) genValue(b *strings.Builder, depth int) {
 	var choice uint32
 	if depth <= 0 {
 		choice = 3 + r.below(4)
@@ -251,7 +246,7 @@ func (r *xorshift) genValue(b *strings.Builder, depth int) {
 func TestUnpaddedRandomDocuments(t *testing.T) {
 	var p Parser
 	for seed := uint64(1); seed <= 5000; seed++ {
-		r := xorshift{seed * 0x100000001b3}
+		r := rng{rand.New(rand.NewPCG(seed, 0))}
 		var b strings.Builder
 		r.genValue(&b, 4)
 		if e, ok := checkUnpadded(t, &p, b.String(), nil); ok {
@@ -365,10 +360,11 @@ func TestUnpaddedAPI(t *testing.T) {
 // C++ tests/dom/unpadded_tests.cpp: degenerate_inputs, truncated_nested_containers
 // (issue 2815) and truncated_utf8_at_end.
 func TestUnpaddedTruncated(t *testing.T) {
-	tests := []struct {
+	type errCase struct {
 		in   string
 		want error
-	}{
+	}
+	tests := []errCase{
 		// degenerate_inputs
 		{"", ErrEmpty}, {" ", ErrEmpty}, {"   ", ErrEmpty}, {"\t\n", ErrEmpty},
 		{"{", ErrTape}, {"[", ErrTape}, {`"`, ErrUnclosedString}, {`"abc`, ErrUnclosedString},
@@ -381,10 +377,7 @@ func TestUnpaddedTruncated(t *testing.T) {
 	// truncated_utf8_at_end: a multi-byte sequence cut off by the end of input.
 	for _, tail := range []string{"\xc3", "\xe0", "\xe0\xa0", "\xf0", "\xf0\x90", "\xf0\x90\x80"} {
 		for _, in := range []string{`["a` + tail, `"a` + tail, `{"a":"b` + tail} {
-			tests = append(tests, struct {
-				in   string
-				want error
-			}{in, ErrUnclosedString})
+			tests = append(tests, errCase{in, ErrUnclosedString})
 		}
 	}
 	var p Parser
@@ -396,12 +389,7 @@ func TestUnpaddedTruncated(t *testing.T) {
 // Not ported from unpadded_tests.cpp: nan_inf_at_end needs the
 // SIMDJSON_ENABLE_NAN_INF build option, which this port does not have.
 
-// C++ tests/dom/basictests.cpp: issue2213
-func TestIssue2213(t *testing.T) {
-	for range 15 {
-		mustParse(t, `[1,2,3,"4", {"a": 5}]`)
-	}
-}
+// C++ basictests.cpp issue2213 (repeated parses) is covered by TestParserReuse.
 
 // parseFloatDoc parses in and returns it as a float64 (C++ get<double>).
 func parseFloatDoc(t *testing.T, p *Parser, in string) (float64, bool) {
@@ -554,84 +542,7 @@ func TestTwitterQueries(t *testing.T) {
 	}
 }
 
-// C++ tests/dom/document_tests.cpp: lots_of_brackets
-func TestLotsOfBrackets(t *testing.T) {
-	mustParse(t, strings.Repeat("[", 200)+strings.Repeat("]", 200))
-}
-
-// C++ tests/dom/document_tests.cpp: skyprophet_test
-func TestSkyprophet(t *testing.T) {
-	const n = 100
-	var data []string
-	for i := range n {
-		gender := "female"
-		if i%2 == 1 {
-			gender = "male"
-		}
-		data = append(data, fmt.Sprintf(`{"id": %d, "name": "name%d", "gender": "%s", "school": {"id": %d, "name": "school%d"}}`,
-			i, i, gender, i%10, i%10))
-	}
-	for i := range n {
-		data = append(data, fmt.Sprintf(`{"counter": %f, "array": [%t]}`, float64(i)*3.1416, i%2 == 1))
-	}
-	for i := range n {
-		data = append(data, fmt.Sprintf(`{"number": %e}`, float64(i)*10000.31321321))
-	}
-	data = append(data, "true", "false", "null", "0.1")
-	var p Parser
-	for _, rec := range data {
-		for range 2 {
-			if _, err := p.Parse([]byte(rec)); err != nil {
-				t.Errorf("Parse(%q): %v", rec, err)
-			}
-		}
-	}
-}
-
-// C++ tests/dom/document_tests.cpp: issue938. C++ prints each element and type;
-// only success is checked.
-func TestIssue938(t *testing.T) {
-	var p1 Parser
-	for _, s := range []string{"[true,false]", "[1,2,3,null]", `{"yay":"json!"}`} {
-		if _, err := p1.Parse([]byte(s)); err != nil {
-			t.Errorf("Parse(%q): %v", s, err)
-		}
-	}
-	files := []string{
-		"small/adversarial.json", "small/flatadversarial.json", "small/demo.json",
-		"twitter_timeline.json", "repeat.json", "small/smalldemo.json", "small/truenull.json",
-	}
-	var p3 Parser
-	for _, reuse := range []bool{false, true} {
-		for _, name := range files {
-			data := readTestdata(t, "jsonexamples", name)
-			p := &p3
-			if !reuse {
-				p = new(Parser)
-			}
-			if _, err := p.Parse(data); err != nil {
-				t.Errorf("%s (reused parser %v): %v", name, reuse, err)
-			}
-		}
-	}
-}
-
-// C++ tests/dom/document_tests.cpp: count_array_example and
-// count_object_example. Their iterator comparisons (<, ==) have no Go
-// equivalent and are not ported.
-func TestCountExamples(t *testing.T) {
-	a, err := mustParse(t, "[1,2,3]").Array()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if a.Len() != 3 {
-		t.Errorf("array Len = %d, want 3", a.Len())
-	}
-	o, err := mustParse(t, `{"1":1,"2":1,"3":1}`).Object()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if o.Len() != 3 {
-		t.Errorf("object Len = %d, want 3", o.Len())
-	}
-}
+// Covered elsewhere, so not repeated here (C++ tests/dom/document_tests.cpp):
+// lots_of_brackets by TestMaxDepth, skyprophet_test and issue938 by
+// TestParserReuse and TestUnpaddedRealFiles, count_array_example and
+// count_object_example by TestArray and TestObject.
