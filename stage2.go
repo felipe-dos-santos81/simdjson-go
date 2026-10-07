@@ -191,7 +191,7 @@ func (b *builder) endContainer() {
 	s := b.stack[len(b.stack)-1]
 	b.stack = b.stack[:len(b.stack)-1]
 	b.tape = append(b.tape, word(closer(s.open), uint64(s.tapeIndex)))
-	count := min(s.count, 0xFFFFFF)
+	count := min(s.count, saturated)
 	b.tape[s.tapeIndex] = word(s.open, uint64(count)<<32|uint64(len(b.tape)))
 }
 

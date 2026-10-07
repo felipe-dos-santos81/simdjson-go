@@ -13,8 +13,8 @@ import (
 // recursion, so nesting depth is limited only by memory.
 func (e Element) AppendJSON(dst []byte) []byte {
 	type open struct {
-		object bool
-		n      int // values written so far (keys count too)
+		object   bool
+		nonEmpty bool // an element or field was written: the next needs a comma
 	}
 	var buf [32]open
 	stack := buf[:0]
@@ -29,13 +29,16 @@ func (e Element) AppendJSON(dst []byte) []byte {
 		}
 		if len(stack) > 0 {
 			top := &stack[len(stack)-1]
-			switch {
-			case top.object && top.n%2 == 1:
-				dst = append(dst, ':') // after a key
-			case top.n > 0:
+			if top.nonEmpty {
 				dst = append(dst, ',')
 			}
-			top.n++
+			top.nonEmpty = true
+			if top.object { // v is a key (one tape word): write it, then its value
+				dst = append(appendQuoted(dst, v.rawString()), ':')
+				i++
+				v = Element{e.doc, i}
+				tag = v.tag()
+			}
 		}
 		if tag == tagStartArray || tag == tagStartObject {
 			dst = append(dst, tag)

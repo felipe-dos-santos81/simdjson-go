@@ -89,6 +89,11 @@ func Index(buf []byte, idx []uint32) ([]uint32, error) {
 	if len(buf) == 0 {
 		return idx, ErrEmpty
 	}
+	if cap(idx) == 0 {
+		// Real documents have one structural per 7 to 44 bytes, so this rarely
+		// grows, while reserving an eighth of the one-per-byte worst case.
+		idx = make([]uint32, 0, len(buf)/8+64)
+	}
 	var (
 		s    scanner
 		u    utf8Checker
