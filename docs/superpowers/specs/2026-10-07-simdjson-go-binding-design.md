@@ -99,7 +99,7 @@ of 1024 for direct `Parse` calls.
 
 **Mechanics:** `Unmarshal` takes a `Parser{MaxDepth: 10001, BigIntAsString: true, binding: true}`
 from a `sync.Pool` (a depth of 10001 because the parser counts the root; 10,000 nested levels
-pass) and returns it afterwards, unless it grew past 1 MiB of tape or 8 MiB of strings. Decoded
+pass) and returns it afterwards, unless it grew past 1 Mi tape words (8 MiB) or 8 MiB of strings. Decoded
 values never alias the parser's buffers (strings and bytes are copied; short strings go through a
 per-parser 256-entry cache, as in v2). Each Go type's decoder and encoder are built on first use
 and cached in a `sync.Map`.
@@ -290,5 +290,5 @@ Files adapted from the Go source say so in a header and are covered by `LICENSE-
 | v2 behaviour changes between Go releases | Tests compare against the installed v2, so drift fails loudly; this spec pins Go 1.27 |
 | A precedence rule of §6 is missed for some type | The fuzzers try every type of the suite against v2 |
 | Binding-mode checks slow plain parsing | Measured: +2.6%, bounded by §1 criterion 4 |
-| Pooled parsers or buffers keep large memory alive | Parsers over 1 MiB of tape or 8 MiB of strings, and `Marshal` buffers over 8 MiB, are dropped instead of pooled |
+| Pooled parsers or buffers keep large memory alive | Parsers over 1 Mi tape words (8 MiB) or 8 MiB of strings, and `Marshal` buffers over 8 MiB, are dropped instead of pooled |
 | Reflection overhead caps decoding speed | Accepted at the speeds of §1; per-kind `unsafe` fast paths are the next step if a service needs more |

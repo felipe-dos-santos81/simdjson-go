@@ -24,7 +24,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `options.go`, `typeplan.go` | Data binding: options, the per-type codec cache, struct field plans (adapted from v2's `fields.go`) |
 | `decode.go`, `encode.go`, `indent.go` | `Unmarshal`, `Marshal`/`MarshalAppend`, `MarshalIndent` |
 | `methods.go`, `time.go`, `strcache.go` | `MarshalJSON`/`UnmarshalJSON`/text methods, `time.Time`, the string cache |
-| `*_test.go` | Unit, corpus (`corpus_test.go`), fuzz (`fuzz_test.go`) and benchmark tests; data binding against v2 in `bind_test.go`, `bind_fuzz_test.go`, `bind_bench_test.go` |
+| `*_test.go` | Unit, corpus (`corpus_test.go`), fuzz (`fuzz_test.go`) and benchmark tests; data binding against v2 in `bind_test.go`, `bind_fuzz_test.go`, `bind_bench_test.go`; stage 2 binding mode in `binding_test.go` |
 | `scripts/fetch-testdata.sh` | Downloads the pinned corpora (`make testdata`) |
 
 ## Commands
@@ -41,7 +41,7 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 
 ## When you change code
 
-- Run `make check`. It runs gofmt, vet (including linux/386 and wasip1/wasm) and the tests on pure Go, `-tags purego`, NEON and amd64 (under Rosetta).
+- Run `make check`. It runs gofmt, vet (including linux/386 and wasip1/wasm) and the tests on pure Go, `-tags purego`, NEON and amd64 (under Rosetta), and ends with a `-race` run (`make test-race`).
 - **A stage 1 kernel change** must keep the NEON and portable kernels bit-identical. Run `make fuzz target=FuzzClassify` and `make fuzz target=FuzzUTF8`.
 - **A parsing change** needs `make fuzz target=FuzzParse` (both builds) and the corpus tests passing.
 - **A data binding change** needs `make fuzz target=FuzzUnmarshal` and `make fuzz target=FuzzMarshal`. If they fail, fix the binding: do not loosen `sameUnmarshal`/`sameMarshal` in `bind_test.go`.

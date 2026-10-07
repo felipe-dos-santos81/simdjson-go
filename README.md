@@ -40,6 +40,8 @@ out := doc.Root().AppendJSON(nil) // minified JSON
 - **`Minify(dst, src)`** removes whitespace without parsing.
 - **Errors** are sentinel values (`ErrTape`, `ErrNumber`, `ErrDepth`, …), one per C++ error code. Check them with `errors.Is`.
 
+**Lifetime:** a `Document` and everything read from it stay valid until the next `Parse` on the same `Parser`, including a call that fails. A `Parser` is not safe for concurrent use. A `Document` can be read from several goroutines as long as no `Parse` runs at the same time.
+
 ### Data binding
 
 ```go
@@ -55,9 +57,7 @@ out, err := simdjson.Marshal(&u)
 
 `Unmarshal`, `Marshal`, `MarshalAppend` and `MarshalIndent` have the semantics of `encoding/json/v2` under its default options: exact name matching, duplicate names rejected, invalid UTF-8 rejected, `[]`/`{}` for nil slices and maps. Errors are v2's `*jsontext.SyntacticError` and `*json.SemanticError`. Struct tags use v2's syntax (`omitempty`, `omitzero`, `string`, `case:ignore`, `embed`; `format:` is not supported), and `MarshalJSON`/`UnmarshalJSON`/text methods are honoured. Options turn on the v1 behaviours services rely on: `MatchCaseInsensitiveNames`, `FormatNilSliceAsNull`, `FormatNilMapAsNull`, `Deterministic`, `RejectUnknownMembers`.
 
-One difference: invalid JSON is always a `SyntacticError`, because the whole input is validated before decoding, where v2 may first report a semantic error it meets earlier.
-
-**Lifetime:** a `Document` and everything read from it stay valid until the next `Parse` on the same `Parser`, including a call that fails. A `Parser` is not safe for concurrent use. A `Document` can be read from several goroutines as long as no `Parse` runs at the same time.
+One difference: invalid JSON is always a `SyntacticError`, because the whole input is validated before decoding, where v2 may first report a semantic error it meets earlier. Not supported: the `io.Reader`/`io.Writer` forms, `MarshalerTo`/`UnmarshalerFrom` methods, the `format:` tag option, `embed` of anything but a struct, v2 options other than the five above, and `ByteOffset` in errors (always 0).
 
 ## Builds
 
