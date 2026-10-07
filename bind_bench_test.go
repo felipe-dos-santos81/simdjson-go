@@ -103,7 +103,8 @@ func BenchmarkV2Unmarshal(b *testing.B) {
 	b.Run("canada", func(b *testing.B) { benchBind[benchCanada](b, "canada.json", v2) })
 }
 
-// TestBenchTypesMatchV2 keeps the benchmarks honest: both decode the same.
+// TestBenchTypesMatchV2 keeps the benchmarks honest: both decode the same,
+// and our Marshal output equals v2's.
 func TestBenchTypesMatchV2(t *testing.T) {
 	check := func(file string, a, b any) {
 		data := readTestdata(t, "jsonexamples", file)
@@ -113,10 +114,26 @@ func TestBenchTypesMatchV2(t *testing.T) {
 		if err := jsonv2.Unmarshal(data, b); err != nil {
 			t.Fatal(file, err)
 		}
-		x, _ := jsonv2.Marshal(a, jsonv2.Deterministic(true))
-		y, _ := jsonv2.Marshal(b, jsonv2.Deterministic(true))
+		x, err := jsonv2.Marshal(a, jsonv2.Deterministic(true))
+		if err != nil {
+			t.Fatal(file, err)
+		}
+		y, err := jsonv2.Marshal(b, jsonv2.Deterministic(true))
+		if err != nil {
+			t.Fatal(file, err)
+		}
 		if string(x) != string(y) {
 			t.Errorf("%s: decoded values differ", file)
+		}
+		z, err := Marshal(b, Deterministic(true))
+		if err != nil {
+			t.Fatal(file, err)
+		}
+		if string(z) != string(y) {
+			t.Errorf("%s: Marshal output differs from v2", file)
+		}
+		if len(y) < 1000 {
+			t.Errorf("%s: only %d bytes re-encoded from %d", file, len(y), len(data))
 		}
 	}
 	check("twitter.json", new(benchTwitter), new(benchTwitter))
