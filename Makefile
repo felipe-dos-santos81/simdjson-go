@@ -1,17 +1,16 @@
-# simdjson-go — Go port of the simdjson JSON parser.
-# Builds: pure Go (default), NEON (GOEXPERIMENT=simd, arm64), portable forced (-tags purego).
+# simdjson-go: Go port of the simdjson parser, with encoding/json/v2-style binding.
+# Builds: pure Go (default), NEON (GOEXPERIMENT=simd, arm64), forced portable (-tags purego).
 PROJECT = simdjson-go
 
 GO        = go
 SIMD      = GOEXPERIMENT=simd
-# Dev tooling only, pinned; the library itself stays standard-library only.
+# Dev tooling only, pinned; the library stays standard-library only.
 BENCHSTAT = $(GO) run golang.org/x/perf/cmd/benchstat@v0.0.0-20260929162123-406019bb8b68
 target ?= FuzzParse
 time   ?= 60s
 count  ?= 6
 
-# These fuzz targets compare the NEON kernel with the portable one, so they
-# exist only in the NEON build, in internal/stage1.
+# NEON-vs-portable fuzz targets: NEON build only, in internal/stage1.
 NEON_FUZZ = FuzzClassify FuzzUTF8
 FUZZ_ENV  = $(if $(or $(neon),$(filter $(target),$(NEON_FUZZ))),$(SIMD))
 FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,.)
@@ -23,7 +22,7 @@ FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,.)
 # ── Setup ────────────────────────────────────────────────────────────────────
 
 help: ## Show this help
-	@printf '\033[01;32m${PROJECT} — Go port of the simdjson JSON parser\033[00;37m\n\n'
+	@printf '\033[01;32m${PROJECT}\033[00;37m\n\n'
 	@printf "\033[33mUsage:\033[0m\n  make [target] [arg=\"val\"...]\n\n\033[33mTargets:\033[0m\n"
 	@grep -E '^[-a-zA-Z0-9_\.\/]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; \
@@ -42,29 +41,29 @@ clean: ## Delete the downloaded corpora
 fmt: ## Fail if any file needs gofmt
 	@test -z "$$(gofmt -l .)" || { gofmt -l .; exit 1; }
 
-vet: ## go vet the pure-Go and NEON builds; type-check 32-bit and wasm
+vet: ## Vet pure Go and NEON; type-check 386 and wasm
 	$(GO) vet ./...
 	$(SIMD) $(GO) vet ./...
 	GOOS=linux GOARCH=386 $(GO) vet ./...
 	GOOS=wasip1 GOARCH=wasm $(GO) vet ./...
 
-check: fmt vet test test-purego test-neon test-amd64 test-race ## Full build matrix (spec §8.4); run before committing
+check: fmt vet test test-purego test-neon test-amd64 test-race ## Everything; run before committing
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
-test: testdata ## Test the pure-Go build [short=1]
+test: testdata ## Pure-Go build [short=1]
 	$(GO) test $(if $(short),-short) ./...
 
-test-neon: testdata ## Test the NEON build [short=1]
+test-neon: testdata ## NEON build [short=1]
 	$(SIMD) $(GO) test $(if $(short),-short) ./...
 
-test-purego: testdata ## Test with -tags purego [short=1]
+test-purego: testdata ## -tags purego [short=1]
 	$(GO) test -tags purego $(if $(short),-short) ./...
 
-test-amd64: testdata ## Test as amd64, via Rosetta 2 on Apple silicon [short=1]
+test-amd64: testdata ## amd64 (Rosetta 2 on Apple silicon) [short=1]
 	GOARCH=amd64 $(GO) test $(if $(short),-short) ./...
 
-test-race: testdata ## Test with the race detector (short mode)
+test-race: testdata ## Race detector, short mode
 	$(GO) test -race -short ./...
 
 # ── Fuzzing and benchmarks ───────────────────────────────────────────────────
@@ -72,7 +71,7 @@ test-race: testdata ## Test with the race detector (short mode)
 fuzz: ## Fuzz one target [target=FuzzParse time=60s neon=1]
 	$(FUZZ_ENV) $(GO) test -run '^$$' -fuzz '^$(target)$$' -fuzztime $(time) $(FUZZ_PKG)
 
-bench: testdata ## Run benchmarks [bench=regex count=6 neon=1 out=file]
+bench: testdata ## Benchmarks [bench=regex count=6 neon=1 out=file]
 	$(if $(neon),$(SIMD)) $(GO) test -run '^$$' -bench '$(or $(bench),.)' -count $(count) . \
 		$(if $(out),> $(out) && cat $(out))
 

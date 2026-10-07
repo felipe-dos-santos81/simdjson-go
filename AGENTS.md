@@ -32,9 +32,9 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 ```sh
 make test         # pure-Go build; fetches the corpora into testdata/ on first run
 make test-neon    # NEON build (GOEXPERIMENT=simd)
-make check        # gofmt, vet and tests on every build; must pass before committing
-make fuzz target=FuzzParse time=60s
-make bench neon=1
+make check        # gofmt, vet, tests on every build, race; must pass before committing
+make fuzz target=FuzzParse time=60s       # or FuzzUnmarshal, FuzzMarshal, FuzzClassify, FuzzUTF8
+make bench neon=1 bench=Unmarshal/        # binding benchmarks sit beside their v2 equivalents
 ```
 
 Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates about 0.5 GB.
@@ -55,4 +55,6 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 - **`archsimd` shift direction.** `x.ConcatShiftBytesRight(y, n)` treats `y` as the low half. The byte k positions before `in[i]` is `in.ConcatShiftBytesRight(prev, 16-k)[i]`.
 - **Depth.** Empty `[]` and `{}` don't count toward `MaxDepth`, as in C++ (but they do in binding mode, as in v2). The parser and DOM never recurse per nesting level (`AppendJSON` and `AtPointer` walk the tape iteratively); keep it that way so a raised `MaxDepth` cannot overflow the stack. The binding codecs do recurse, as v2's do, bounded by v2's depth limit of 10,000.
 - **Binding mode.** `Parser.binding` (set only by `Unmarshal`) makes stage 2 record input offsets and repeated names. Keep every binding-only step behind `if b.binding`, so plain `Parse` and its tape stay as C++ defines them.
+- **Duplicate-name hashing.** `checkNames` (stage 2) hashes names with seeded `hash/maphash`. A cheaper unseeded or prefix/suffix hash lets crafted or ordinary input (same-length URLs, timestamps) make `Unmarshal` quadratic; `TestCollidingNames` guards it.
+- **Benchmark noise.** Speed bars (binding spec §1) are ratios against v2 or against `main`; twitter `Unmarshal` sits near its 1.4× bar. On a loaded machine, compare in the same binary or alternate old/new test binaries run by run, and record `uptime`.
 - **Tape counts.** A container's element count saturates at 0xFFFFFF (`saturated`), and `Len()` then walks the tape. Read the count field only through `Element.exactCount`, which says whether it is exact.
