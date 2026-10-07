@@ -335,9 +335,9 @@ does not exist, so 32-bit tests cannot run locally). `scripts/check.sh` runs all
 
 ### 8.5 Benchmarks
 
-`BenchmarkParse/<file>` over `jsonexamples/` (`b.SetBytes(len)`; reports GB/s) for each build
+`BenchmarkParse/<file>` over six `jsonexamples/` files (`b.SetBytes(len)`; reports MB/s) for each build
 configuration, alongside `BenchmarkStdlib/<file>` (`encoding/json.Unmarshal` into `any`), plus
-`BenchmarkStage1` and `BenchmarkMinify`. Results are compared with `benchstat`.
+`BenchmarkIndex` (stage 1) and `BenchmarkMinify`. Results are compared with `benchstat`.
 
 ## 9. Deviations from C++ (summary)
 
