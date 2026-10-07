@@ -17,7 +17,7 @@ FUZZ_ENV  = $(if $(or $(neon),$(filter $(target),$(NEON_FUZZ))),$(SIMD))
 FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,.)
 
 .PHONY: help testdata clean fmt vet check \
-        test test-neon test-purego test-amd64 \
+        test test-neon test-purego test-amd64 test-race \
         fuzz bench benchstat
 
 # ── Setup ────────────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ vet: ## go vet the pure-Go and NEON builds; type-check 32-bit and wasm
 	GOOS=linux GOARCH=386 $(GO) vet ./...
 	GOOS=wasip1 GOARCH=wasm $(GO) vet ./...
 
-check: fmt vet test test-purego test-neon test-amd64 ## Full build matrix (spec §8.4); run before committing
+check: fmt vet test test-purego test-neon test-amd64 test-race ## Full build matrix (spec §8.4); run before committing
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -63,6 +63,9 @@ test-purego: testdata ## Test with -tags purego [short=1]
 
 test-amd64: testdata ## Test as amd64, via Rosetta 2 on Apple silicon [short=1]
 	GOARCH=amd64 $(GO) test $(if $(short),-short) ./...
+
+test-race: testdata ## Test with the race detector (short mode)
+	$(GO) test -race -short ./...
 
 # ── Fuzzing and benchmarks ───────────────────────────────────────────────────
 
