@@ -208,11 +208,18 @@ func (d *decodeState) firstDup(o Element) int {
 	}
 	k, _ := slices.BinarySearch(d.doc.dups, uint32(o.i))
 	end := o.next()
-	for ; k < len(d.doc.dups) && int(d.doc.dups[k]) < end; k++ {
-		for name := range (Object{o}).keyIndices() {
-			if name == int(d.doc.dups[k]) {
-				return name
-			}
+	if k == len(d.doc.dups) || int(d.doc.dups[k]) >= end {
+		return -1 // no repeated name anywhere inside o
+	}
+	for name := range (Object{o}).keyIndices() {
+		for k < len(d.doc.dups) && int(d.doc.dups[k]) < name {
+			k++
+		}
+		if k == len(d.doc.dups) || int(d.doc.dups[k]) >= end {
+			return -1
+		}
+		if int(d.doc.dups[k]) == name {
+			return name
 		}
 	}
 	return -1

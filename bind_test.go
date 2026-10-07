@@ -258,6 +258,34 @@ func TestUnmarshalReusesParsers(t *testing.T) {
 	}
 }
 
+// TestManyObjectsWithDuplicates decodes an object with many members that each
+// repeat a name inside: finding the outer object's own duplicate must stay
+// linear.
+func TestManyObjectsWithDuplicates(t *testing.T) {
+	var b strings.Builder
+	b.WriteString("{")
+	for i := range 100000 {
+		if i > 0 {
+			b.WriteString(",")
+		}
+		fmt.Fprintf(&b, `"k%d":{"a":1,"a":2}`, i)
+	}
+	b.WriteString("}")
+	in := []byte(b.String())
+	start := time.Now()
+	var v any
+	err := Unmarshal(in, &v)
+	if elapsed := time.Since(start); elapsed > 2*time.Second {
+		t.Errorf("Unmarshal of %d bytes took %v", len(in), elapsed)
+	}
+	if errClass(err) != "syntactic:duplicate" {
+		t.Errorf("err = %v, want a duplicate-name error", err)
+	}
+	if d := sameUnmarshal([]byte(`[{"a":1},{"b":{"c":1,"c":2}}]`), reflect.TypeFor[[]map[string]any]()); d != "" {
+		t.Error(d)
+	}
+}
+
 func TestMarshalMatchesV2(t *testing.T) {
 	ts := time.Date(2026, 10, 7, 12, 0, 0, 500, time.FixedZone("x", 2*3600))
 	in := Inner{X: 1, Y: "y"}
