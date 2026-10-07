@@ -9,11 +9,17 @@ import (
 
 func isDigit(c byte) bool { return c-'0' < 10 }
 
+// maxExp10 bounds the decimal exponents number passes to decimalToFloat64: past
+// ±maxExp10 every 19-digit significand underflows to ±0 (below -345) or
+// overflows (above 310), so larger exponents need not be kept exactly.
+const maxExp10 = 400
+
 // number parses the number at buf[off] and appends it to the tape. Port of
 // parse_number (include/simdjson/generic/numberparsing.h). While checking the
 // JSON grammar it collects a float's significand (up to 19 significant digits)
-// and decimal exponent for decimalToFloat64; longer significands fall back to
-// strconv.ParseFloat. Both fail only on overflow to ±Inf, which C++ also rejects.
+// and decimal exponent for decimalToFloat64; a float whose dropped digits are
+// not all zeros falls back to strconv.ParseFloat. Both fail only on overflow to
+// ±Inf, which C++ also rejects.
 func (b *builder) number(off int) error {
 	buf := b.buf
 	p := off
@@ -67,9 +73,9 @@ func (b *builder) number(off int) error {
 		}
 		expStart, e := p, int64(0)
 		for p < len(buf) && isDigit(buf[p]) {
-			// Saturate above maxSize+400: leading fraction zeros can lower exp10
-			// by up to maxSize, and an exponent must still be able to cancel them.
-			if e <= maxSize+400 {
+			// Saturate above maxSize+maxExp10: leading fraction zeros can lower
+			// exp10 by up to maxSize, and an exponent must still cancel them.
+			if e <= maxSize+maxExp10 {
 				e = 10*e + int64(buf[p]-'0')
 			}
 			p++
@@ -93,9 +99,9 @@ func (b *builder) number(off int) error {
 			f, err = strconv.ParseFloat(unsafe.String(&buf[off], p-off), 64)
 			ok = err == nil
 		} else {
-			// decimalToFloat64 already maps |exp10| > 345 to ±0 or overflow; the
-			// clamp only keeps the int64 exponent within int on 32-bit builds.
-			f, ok = decimalToFloat64(mant, int(max(-400, min(400, exp10))), neg)
+			// Clamping to ±maxExp10 keeps the result (see maxExp10) and the
+			// int64 exponent within int on 32-bit builds.
+			f, ok = decimalToFloat64(mant, int(max(-maxExp10, min(maxExp10, exp10))), neg)
 		}
 		if !ok {
 			return ErrNumber

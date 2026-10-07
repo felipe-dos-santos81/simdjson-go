@@ -115,7 +115,7 @@ tiny surface. Stage 2, tape and DOM share unexported types, so they live in the 
 
 ```
 Parse(b []byte)
-  └─ stage1.Index(b, &p.indices) ── for each 64-byte block (last partial block copied into a
+  └─ stage1.Index(b, p.indices) ─── for each 64-byte block (last partial block copied into a
   │                                 [64]byte filled with spaces):
   │        classify(block) → masks{backslash, quote, ws, op, ctrl}
   │        scanner: escapes (odd-backslash carry), in-string = prefix_xor(quote) ^ carry,
@@ -177,8 +177,10 @@ stage 1 copies only the final partial block into a padded stack buffer (as C++
   - Any number with `.` or `e/E` is a float. While validating it, stage 2 collects up to 19
     significant digits and the decimal exponent and converts them with `decimalToFloat64`, a
     port of the Go standard library's unrounded-scaling `parseFloat64` (`fastfloat.go`,
-    `pow10tab.go`; BSD, see `LICENSE-GO`). Longer significands fall back to
-    `strconv.ParseFloat` on the validated bytes. Results are bit-identical to
+    `pow10tab.go`; BSD, see `LICENSE-GO`). When a dropped digit is non-zero (a significand
+    longer than 19 significant digits, or an integer part longer than 19 digits) it falls back
+    to `strconv.ParseFloat` on the validated bytes; dropped zeros do not change the value.
+    Results are bit-identical to
     `strconv.ParseFloat`. Result ±Inf → `ErrNumber`. Underflow yields ±0 / subnormals, as C++.
 
 ### 5.6 Tape format (identical to C++ `doc/tape.md`)
@@ -199,7 +201,8 @@ Buffers are pre-sized and written with `append`, so an estimate miss costs a rea
 never a bug; they are kept on the `Parser` and reused (grow-only). The tape reserves
 `min(len(b)+3, 2·structurals+2)` words: C++'s `len(b)+3` bound, tightened by the structural
 count stage 1 found (at most 2 words per structural plus the 2 root words). The structural
-index grows on demand; strings reserve `5*len(b)/3 + 64` bytes.
+index starts at `len(b)/8 + 64` entries (the corpus has 3 to 44 bytes per structural) and
+grows on demand; strings reserve `5*len(b)/3 + 64` bytes.
 
 ## 6. Public API
 

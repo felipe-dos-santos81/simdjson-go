@@ -41,3 +41,10 @@ func TestTapeBound(t *testing.T) {
 		t.Errorf("maxSize %#x lets tape indices overflow 32 bits", uint64(maxSize))
 	}
 }
+
+// Stage 2 writes a container's opening and closing bytes as its tape tags.
+func TestBracketsAreTags(t *testing.T) {
+	if tagStartArray != '[' || tagEndArray != ']' || tagStartObject != '{' || tagEndObject != '}' {
+		t.Fatal("bracket bytes and tape tags differ")
+	}
+}

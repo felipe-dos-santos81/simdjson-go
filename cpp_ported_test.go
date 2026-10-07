@@ -148,7 +148,8 @@ func TestUnpaddedMalformedAtomsAtEnd(t *testing.T) {
 	}
 }
 
-// xorshift64, the C++ rng of unpadded_tests.cpp.
+// xorshift64, the C++ rng of unpadded_tests.cpp (same next, modulo-biased below
+// and seeding: random_documents uses rng(seed * 0x100000001b3)).
 type xorshift struct{ s uint64 }
 
 func (r *xorshift) next() uint64 {

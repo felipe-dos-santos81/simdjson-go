@@ -33,7 +33,7 @@ func FuzzParse(f *testing.F) {
 		if err != nil {
 			return
 		}
-		if n := tapeWords(len(in), len(p.indices)); len(doc.tape) > n { // a larger tape would allocate
+		if n := tapeWords(len(bytes.TrimPrefix(in, bom)), len(p.indices)); len(doc.tape) > n { // a larger tape would allocate
 			t.Fatalf("Parse(%q): %d tape words, bound %d", in, len(doc.tape), n)
 		}
 		if diff := sameAsStdlib(doc.Root(), in); diff != "" {

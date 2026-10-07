@@ -10,6 +10,10 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md` (read it first).
 
+**Status:** executed. This plan is the record of the original implementation; the code has since
+changed through reviews (see `git log`), so where its code blocks differ from the repository,
+the repository and the spec are current.
+
 **How the code in this plan was checked:** every code block below was compiled and tested in a scratch copy of this module on Go 1.27.1. It passed on pure Go (arm64), the NEON build and pure Go amd64 under Rosetta 2. On 72,718 inputs (the corpora, hand-written edge cases, random and mutated documents), its parse result and error code matched C++ simdjson v5.0.2. It was fuzzed (about 10M `FuzzParse` and 13M `FuzzClassify` executions without a finding), and the task order below was dry-run one task at a time. Copy code exactly; if something fails, the plan is wrong, so stop and report rather than improvise.
 
 ## Global Constraints

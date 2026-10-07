@@ -119,7 +119,7 @@ value: // c, off start a value: the root, an object field's value or an array el
 		}
 		goto arrayBegin
 	}
-	if err = b.primitive(c, off, len(b.stack) == 0); err != nil {
+	if err = b.primitive(c, off); err != nil {
 		return err
 	}
 
@@ -198,7 +198,8 @@ func (b *builder) endContainer() {
 // primitive parses a string, number or atom. Inside arrays and objects C++
 // visit_primitive tests (c - '0') < 10 in int arithmetic, so every byte below
 // '0' goes to the number parser (NUMBER_ERROR); at the root it is a TAPE_ERROR.
-func (b *builder) primitive(c byte, off int, root bool) error {
+func (b *builder) primitive(c byte, off int) error {
+	root := len(b.stack) == 0
 	switch {
 	case c == '"':
 		return b.str(off)

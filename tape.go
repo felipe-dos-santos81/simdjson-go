@@ -59,5 +59,9 @@ const (
 	tagBigInt      = 'Z'
 )
 
+// saturated is the ceiling of the 24-bit element count in an array's or
+// object's opening word: larger counts are stored as saturated.
+const saturated = 0xFFFFFF
+
 // word builds a tape word: an 8-bit tag above a 56-bit payload.
 func word(tag byte, payload uint64) uint64 { return uint64(tag)<<56 | payload }

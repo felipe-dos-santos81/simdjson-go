@@ -49,4 +49,4 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 - **Literal `\u` escapes in tests.** Test inputs such as `` `"é"` `` must keep the backslash. Some editors and tools decode them to `é`, which silently weakens the test. Check with `grep -c 'u00e9'`.
 - **`archsimd` shift direction.** `x.ConcatShiftBytesRight(y, n)` treats `y` as the low half. The byte k positions before `in[i]` is `in.ConcatShiftBytesRight(prev, 16-k)[i]`.
 - **Depth.** Empty `[]` and `{}` don't count toward `MaxDepth`, as in C++. Nothing recurses per nesting level (`AppendJSON` and `AtPointer` walk the tape iteratively); keep it that way so a raised `MaxDepth` cannot overflow the stack.
-- **Tape counts.** A container's element count saturates at 0xFFFFFF. `Len()` then walks the tape, so never read the count field directly.
+- **Tape counts.** A container's element count saturates at 0xFFFFFF (`saturated`), and `Len()` then walks the tape. Read the count field only through `Element.exactCount`, which says whether it is exact.

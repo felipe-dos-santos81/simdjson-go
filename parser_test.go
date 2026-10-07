@@ -171,7 +171,8 @@ func TestParseErrors(t *testing.T) {
 	for _, tt := range tests {
 		var p Parser
 		doc, err := p.Parse([]byte(tt.in))
-		if checkErr(t, strconv.Quote(tt.in), err, tt.want) && doc != nil {
+		checkErr(t, strconv.Quote(tt.in), err, tt.want)
+		if doc != nil {
 			t.Errorf("Parse(%q) returned a document with an error", tt.in)
 		}
 	}

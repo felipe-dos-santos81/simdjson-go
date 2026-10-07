@@ -180,22 +180,20 @@ func (e Element) items() iter.Seq[Element] {
 	}
 }
 
-// saturated is the tape's element-count ceiling: counts from it upward read as it.
-const saturated = 0xFFFFFF
-
-// count returns the element or field count stored in an array's or object's
-// opening word, which saturates at the saturated constant.
-func (e Element) count() int {
+// exactCount returns the element or field count stored in an array's or
+// object's opening word, and whether it is exact: it saturates at saturated.
+func (e Element) exactCount() (n int, ok bool) {
 	if e.doc == nil {
-		return 0
+		return 0, true
 	}
-	return int(e.doc.tape[e.i] >> 32 & saturated)
+	n = int(e.doc.tape[e.i] >> 32 & saturated)
+	return n, n < saturated
 }
 
 // length returns the number of elements (perItem 1) or fields (perItem 2,
 // a key and a value), walking the tape only when the stored count saturated.
 func (e Element) length(perItem int) int {
-	if n := e.count(); n < saturated {
+	if n, ok := e.exactCount(); ok {
 		return n
 	}
 	n := 0
@@ -226,8 +224,10 @@ func (a Array) All() iter.Seq2[int, Element] {
 
 // At returns element i, walking the tape (O(i)).
 func (a Array) At(i int) (Element, error) {
-	// Reject out-of-range i without walking (a saturated count only bounds it).
-	if n := a.e.count(); i < 0 || n < saturated && i >= n {
+	if i < 0 {
+		return Element{}, ErrIndexOutOfBounds
+	}
+	if n, ok := a.e.exactCount(); ok && i >= n { // rejected without walking
 		return Element{}, ErrIndexOutOfBounds
 	}
 	for k, v := range a.All() {
