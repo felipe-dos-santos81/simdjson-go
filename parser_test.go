@@ -178,13 +178,14 @@ func TestParseErrors(t *testing.T) {
 	}
 }
 
+func nest(n int, inner string) []byte {
+	return []byte(strings.Repeat("[", n) + inner + strings.Repeat("]", n))
+}
+
 func TestMaxDepth(t *testing.T) {
 	// Only non-empty arrays/objects count: an empty one is written without
 	// opening a scope (C++ visit_empty_array), so 1024 brackets ending in []
 	// are accepted while 1024 levels around a value are not.
-	nest := func(n int, inner string) []byte {
-		return []byte(strings.Repeat("[", n) + inner + strings.Repeat("]", n))
-	}
 	var p Parser
 	for _, tt := range []struct {
 		in   []byte
@@ -206,6 +207,23 @@ func TestMaxDepth(t *testing.T) {
 	}
 	if _, err := p.Parse([]byte(`[[[1]]]`)); !errors.Is(err, ErrDepth) {
 		t.Errorf("MaxDepth 3, depth 3: err = %v, want ErrDepth", err)
+	}
+}
+
+// A huge MaxDepth is clamped to 1<<20 so that AppendJSON's recursion cannot
+// overflow Go's (fatal, unrecoverable) stack limit.
+func TestMaxDepthCeiling(t *testing.T) {
+	p := Parser{MaxDepth: math.MaxInt}
+	in := nest(1<<20-1, "1")
+	doc, err := p.Parse(in)
+	if err != nil {
+		t.Fatalf("depth 1<<20-1: %v", err)
+	}
+	if got := doc.Root().AppendJSON(nil); string(got) != string(in) {
+		t.Errorf("AppendJSON round trip differs (len %d, want %d)", len(got), len(in))
+	}
+	if _, err := p.Parse(nest(1<<20, "1")); !errors.Is(err, ErrDepth) {
+		t.Errorf("depth 1<<20: err = %v, want ErrDepth", err)
 	}
 }
 
