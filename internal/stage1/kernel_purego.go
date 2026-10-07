@@ -1,3 +1,5 @@
+//go:build !arm64 || !goexperiment.simd || purego
+
 package stage1
 
 import "unicode/utf8"
