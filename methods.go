@@ -27,7 +27,7 @@ func addMethods(c *codec) bool {
 		c.enc = func(s *encodeState, v reflect.Value, mode uint8) error {
 			b, err := v.Addr().Interface().(encoding.TextMarshaler).MarshalText()
 			if err != nil {
-				return textMethodErr(&jsonv2.SemanticError{GoType: t}, err, "MarshalText", false)
+				return marshalTextErr(t, err, "MarshalText")
 			}
 			return s.appendQuoted(t, b)
 		}
@@ -38,7 +38,7 @@ func addMethods(c *codec) bool {
 			b, err := v.Addr().Interface().(encoding.TextAppender).AppendText(s.scratch[:0])
 			s.scratch = b[:0]
 			if err != nil {
-				return textMethodErr(&jsonv2.SemanticError{GoType: t}, err, "AppendText", false)
+				return marshalTextErr(t, err, "AppendText")
 			}
 			return s.appendQuoted(t, b)
 		}
@@ -80,7 +80,7 @@ func addMethods(c *codec) bool {
 				return d.valueErr(e, t, errNonStringValue)
 			}
 			if err := v.Addr().Interface().(encoding.TextUnmarshaler).UnmarshalText(e.rawString()); err != nil {
-				return textMethodErr(d.semanticErr(e, t), err, "UnmarshalText", true)
+				return unmarshalTextErr(d.semanticErr(e, t), err)
 			}
 			return nil
 		}
@@ -118,21 +118,27 @@ func methodErr(err error, method string) error {
 	return err
 }
 
-// textMethodErr is v2's wrapping of an error from a text method: a
-// *SemanticError (or, when decoding, a *SyntacticError) passes through as is;
-// anything else becomes outer's Err.
-func textMethodErr(outer *jsonv2.SemanticError, err error, method string, decoding bool) error {
+// marshalTextErr is v2's wrapping of an error from MarshalText or
+// AppendText: a *SemanticError passes through, anything else is wrapped.
+func marshalTextErr(t reflect.Type, err error, method string) error {
 	err = methodErr(err, method)
-	switch err.(type) {
-	case *jsonv2.SemanticError:
+	if _, ok := err.(*jsonv2.SemanticError); ok {
 		return err
-	case *jsontext.SyntacticError:
-		if decoding {
-			return err
-		}
 	}
-	outer.Err = err
-	return outer
+	return &jsonv2.SemanticError{GoType: t, Err: err}
+}
+
+// unmarshalTextErr is v2's wrapping of an error from UnmarshalText: a
+// *SemanticError or *SyntacticError passes through, anything else becomes
+// outer's Err.
+func unmarshalTextErr(outer *jsonv2.SemanticError, err error) error {
+	switch err := methodErr(err, "UnmarshalText").(type) {
+	case *jsonv2.SemanticError, *jsontext.SyntacticError:
+		return err
+	default:
+		outer.Err = err
+		return outer
+	}
 }
 
 // jsonMethodErr is v2's wrapping of an error from MarshalJSON or

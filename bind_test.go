@@ -170,7 +170,7 @@ var diffInputs = []string{
 	`[]`, `[1]`, `[1,2]`, `[1,2,3]`, `[[1],[2]]`, `[null]`, `[{"q":1,"q":2}]`,
 	`{}`, `{"a":1}`, `{"A":1}`, `{"a":1,"A":2}`, `{"a":1,"a":2}`, `{"zz":1,"zz":2}`, `{"zz":{"x":1,"x":2}}`,
 	`{"1":"a","2":"b"}`, `{"1":"a","01":"b"}`, `{"0":"a","-0":"b"}`, `{"1.5":1,"1.50":2}`, `{"true":1}`,
-	`{"x":1,"Y":"y","z":2}`, `{"A":1,"B":2}`, `{"a":1,"b":2}`, `[1,2,3]`, `[1,2,256]`,
+	`{"x":1,"Y":"y","z":2}`, `{"A":1,"B":2}`, `{"a":1,"b":2}`, `[1,2,256]`,
 	`{"x":1,"Y":"y"}`, `{"x":1,"x":2}`, `{"y":"a","Y":"b"}`, `{"j":true}`, `{"J":true}`, `{"_J-":true}`,
 	`{"g":"1.5","h":"-7"}`, `{"g":1.5}`, `{"h":"07"}`, `{"h":"1e2"}`, `{"g":"-0"}`,
 	`{"d":{"x":3},"e":{"k":{"x":4}},"f":[1,"s",{"t":null}]}`, `{"d":null,"c":[]}`,
@@ -434,34 +434,31 @@ func (m *textErrs) UnmarshalText(b []byte) error {
 // UnmarshalJSON and the text methods are wrapped: type, sentinel and, for
 // SemanticErrors, the JSON Pointer.
 func TestMethodErrorsMatchV2(t *testing.T) {
-	pointer := func(err error) jsontext.Pointer {
-		if se, ok := err.(*jsonv2.SemanticError); ok {
-			return se.JSONPointer
+	sameErr := func(got, want error) bool {
+		pointer := func(err error) jsontext.Pointer {
+			if se, ok := err.(*jsonv2.SemanticError); ok {
+				return se.JSONPointer
+			}
+			return ""
 		}
-		return ""
+		return errClass(got) == errClass(want) && pointer(got) == pointer(want)
+	}
+	type both struct {
+		J jsonErrs `json:"j"`
+		T textErrs `json:"t"`
 	}
 	for _, name := range []string{"", "sem", "syn", "wrapsem", "unsupported", "plain"} {
-		in := []byte(`{"j":"` + name + `","t":"` + name + `"}`)
-		type pair struct {
-			J jsonErrs `json:"j"`
-			T textErrs `json:"t"`
-		}
-		for _, v := range []any{new(struct {
-			J jsonErrs `json:"j"`
-		}), new(struct {
-			T textErrs `json:"t"`
-		}), new(pair)} {
-			got := reflect.New(reflect.TypeOf(v).Elem()).Interface()
-			errWant := jsonv2.Unmarshal(in, v)
-			errGot := Unmarshal(in, got)
-			if errClass(errGot) != errClass(errWant) || pointer(errGot) != pointer(errWant) {
-				t.Errorf("Unmarshal(%s) into %T = %v, v2 %v", in, v, errGot, errWant)
+		for _, in := range []string{`{"j":"` + name + `"}`, `{"t":"` + name + `"}`} {
+			errGot, errWant := Unmarshal([]byte(in), new(both)), jsonv2.Unmarshal([]byte(in), new(both))
+			if !sameErr(errGot, errWant) {
+				t.Errorf("Unmarshal(%s) = %v, v2 %v", in, errGot, errWant)
 			}
 		}
-		for _, v := range []any{jsonErrs{errMethods(name)}, textErrs{errMethods(name)}, map[textErrs]int{{errMethods(name)}: 1}} {
-			_, errWant := jsonv2.Marshal(v)
+		m := errMethods(name)
+		for _, v := range []any{jsonErrs{m}, textErrs{m}, map[textErrs]int{{m}: 1}} {
 			_, errGot := Marshal(v)
-			if errClass(errGot) != errClass(errWant) || pointer(errGot) != pointer(errWant) {
+			_, errWant := jsonv2.Marshal(v)
+			if !sameErr(errGot, errWant) {
 				t.Errorf("Marshal(%#v) = %v, v2 %v", v, errGot, errWant)
 			}
 		}

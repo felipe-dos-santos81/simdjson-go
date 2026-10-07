@@ -569,13 +569,11 @@ func (s *encodeState) appendCanonical(b []byte) error {
 	if bytes.HasPrefix(b, bom) {
 		return &jsontext.SyntacticError{Err: ErrTape}
 	}
-	bd := binders.Get().(*binder)
-	defer putBinder(bd)
 	// The value's own nesting counts toward v2's limit, below the s.depth
-	// levels already open (MaxDepth counts the value itself).
-	bd.p.MaxDepth = maxDepth + 1 - s.depth
+	// levels already open.
+	bd := getBinder(maxDepth - s.depth)
+	defer putBinder(bd)
 	doc, err := bd.p.Parse(b)
-	bd.p.MaxDepth = maxDepth + 1
 	if err != nil {
 		return &jsontext.SyntacticError{Err: err}
 	}

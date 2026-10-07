@@ -32,7 +32,7 @@ func Unmarshal(data []byte, v any, opts ...Option) error {
 	if bytes.HasPrefix(data, bom) { // v2 does not skip a byte-order mark
 		return &jsontext.SyntacticError{Err: ErrTape}
 	}
-	b := binders.Get().(*binder)
+	b := getBinder(maxDepth)
 	defer putBinder(b)
 	doc, err := b.p.Parse(data)
 	if err != nil {
@@ -44,17 +44,24 @@ func Unmarshal(data []byte, v any, opts ...Option) error {
 
 var errNonNilPointer = errors.New("value must be passed as a non-nil pointer reference")
 
-// binder is a Parser in binding mode with its string cache. v2 limits
-// nesting to 10000 levels, counting empty arrays and objects, as binding
-// mode does (MaxDepth counts the root too).
+// binder is a Parser in binding mode with its string cache.
 type binder struct {
 	p    Parser
 	strs stringCache
 }
 
 var binders = sync.Pool{New: func() any {
-	return &binder{p: Parser{MaxDepth: maxDepth + 1, BigIntAsString: true, binding: true}}
+	return &binder{p: Parser{BigIntAsString: true, binding: true}}
 }}
+
+// getBinder takes a binder from the pool, set to allow nesting levels of
+// arrays and objects, empty ones included, as v2 counts them (MaxDepth also
+// counts the root value).
+func getBinder(levels int) *binder {
+	b := binders.Get().(*binder)
+	b.p.MaxDepth = levels + 1
+	return b
+}
 
 // putBinder returns b to the pool unless it grew large, so one big document
 // does not pin its buffers for the life of the process.
