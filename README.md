@@ -36,7 +36,7 @@ out := doc.Root().AppendJSON(nil) // minified JSON
   - `Type`, `Int64`, `Uint64`, `Float64`, `Bool`, `IsNull`, `StringValue`, `StringBytes`, `BigInt`, `Array`, `Object`
   - `AtPointer` (RFC 6901 JSON Pointer)
   - `AppendJSON`, `MarshalJSON`
-- **`Array`**: `Len`, `At`, `All`. **`Object`**: `Len`, `Get` (the first duplicate key wins, as in C++), `All`.
+- **`Array`**: `Len`, `At`, `All`. **`Object`**: `Len`, `Get` (the first duplicate key wins, as in C++), `All` (copies keys), `AllBytes` (zero-copy keys).
 - **`Minify(dst, src)`** removes whitespace without parsing.
 - **Errors** are sentinel values (`ErrTape`, `ErrNumber`, `ErrDepth`, …), one per C++ error code. Check them with `errors.Is`.
 

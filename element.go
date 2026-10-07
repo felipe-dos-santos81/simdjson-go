@@ -221,26 +221,27 @@ type Object struct{ e Element }
 // Len returns the number of fields.
 func (o Object) Len() int { return o.e.length(2) }
 
-// fields iterates over the unescaped keys (not copied) and values.
-func (o Object) fields() iter.Seq2[[]byte, Element] {
+// AllBytes iterates over the fields in document order without copying the
+// keys: they alias the parser's buffer, are valid until the next Parse and
+// must not be modified.
+func (o Object) AllBytes() iter.Seq2[[]byte, Element] {
 	return func(yield func([]byte, Element) bool) {
-		var key []byte
-		isKey := true
-		for v := range o.e.items() {
-			if isKey {
-				key = v.rawString()
-			} else if !yield(key, v) {
+		end := o.e.next() - 1 // the closing '}'
+		for i := o.e.i + 1; i < end; {
+			k, v := Element{o.e.doc, i}, Element{o.e.doc, i + 1} // a key is one tape word
+			if !yield(k.rawString(), v) {
 				return
 			}
-			isKey = !isKey
+			i = v.next()
 		}
 	}
 }
 
-// All iterates over the fields in document order. Keys are copies.
+// All iterates over the fields in document order. Keys are copies; AllBytes
+// avoids the copies.
 func (o Object) All() iter.Seq2[string, Element] {
 	return func(yield func(string, Element) bool) {
-		for k, v := range o.fields() {
+		for k, v := range o.AllBytes() {
 			if !yield(string(k), v) {
 				return
 			}
@@ -250,7 +251,7 @@ func (o Object) All() iter.Seq2[string, Element] {
 
 // Get returns the value of the first field whose unescaped key equals key.
 func (o Object) Get(key string) (Element, error) {
-	for k, v := range o.fields() {
+	for k, v := range o.AllBytes() {
 		if string(k) == key {
 			return v, nil
 		}

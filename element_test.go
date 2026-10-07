@@ -200,6 +200,13 @@ func TestObject(t *testing.T) {
 	for k := range o.All() {
 		keys = append(keys, k)
 	}
+	var byteKeys []string
+	for k := range o.AllBytes() {
+		byteKeys = append(byteKeys, string(k))
+	}
+	if strings.Join(byteKeys, ",") != strings.Join(keys, ",") {
+		t.Errorf("AllBytes keys = %q, All keys = %q", byteKeys, keys)
+	}
 	if strings.Join(keys, ",") != "1,2,3,1,k\u00e9y" {
 		t.Errorf("keys = %q", keys)
 	}

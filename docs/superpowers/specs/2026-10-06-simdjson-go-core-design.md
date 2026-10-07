@@ -252,6 +252,7 @@ type Object struct{ /* unexported */ }
 func (o Object) Len() int                            // same saturation rule as Array.Len
 func (o Object) Get(key string) (Element, error)     // first exact match on unescaped key; ErrNoSuchField
 func (o Object) All() iter.Seq2[string, Element]     // keys are allocated copies (safe to retain)
+func (o Object) AllBytes() iter.Seq2[[]byte, Element] // keys alias the parser buffer (no copies)
 
 // Minify appends src with whitespace outside strings removed. Like C++, it does not
 // validate grammar or UTF-8; it returns ErrUnclosedString for an unterminated string.
