@@ -21,7 +21,10 @@ func (e Element) AtPointer(ptr string) (Element, error) {
 		case tagStartObject:
 			e, err = Object{e}.pointerChild(token)
 		case tagStartArray:
-			e, err = Array{e}.pointerChild(token, rest == "")
+			if token == "-" && rest == "" { // the position after the last element
+				return Element{}, ErrIndexOutOfBounds
+			}
+			e, err = Array{e}.pointerChild(token)
 		default:
 			if pointerWellFormed(ptr) { // descending into a scalar (simdjson issue 2154)
 				return Element{}, ErrNoSuchField
@@ -48,11 +51,8 @@ func (o Object) pointerChild(token string) (Element, error) {
 }
 
 // pointerChild returns the element at the pointer token's index (C++
-// parse_json_pointer_array_index). last reports whether the token ends the pointer.
-func (a Array) pointerChild(token string, last bool) (Element, error) {
-	if token == "-" && last { // the position after the last element
-		return Element{}, ErrIndexOutOfBounds
-	}
+// parse_json_pointer_array_index).
+func (a Array) pointerChild(token string) (Element, error) {
 	if token == "" {
 		return Element{}, ErrInvalidJSONPointer
 	}

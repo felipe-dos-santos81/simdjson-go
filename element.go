@@ -151,12 +151,16 @@ func (e Element) Bool() (bool, error) {
 // IsNull reports whether e is JSON null.
 func (e Element) IsNull() bool { return e.tag() == tagNull }
 
+// span returns the tape range inside an array or object: from its first
+// entry up to (not including) its closing word.
+func (e Element) span() (first, end int) { return e.i + 1, e.next() - 1 }
+
 // items iterates over the tape entries inside an array or object: its
 // elements, or its keys and values alternating.
 func (e Element) items() iter.Seq[Element] {
 	return func(yield func(Element) bool) {
-		end := e.next() - 1 // the closing ']' or '}'
-		for i := e.i + 1; i < end; {
+		i, end := e.span()
+		for i < end {
 			v := Element{e.doc, i}
 			if !yield(v) {
 				return
@@ -226,8 +230,8 @@ func (o Object) Len() int { return o.e.length(2) }
 // must not be modified.
 func (o Object) AllBytes() iter.Seq2[[]byte, Element] {
 	return func(yield func([]byte, Element) bool) {
-		end := o.e.next() - 1 // the closing '}'
-		for i := o.e.i + 1; i < end; {
+		i, end := o.e.span()
+		for i < end { // a direct key/value walk: faster than pairing items()
 			k, v := Element{o.e.doc, i}, Element{o.e.doc, i + 1} // a key is one tape word
 			if !yield(k.rawString(), v) {
 				return

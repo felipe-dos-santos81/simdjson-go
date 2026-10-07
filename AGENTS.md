@@ -5,7 +5,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 ## Ground rules
 
 - **C++ simdjson v5.0.2 is the oracle.** The tape format, the error returned for each bad input, and the edge cases must match C++. Some of those cases look like bugs but are intended, so don't "fix" them: the design spec lists them (§5.5, §9). Change parsing behaviour only together with evidence from C++.
-- **Go 1.27, standard library only.** No cgo, no third-party modules.
+- **Go 1.27, standard library only.** No cgo, no third-party modules in the library or its tests. Dev tooling run through `go run` (the pinned `benchstat` in the Makefile) is the only exception.
 - **The spec is the authority.** Read [`docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`](docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md) before changing behaviour. If the code and the spec disagree, fix one of them in the same change.
 
 ## Layout

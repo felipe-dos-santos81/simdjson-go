@@ -19,6 +19,11 @@ const (
 
 var bom = []byte{0xEF, 0xBB, 0xBF}
 
+// tapeWords bounds the tape of an n-byte document with s structural
+// characters: at most 2 words per structural (numbers) plus the 2 root words,
+// and never more than n+3 (C++'s bound, which commas and colons keep tighter).
+func tapeWords(n, s int) int { return min(n+3, 2*s+2) }
+
 // Document is a parsed JSON document in C++ simdjson's tape format
 // (doc/tape.md). It is owned by the Parser that produced it and, with every
 // Element, Array, Object and string bytes obtained from it, is valid until
@@ -64,7 +69,7 @@ func (p *Parser) Parse(b []byte) (*Document, error) {
 	bd := builder{
 		buf:            b,
 		idx:            p.indices,
-		tape:           slices.Grow(p.doc.tape[:0], 2*len(p.indices)+2), // ≤ 2 words per structural, plus the root words
+		tape:           slices.Grow(p.doc.tape[:0], tapeWords(len(b), len(p.indices))),
 		strs:           slices.Grow(p.doc.strings[:0], 5*len(b)/3+64),
 		stack:          p.stack[:0],
 		maxDepth:       p.MaxDepth,

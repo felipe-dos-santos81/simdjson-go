@@ -1,10 +1,11 @@
 # simdjson-go — Go port of the simdjson JSON parser.
 # Builds: pure Go (default), NEON (GOEXPERIMENT=simd, arm64), portable forced (-tags purego).
-SERVICE = simdjson-go
+PROJECT = simdjson-go
 
 GO        = go
 SIMD      = GOEXPERIMENT=simd
-BENCHSTAT = $(GO) run golang.org/x/perf/cmd/benchstat@latest
+# Dev tooling only, pinned; the library itself stays standard-library only.
+BENCHSTAT = $(GO) run golang.org/x/perf/cmd/benchstat@v0.0.0-20260929162123-406019bb8b68
 target ?= FuzzParse
 time   ?= 60s
 count  ?= 6
@@ -22,7 +23,7 @@ FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,.)
 # ── Setup ────────────────────────────────────────────────────────────────────
 
 help: ## Show this help
-	@printf '\033[01;32m${SERVICE} — Go port of the simdjson JSON parser\033[00;37m\n\n'
+	@printf '\033[01;32m${PROJECT} — Go port of the simdjson JSON parser\033[00;37m\n\n'
 	@printf "\033[33mUsage:\033[0m\n  make [target] [arg=\"val\"...]\n\n\033[33mTargets:\033[0m\n"
 	@grep -E '^[-a-zA-Z0-9_\.\/]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; \

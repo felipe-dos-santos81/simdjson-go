@@ -4,7 +4,7 @@ package simdjson
 type scope struct {
 	tapeIndex uint32 // tape index of the opening word, written when the scope closes
 	count     uint32 // number of elements (arrays) or fields (objects)
-	isArray   bool
+	open      byte   // '[' or '{', which is also the scope's tape tag
 }
 
 // builder is stage 2: it walks the structural indices found by stage 1 and
@@ -64,25 +64,9 @@ func (b *builder) walk() error {
 		c == '[' && last != ']' {
 		return ErrTape
 	}
-	switch c {
-	case '{', '[':
-		if b.empty(c) {
-			goto documentEnd
-		}
-		if c == '{' {
-			goto objectBegin
-		}
-		goto arrayBegin
-	}
-	if err = b.primitive(c, off, true); err != nil {
-		return err
-	}
-	goto documentEnd
+	goto value
 
 objectBegin:
-	if err = b.push(false); err != nil {
-		return err
-	}
 	if c, off = b.advance(); c != '"' {
 		return ErrTape
 	}
@@ -96,19 +80,7 @@ objectField:
 		return ErrTape
 	}
 	c, off = b.advance()
-	switch c {
-	case '{', '[':
-		if b.empty(c) {
-			goto objectContinue
-		}
-		if c == '{' {
-			goto objectBegin
-		}
-		goto arrayBegin
-	}
-	if err = b.primitive(c, off, false); err != nil {
-		return err
-	}
+	goto value
 
 objectContinue:
 	switch c, _ = b.advance(); c {
@@ -123,41 +95,43 @@ objectContinue:
 		goto objectField
 	case '}':
 		b.endContainer()
-		goto scopeEnd
+		b.stack = b.stack[:len(b.stack)-1]
+		goto valueEnd
 	}
 	return ErrTape
 
-scopeEnd:
-	b.stack = b.stack[:len(b.stack)-1]
-	if len(b.stack) == 0 {
-		goto documentEnd
-	}
-	if b.stack[len(b.stack)-1].isArray {
-		goto arrayContinue
-	}
-	goto objectContinue
-
 arrayBegin:
-	if err = b.push(true); err != nil {
-		return err
-	}
 	b.stack[len(b.stack)-1].count++
 
 arrayValue:
 	c, off = b.advance()
+
+value: // c, off start a value: the root, an object field's value or an array element
 	switch c {
 	case '{', '[':
 		if b.empty(c) {
-			goto arrayContinue
+			goto valueEnd
+		}
+		if err = b.push(c); err != nil {
+			return err
 		}
 		if c == '{' {
 			goto objectBegin
 		}
 		goto arrayBegin
 	}
-	if err = b.primitive(c, off, false); err != nil {
+	if err = b.primitive(c, off, len(b.stack) == 0); err != nil {
 		return err
 	}
+
+valueEnd: // continue the enclosing scope, or finish the document
+	if len(b.stack) == 0 {
+		goto documentEnd
+	}
+	if b.stack[len(b.stack)-1].open == '[' {
+		goto arrayContinue
+	}
+	goto objectContinue
 
 arrayContinue:
 	switch c, _ = b.advance(); c {
@@ -166,7 +140,8 @@ arrayContinue:
 		goto arrayValue
 	case ']':
 		b.endContainer()
-		goto scopeEnd
+		b.stack = b.stack[:len(b.stack)-1]
+		goto valueEnd
 	}
 	return ErrTape
 
@@ -180,11 +155,11 @@ documentEnd:
 }
 
 // push opens a scope. Like C++, depth counts open scopes and must stay below maxDepth.
-func (b *builder) push(isArray bool) error {
+func (b *builder) push(open byte) error {
 	if len(b.stack)+1 >= b.maxDepth {
 		return ErrDepth
 	}
-	b.stack = append(b.stack, scope{tapeIndex: uint32(len(b.tape)), isArray: isArray})
+	b.stack = append(b.stack, scope{tapeIndex: uint32(len(b.tape)), open: open})
 	b.tape = append(b.tape, 0) // written by endContainer
 	return nil
 }
@@ -216,13 +191,9 @@ func closer(open byte) byte {
 // word, element count saturated to 24 bits).
 func (b *builder) endContainer() {
 	s := b.stack[len(b.stack)-1]
-	start := byte(tagStartObject)
-	if s.isArray {
-		start = tagStartArray
-	}
-	b.tape = append(b.tape, word(closer(start), uint64(s.tapeIndex)))
+	b.tape = append(b.tape, word(closer(s.open), uint64(s.tapeIndex)))
 	count := min(s.count, 0xFFFFFF)
-	b.tape[s.tapeIndex] = word(start, uint64(count)<<32|uint64(len(b.tape)))
+	b.tape[s.tapeIndex] = word(s.open, uint64(count)<<32|uint64(len(b.tape)))
 }
 
 // primitive parses a string, number or atom. Inside arrays and objects C++

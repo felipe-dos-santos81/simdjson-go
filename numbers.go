@@ -65,14 +65,14 @@ func (b *builder) number(off int) error {
 		if p < len(buf) && (buf[p] == '-' || buf[p] == '+') {
 			p++
 		}
-		exp, e := p, int64(0)
+		expStart, e := p, int64(0)
 		for p < len(buf) && isDigit(buf[p]) {
 			if e < 1e12 { // saturate: far beyond any float, and no int64 overflow
 				e = 10*e + int64(buf[p]-'0')
 			}
 			p++
 		}
-		if p == exp {
+		if p == expStart {
 			return ErrNumber
 		}
 		if expNeg {

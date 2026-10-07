@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"math/rand/v2"
 	"strconv"
 	"strings"
 	"testing"
@@ -149,13 +148,19 @@ func TestUnpaddedMalformedAtomsAtEnd(t *testing.T) {
 	}
 }
 
-// rng generates the documents of C++ random_documents. C++ uses xorshift64;
-// any uniform source exercises the same document shapes.
-type rng struct{ *rand.Rand }
+// xorshift64, the C++ rng of unpadded_tests.cpp.
+type xorshift struct{ s uint64 }
 
-func (r rng) below(n uint32) uint32 { return r.Uint32N(n) }
+func (r *xorshift) next() uint64 {
+	r.s ^= r.s << 13
+	r.s ^= r.s >> 7
+	r.s ^= r.s << 17
+	return r.s
+}
 
-func (r rng) genString(b *strings.Builder) {
+func (r *xorshift) below(n uint32) uint32 { return uint32(r.next() % uint64(n)) }
+
+func (r *xorshift) genString(b *strings.Builder) {
 	b.WriteByte('"')
 	for n, i := r.below(24), uint32(0); i < n; i++ {
 		switch r.below(9) {
@@ -182,7 +187,7 @@ func (r rng) genString(b *strings.Builder) {
 	b.WriteByte('"')
 }
 
-func (r rng) genNumber(b *strings.Builder) {
+func (r *xorshift) genNumber(b *strings.Builder) {
 	switch r.below(6) {
 	case 0:
 		fmt.Fprint(b, r.below(1000000))
@@ -197,11 +202,11 @@ func (r rng) genNumber(b *strings.Builder) {
 	case 4:
 		b.WriteString("0")
 	default:
-		fmt.Fprint(b, r.Uint64())
+		fmt.Fprint(b, r.next())
 	}
 }
 
-func (r rng) genValue(b *strings.Builder, depth int) {
+func (r *xorshift) genValue(b *strings.Builder, depth int) {
 	var choice uint32
 	if depth <= 0 {
 		choice = 3 + r.below(4)
@@ -246,7 +251,7 @@ func (r rng) genValue(b *strings.Builder, depth int) {
 func TestUnpaddedRandomDocuments(t *testing.T) {
 	var p Parser
 	for seed := uint64(1); seed <= 5000; seed++ {
-		r := rng{rand.New(rand.NewPCG(seed, 0))}
+		r := xorshift{seed * 0x100000001b3}
 		var b strings.Builder
 		r.genValue(&b, 4)
 		if e, ok := checkUnpadded(t, &p, b.String(), nil); ok {
@@ -543,6 +548,35 @@ func TestTwitterQueries(t *testing.T) {
 }
 
 // Covered elsewhere, so not repeated here (C++ tests/dom/document_tests.cpp):
-// lots_of_brackets by TestMaxDepth, skyprophet_test and issue938 by
-// TestParserReuse and TestUnpaddedRealFiles, count_array_example and
-// count_object_example by TestArray and TestObject.
+// lots_of_brackets by TestMaxDepth, issue938 by TestParserReuse and
+// TestUnpaddedRealFiles, count_array_example and count_object_example by
+// TestArray and TestObject.
+
+// C++ tests/dom/document_tests.cpp: skyprophet_test
+func TestSkyprophet(t *testing.T) {
+	const n = 100
+	var data []string
+	for i := range n {
+		gender := "female"
+		if i%2 == 1 {
+			gender = "male"
+		}
+		data = append(data, fmt.Sprintf(`{"id": %d, "name": "name%d", "gender": "%s", "school": {"id": %d, "name": "school%d"}}`,
+			i, i, gender, i%10, i%10))
+	}
+	for i := range n {
+		data = append(data, fmt.Sprintf(`{"counter": %f, "array": [%t]}`, float64(i)*3.1416, i%2 == 1))
+	}
+	for i := range n {
+		data = append(data, fmt.Sprintf(`{"number": %e}`, float64(i)*10000.31321321))
+	}
+	data = append(data, "true", "false", "null", "0.1")
+	var p Parser
+	for _, rec := range data {
+		for range 2 {
+			if _, err := p.Parse([]byte(rec)); err != nil {
+				t.Errorf("Parse(%q): %v", rec, err)
+			}
+		}
+	}
+}
