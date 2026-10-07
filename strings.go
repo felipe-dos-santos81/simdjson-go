@@ -17,7 +17,7 @@ func (b *builder) str(off int) error {
 	}
 	binary.LittleEndian.PutUint32(b.strs[start:], uint32(len(b.strs)-start-4))
 	b.strs = append(b.strs, 0)
-	b.tape = append(b.tape, word('"', uint64(start)))
+	b.tape = append(b.tape, word(tagString, uint64(start)))
 	return nil
 }
 

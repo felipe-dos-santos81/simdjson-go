@@ -61,7 +61,7 @@ func (b *builder) number(off int) error {
 		if err != nil || !terminates(buf, p) {
 			return ErrNumber
 		}
-		b.tape = append(b.tape, word('d', 0), math.Float64bits(f))
+		b.tape = append(b.tape, word(tagDouble, 0), math.Float64bits(f))
 		return nil
 	}
 
@@ -81,17 +81,17 @@ func (b *builder) number(off int) error {
 	}
 	switch {
 	case neg:
-		b.tape = append(b.tape, word('l', 0), -i) // two's complement; -2^63 included
+		b.tape = append(b.tape, word(tagInt64, 0), -i) // two's complement; -2^63 included
 	case i > math.MaxInt64:
-		b.tape = append(b.tape, word('u', 0), i)
+		b.tape = append(b.tape, word(tagUint64, 0), i)
 	default:
-		b.tape = append(b.tape, word('l', 0), i)
+		b.tape = append(b.tape, word(tagInt64, 0), i)
 	}
 	return nil
 }
 
 // bigInt handles an integer outside int64/uint64: ErrBigInt, or with
-// BigIntAsString its raw digits stored like a string under tag 'Z'.
+// BigIntAsString its raw digits stored like a string under tagBigInt.
 func (b *builder) bigInt(off int) error {
 	if !b.bigIntAsString {
 		return ErrBigInt
@@ -110,6 +110,6 @@ func (b *builder) bigInt(off int) error {
 	b.strs = binary.LittleEndian.AppendUint32(b.strs, uint32(p-off))
 	b.strs = append(b.strs, b.buf[off:p]...)
 	b.strs = append(b.strs, 0)
-	b.tape = append(b.tape, word('Z', uint64(start)))
+	b.tape = append(b.tape, word(tagBigInt, uint64(start)))
 	return nil
 }

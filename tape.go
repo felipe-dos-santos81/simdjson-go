@@ -6,15 +6,15 @@ type Type byte
 
 // The values of Type, as returned by Element.Type.
 const (
-	TypeArray   Type = '['
-	TypeObject  Type = '{'
-	TypeInt64   Type = 'l'
-	TypeUint64  Type = 'u'
-	TypeFloat64 Type = 'd'
-	TypeString  Type = '"'
-	TypeBool    Type = 't'
-	TypeNull    Type = 'n'
-	TypeBigInt  Type = 'Z'
+	TypeArray   Type = tagStartArray
+	TypeObject  Type = tagStartObject
+	TypeInt64   Type = tagInt64
+	TypeUint64  Type = tagUint64
+	TypeFloat64 Type = tagDouble
+	TypeString  Type = tagString
+	TypeBool    Type = tagTrue
+	TypeNull    Type = tagNull
+	TypeBigInt  Type = tagBigInt
 )
 
 // String returns the C++ element_type name.
@@ -42,12 +42,21 @@ func (t Type) String() string {
 	return "unknown"
 }
 
-// Tape tags that are not value types.
+// Tape tags (C++ doc/tape.md).
 const (
-	tagRoot      = 'r'
-	tagEndArray  = ']'
-	tagEndObject = '}'
-	tagFalse     = 'f'
+	tagRoot        = 'r'
+	tagStartArray  = '['
+	tagEndArray    = ']'
+	tagStartObject = '{'
+	tagEndObject   = '}'
+	tagString      = '"'
+	tagInt64       = 'l'
+	tagUint64      = 'u'
+	tagDouble      = 'd'
+	tagTrue        = 't'
+	tagFalse       = 'f'
+	tagNull        = 'n'
+	tagBigInt      = 'Z'
 )
 
 // word builds a tape word: an 8-bit tag above a 56-bit payload.

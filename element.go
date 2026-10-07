@@ -31,15 +31,15 @@ func (e Element) value() uint64 { return e.doc.tape[e.i+1] } // second word of a
 // next returns the tape index just past e.
 func (e Element) next() int {
 	switch e.tag() {
-	case '[', '{':
+	case tagStartArray, tagStartObject:
 		return int(uint32(e.doc.tape[e.i])) // opening word points past the closing one
-	case 'l', 'u', 'd':
+	case tagInt64, tagUint64, tagDouble:
 		return e.i + 2
 	}
 	return e.i + 1
 }
 
-// rawString returns the bytes of a '"' or 'Z' element in the string buffer.
+// rawString returns the bytes of a string or big-integer element in the string buffer.
 func (e Element) rawString() []byte {
 	off := e.doc.tape[e.i] & (1<<56 - 1)
 	n := uint64(binary.LittleEndian.Uint32(e.doc.strings[off:]))
@@ -56,7 +56,7 @@ func (e Element) Type() Type {
 
 // Array returns e as an Array, or ErrIncorrectType if it is not an array.
 func (e Element) Array() (Array, error) {
-	if e.tag() != '[' {
+	if e.tag() != tagStartArray {
 		return Array{}, ErrIncorrectType
 	}
 	return Array{e}, nil
@@ -64,7 +64,7 @@ func (e Element) Array() (Array, error) {
 
 // Object returns e as an Object, or ErrIncorrectType if it is not an object.
 func (e Element) Object() (Object, error) {
-	if e.tag() != '{' {
+	if e.tag() != tagStartObject {
 		return Object{}, ErrIncorrectType
 	}
 	return Object{e}, nil
@@ -79,7 +79,7 @@ func (e Element) StringValue() (string, error) {
 // StringBytes returns a string value without copying. The bytes alias the
 // parser's buffer: they are valid until the next Parse and must not be modified.
 func (e Element) StringBytes() ([]byte, error) {
-	if e.tag() != '"' {
+	if e.tag() != tagString {
 		return nil, ErrIncorrectType
 	}
 	return e.rawString(), nil
@@ -87,7 +87,7 @@ func (e Element) StringBytes() ([]byte, error) {
 
 // BigInt returns the raw digits of a TypeBigInt value (see Parser.BigIntAsString).
 func (e Element) BigInt() (string, error) {
-	if e.tag() != 'Z' {
+	if e.tag() != tagBigInt {
 		return "", ErrIncorrectType
 	}
 	return string(e.rawString()), nil
@@ -97,9 +97,9 @@ func (e Element) BigInt() (string, error) {
 // most math.MaxInt64 (else ErrNumberOutOfRange). Other types give ErrIncorrectType.
 func (e Element) Int64() (int64, error) {
 	switch e.tag() {
-	case 'l':
+	case tagInt64:
 		return int64(e.value()), nil
-	case 'u':
+	case tagUint64:
 		if v := e.value(); v <= math.MaxInt64 {
 			return int64(v), nil
 		}
@@ -112,9 +112,9 @@ func (e Element) Int64() (int64, error) {
 // negative (else ErrNumberOutOfRange). Other types give ErrIncorrectType.
 func (e Element) Uint64() (uint64, error) {
 	switch e.tag() {
-	case 'u':
+	case tagUint64:
 		return e.value(), nil
-	case 'l':
+	case tagInt64:
 		if v := int64(e.value()); v >= 0 {
 			return uint64(v), nil
 		}
@@ -127,11 +127,11 @@ func (e Element) Uint64() (uint64, error) {
 // give ErrIncorrectType.
 func (e Element) Float64() (float64, error) {
 	switch e.tag() {
-	case 'd':
+	case tagDouble:
 		return math.Float64frombits(e.value()), nil
-	case 'l':
+	case tagInt64:
 		return float64(int64(e.value())), nil
-	case 'u':
+	case tagUint64:
 		return float64(e.value()), nil
 	}
 	return 0, ErrIncorrectType
@@ -140,7 +140,7 @@ func (e Element) Float64() (float64, error) {
 // Bool returns a boolean value, or ErrIncorrectType if e is not a boolean.
 func (e Element) Bool() (bool, error) {
 	switch e.tag() {
-	case 't':
+	case tagTrue:
 		return true, nil
 	case tagFalse:
 		return false, nil
@@ -149,38 +149,16 @@ func (e Element) Bool() (bool, error) {
 }
 
 // IsNull reports whether e is JSON null.
-func (e Element) IsNull() bool { return e.tag() == 'n' }
+func (e Element) IsNull() bool { return e.tag() == tagNull }
 
-// count returns the element count stored in an opening word, saturated at 2^24-1.
-func (e Element) count() int {
-	if e.doc == nil {
-		return 0
-	}
-	return int(e.doc.tape[e.i] >> 32 & 0xFFFFFF)
-}
-
-// Array is a JSON array.
-type Array struct{ e Element }
-
-// Len returns the number of elements.
-func (a Array) Len() int {
-	if n := a.e.count(); n < 0xFFFFFF {
-		return n
-	}
-	n := 0
-	for range a.All() {
-		n++
-	}
-	return n
-}
-
-// All iterates over the elements and their indices.
-func (a Array) All() iter.Seq2[int, Element] {
-	return func(yield func(int, Element) bool) {
-		end := a.e.next() - 1 // the closing ']'
-		for i, k := a.e.i+1, 0; i < end; k++ {
-			v := Element{a.e.doc, i}
-			if !yield(k, v) {
+// items iterates over the tape entries inside an array or object: its
+// elements, or its keys and values alternating.
+func (e Element) items() iter.Seq[Element] {
+	return func(yield func(Element) bool) {
+		end := e.next() - 1 // the closing ']' or '}'
+		for i := e.i + 1; i < end; {
+			v := Element{e.doc, i}
+			if !yield(v) {
 				return
 			}
 			i = v.next()
@@ -188,10 +166,46 @@ func (a Array) All() iter.Seq2[int, Element] {
 	}
 }
 
+// length returns the number of elements (perItem 1) or fields (perItem 2,
+// a key and a value). The count stored in the opening word saturates at
+// 2^24-1; past that the tape is walked.
+func (e Element) length(perItem int) int {
+	if e.doc == nil {
+		return 0
+	}
+	if n := int(e.doc.tape[e.i] >> 32 & 0xFFFFFF); n < 0xFFFFFF {
+		return n
+	}
+	n := 0
+	for range e.items() {
+		n++
+	}
+	return n / perItem
+}
+
+// Array is a JSON array.
+type Array struct{ e Element }
+
+// Len returns the number of elements.
+func (a Array) Len() int { return a.e.length(1) }
+
+// All iterates over the elements and their indices.
+func (a Array) All() iter.Seq2[int, Element] {
+	return func(yield func(int, Element) bool) {
+		k := 0
+		for v := range a.e.items() {
+			if !yield(k, v) {
+				return
+			}
+			k++
+		}
+	}
+}
+
 // At returns element i, walking the tape (O(i)).
 func (a Array) At(i int) (Element, error) {
 	if i < 0 {
-		return Element{}, ErrIndexOutOfBounds
+		return Element{}, ErrIndexOutOfBounds // without walking the whole array
 	}
 	for k, v := range a.All() {
 		if k == i {
@@ -205,27 +219,20 @@ func (a Array) At(i int) (Element, error) {
 type Object struct{ e Element }
 
 // Len returns the number of fields.
-func (o Object) Len() int {
-	if n := o.e.count(); n < 0xFFFFFF {
-		return n
-	}
-	n := 0
-	for range o.fields() {
-		n++
-	}
-	return n
-}
+func (o Object) Len() int { return o.e.length(2) }
 
 // fields iterates over the unescaped keys (not copied) and values.
 func (o Object) fields() iter.Seq2[[]byte, Element] {
 	return func(yield func([]byte, Element) bool) {
-		end := o.e.next() - 1 // the closing '}'
-		for i := o.e.i + 1; i < end; {
-			k, v := Element{o.e.doc, i}, Element{o.e.doc, i + 1}
-			if !yield(k.rawString(), v) {
+		var key []byte
+		isKey := true
+		for v := range o.e.items() {
+			if isKey {
+				key = v.rawString()
+			} else if !yield(key, v) {
 				return
 			}
-			i = v.next()
+			isKey = !isKey
 		}
 	}
 }

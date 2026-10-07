@@ -12,16 +12,18 @@ import (
 // equal tree, including element types.
 func (e Element) AppendJSON(dst []byte) []byte {
 	switch e.tag() {
-	case '[':
+	case tagStartArray:
 		dst = append(dst, '[')
-		for k, v := range (Array{e}).All() {
-			if k > 0 {
+		first := true
+		for v := range e.items() {
+			if !first {
 				dst = append(dst, ',')
 			}
+			first = false
 			dst = v.AppendJSON(dst)
 		}
 		return append(dst, ']')
-	case '{':
+	case tagStartObject:
 		dst = append(dst, '{')
 		first := true
 		for k, v := range (Object{e}).fields() {
@@ -33,22 +35,22 @@ func (e Element) AppendJSON(dst []byte) []byte {
 			dst = v.AppendJSON(dst)
 		}
 		return append(dst, '}')
-	case '"':
+	case tagString:
 		return appendQuoted(dst, e.rawString())
-	case 'Z':
+	case tagBigInt:
 		return append(dst, e.rawString()...)
-	case 'l':
+	case tagInt64:
 		return strconv.AppendInt(dst, int64(e.value()), 10)
-	case 'u':
+	case tagUint64:
 		return strconv.AppendUint(dst, e.value(), 10)
-	case 'd':
+	case tagDouble:
 		start := len(dst)
 		dst = strconv.AppendFloat(dst, math.Float64frombits(e.value()), 'g', -1, 64)
 		if !bytes.ContainsAny(dst[start:], ".e") {
 			dst = append(dst, ".0"...) // keep it a float when re-parsed
 		}
 		return dst
-	case 't':
+	case tagTrue:
 		return append(dst, "true"...)
 	case tagFalse:
 		return append(dst, "false"...)

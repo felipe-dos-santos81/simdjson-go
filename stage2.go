@@ -57,29 +57,17 @@ func (b *builder) walk() error {
 
 	c, off = b.advance()
 	// An unmatched outer brace or bracket is rejected up front (simdjson issue 906).
-	switch last := b.buf[b.idx[len(b.idx)-1]]; c {
-	case '{':
-		if last != '}' {
-			return ErrTape
-		}
-	case '[':
-		if last != ']' {
-			return ErrTape
-		}
+	if last := b.buf[b.idx[len(b.idx)-1]]; c == '{' && last != '}' ||
+		c == '[' && last != ']' {
+		return ErrTape
 	}
 	switch c {
-	case '{':
-		if b.peek() == '}' {
-			b.advance()
-			b.emptyContainer('{', tagEndObject)
+	case '{', '[':
+		if b.empty(c) {
 			goto documentEnd
 		}
-		goto objectBegin
-	case '[':
-		if b.peek() == ']' {
-			b.advance()
-			b.emptyContainer('[', tagEndArray)
-			goto documentEnd
+		if c == '{' {
+			goto objectBegin
 		}
 		goto arrayBegin
 	}
@@ -106,18 +94,12 @@ objectField:
 	}
 	c, off = b.advance()
 	switch c {
-	case '{':
-		if b.peek() == '}' {
-			b.advance()
-			b.emptyContainer('{', tagEndObject)
+	case '{', '[':
+		if b.empty(c) {
 			goto objectContinue
 		}
-		goto objectBegin
-	case '[':
-		if b.peek() == ']' {
-			b.advance()
-			b.emptyContainer('[', tagEndArray)
-			goto objectContinue
+		if c == '{' {
+			goto objectBegin
 		}
 		goto arrayBegin
 	}
@@ -137,7 +119,7 @@ objectContinue:
 		}
 		goto objectField
 	case '}':
-		b.endContainer('{', tagEndObject)
+		b.endContainer(tagStartObject, tagEndObject)
 		goto scopeEnd
 	}
 	return ErrTape
@@ -161,18 +143,12 @@ arrayBegin:
 arrayValue:
 	c, off = b.advance()
 	switch c {
-	case '{':
-		if b.peek() == '}' {
-			b.advance()
-			b.emptyContainer('{', tagEndObject)
+	case '{', '[':
+		if b.empty(c) {
 			goto arrayContinue
 		}
-		goto objectBegin
-	case '[':
-		if b.peek() == ']' {
-			b.advance()
-			b.emptyContainer('[', tagEndArray)
-			goto arrayContinue
+		if c == '{' {
+			goto objectBegin
 		}
 		goto arrayBegin
 	}
@@ -186,7 +162,7 @@ arrayContinue:
 		b.stack[len(b.stack)-1].count++
 		goto arrayValue
 	case ']':
-		b.endContainer('[', tagEndArray)
+		b.endContainer(tagStartArray, tagEndArray)
 		goto scopeEnd
 	}
 	return ErrTape
@@ -210,9 +186,21 @@ func (b *builder) push(isArray bool) error {
 	return nil
 }
 
-func (b *builder) emptyContainer(start, end byte) {
+// empty writes an array or object that closes right after its opening byte
+// c, without opening a scope (C++ visit_empty_array/visit_empty_object), and
+// reports whether it did. Bracket bytes are their own tape tags.
+func (b *builder) empty(c byte) bool {
+	end := byte(']')
+	if c == '{' {
+		end = '}'
+	}
+	if b.peek() != end {
+		return false
+	}
+	b.advance()
 	i := uint64(len(b.tape))
-	b.tape = append(b.tape, word(start, i+2), word(end, i))
+	b.tape = append(b.tape, word(c, i+2), word(end, i))
+	return true
 }
 
 // endContainer writes the closing word (pointing at the opening one) and the
@@ -237,7 +225,7 @@ func (b *builder) primitive(c byte, off int, root bool) error {
 		if !b.atom(off, "true") {
 			return ErrTAtom
 		}
-		b.tape = append(b.tape, word('t', 0))
+		b.tape = append(b.tape, word(tagTrue, 0))
 	case c == 'f':
 		if !b.atom(off, "false") {
 			return ErrFAtom
@@ -247,7 +235,7 @@ func (b *builder) primitive(c byte, off int, root bool) error {
 		if !b.atom(off, "null") {
 			return ErrNAtom
 		}
-		b.tape = append(b.tape, word('n', 0))
+		b.tape = append(b.tape, word(tagNull, 0))
 	default:
 		return ErrTape
 	}
