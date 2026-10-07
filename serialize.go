@@ -11,7 +11,11 @@ import (
 // AppendJSON appends e as minified JSON to dst. Parsing the output yields an
 // equal tree, including element types. It walks the tape in order without
 // recursion, so nesting depth is limited only by memory.
-func (e Element) AppendJSON(dst []byte) []byte {
+func (e Element) AppendJSON(dst []byte) []byte { return e.appendJSON(dst, nil) }
+
+// appendJSON is AppendJSON; if numberText is not nil, numbers are written as
+// the text it returns instead of being reformatted.
+func (e Element) appendJSON(dst []byte, numberText func(Element) []byte) []byte {
 	type open struct {
 		object   bool
 		nonEmpty bool // an element or field was written: the next needs a comma
@@ -46,7 +50,11 @@ func (e Element) AppendJSON(dst []byte) []byte {
 			i++
 			continue
 		}
-		dst = v.appendScalar(dst)
+		if numberText != nil && (tag == tagInt64 || tag == tagUint64 || tag == tagDouble || tag == tagBigInt) {
+			dst = append(dst, numberText(v)...)
+		} else {
+			dst = v.appendScalar(dst)
+		}
 		i = v.next()
 	}
 	return dst
