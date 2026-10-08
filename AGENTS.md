@@ -6,6 +6,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 
 - **C++ simdjson v5.0.2 is the oracle.** The tape format, the error returned for each bad input, and the edge cases must match C++. Some of those cases look like bugs but are intended, so don't "fix" them: the design spec lists them (§5.5, §9). Change parsing behaviour only together with evidence from C++.
 - **Go 1.27, standard library only.** No cgo, no third-party modules in the library or its tests. Dev tooling run through `go run` (the pinned `benchstat` in the Makefile) is the only exception.
+- **C++ simdjson ondemand is the oracle for package `ondemand`.** `testdata/ondemand/oracle.jsonl` records what C++ v5.0.2 (release build) returns for ~30,000 scripted reads; `TestOracle` replays them. Never edit that file by hand: change `scripts/ondemand-oracle/` and run `make oracle`.
 - **`encoding/json/v2` is the oracle for data binding.** `Unmarshal` and `Marshal` must agree with the installed v2 on values, output bytes and error classes; the one allowed difference is listed in the binding spec (§1, §6).
 - **The spec is the authority.** Read [`docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`](docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md) (parser, DOM) or [`docs/superpowers/specs/2026-10-07-simdjson-go-binding-design.md`](docs/superpowers/specs/2026-10-07-simdjson-go-binding-design.md) (data binding) before changing behaviour. If the code and the spec disagree, fix one of them in the same change.
 
@@ -17,8 +18,11 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `internal/stage1/kernel_generic.go` | Portable classifier; the reference the NEON kernel must equal |
 | `internal/stage1/kernel_arm64.go` | NEON kernel (`//go:build arm64 && goexperiment.simd && !purego`) |
 | `internal/stage1/kernel_fallback.go` | Portable kernel for every other build (the exact negation of the tag above) |
+| `internal/jsonerr/` | The error sentinels, shared by `simdjson` (which re-exports them) and `ondemand` |
+| `internal/number/`, `internal/str/` | Float conversion (adapted from Go's `internal/strconv`, `LICENSE-GO`; `go generate` there rebuilds `pow10tab.go`) and terminator rules; string unescaping |
+| `ondemand/` | On-Demand: `iter.go` and `valueiter.go` port C++'s `json_iterator` and `value_iterator`; `numbers.go` its typed number parsers; `document.go`, `value.go`, `object.go`, `array.go` the API |
+| `scripts/ondemand-oracle/`, `testdata/ondemand/` | The C++ program, case generator and output behind `TestOracle` (`make oracle`) |
 | `stage2.go`, `strings.go`, `numbers.go` | Stage 2: build the tape, unescape strings, parse numbers; in binding mode, record offsets and repeated names (`checkNames`) |
-| `fastfloat.go`, `pow10tab.go` | Decimal→float64 conversion adapted from Go's `internal/strconv` (BSD, `LICENSE-GO`); regenerate the table with `go generate` (`pow10gen.go`) |
 | `parser.go`, `tape.go`, `errors.go` | `Parser`, `Document`, tape tags, sentinel errors |
 | `element.go`, `pointer.go`, `serialize.go` | DOM API, JSON Pointer, `AppendJSON` and `Minify` |
 | `options.go`, `typeplan.go` | Data binding: options, the per-type codec cache, struct field plans (adapted from v2's `fields.go`) |
@@ -44,6 +48,7 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 - Run `make check`. It runs gofmt, vet (including linux/386 and wasip1/wasm) and the tests on pure Go, `-tags purego`, NEON and amd64 (under Rosetta), and ends with a `-race` run (`make test-race`).
 - **A stage 1 kernel change** must keep the NEON and portable kernels bit-identical. Run `make fuzz target=FuzzClassify` and `make fuzz target=FuzzUTF8`.
 - **A parsing change** needs `make fuzz target=FuzzParse` (both builds) and the corpus tests passing.
+- **An On-Demand change** needs `TestOracle` passing and `make fuzz target=FuzzOnDemand`. If C++'s behaviour is in doubt, add a case to `scripts/ondemand-oracle/gen.py` and run `make oracle`; differences between On-Demand and the DOM that C++ has too are listed in `knownDifference` (`ondemand/dom_test.go`).
 - **A data binding change** needs `make fuzz target=FuzzUnmarshal` and `make fuzz target=FuzzMarshal`. If they fail, fix the binding: do not loosen `sameUnmarshal`/`sameMarshal` in `bind_test.go`.
 - **If a fuzzer fails, investigate the parser first.** Do not loosen the oracle in `fuzz_test.go` to make it pass. Each adjustment the oracle makes to `encoding/json` models a documented difference from C++.
 - **Never skip the corpus tests.** They `t.Fatal` when `testdata/` is missing, and that's deliberate.
@@ -57,4 +62,5 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 - **Binding mode.** `Parser.binding` (set only by `Unmarshal`) makes stage 2 record input offsets and repeated names. Keep every binding-only step behind `if b.binding`, so plain `Parse` and its tape stay as C++ defines them.
 - **Duplicate-name hashing.** `checkNames` (stage 2) hashes names with seeded `hash/maphash`. A cheaper unseeded or prefix/suffix hash lets crafted or ordinary input (same-length URLs, timestamps) make `Unmarshal` quadratic; `TestCollidingNames` guards it.
 - **Benchmark noise.** Speed bars (binding spec §1) are ratios against v2 or against `main`; twitter `Unmarshal` sits near its 1.4× bar. On a loaded machine, compare in the same binary or alternate old/new test binaries run by run, and record `uptime`.
+- **On-Demand ports C++'s release build.** C++'s debug-only checks (`SIMDJSON_DEVELOPMENT_CHECKS`) become `ErrOutOfOrderIteration`, but its end-of-input checks (`SIMDJSON_CHECK_EOF`) are off, as in release: past the last structural the iterator reads 0, like C++'s padding. Keep every index into the input bounds-safe; `FuzzOnDemand` runs arbitrary read sequences to catch panics.
 - **Tape counts.** A container's element count saturates at 0xFFFFFF (`saturated`), and `Len()` then walks the tape. Read the count field only through `Element.exactCount`, which says whether it is exact.

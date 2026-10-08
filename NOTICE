@@ -4,7 +4,7 @@ This is a Go port of simdjson (https://github.com/simdjson/simdjson),
 Copyright 2018-2025 The simdjson authors, available under the Apache
 License 2.0 (LICENSE) or the MIT License (LICENSE-MIT), at your option.
 
-fastfloat.go, pow10gen.go and pow10tab.go are adapted from the Go standard
+internal/number/fastfloat.go, internal/number/pow10gen.go and internal/number/pow10tab.go are adapted from the Go standard
 library (src/internal/strconv), Copyright 2025-2026 The Go Authors, available
 under the BSD-style license in LICENSE-GO.
 

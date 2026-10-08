@@ -1,4 +1,4 @@
-# simdjson-go: Go port of the simdjson parser, with encoding/json/v2-style binding.
+# simdjson-go: Go port of the simdjson parser and On-Demand API, with encoding/json/v2-style binding.
 # Builds: pure Go (default), NEON (GOEXPERIMENT=simd, arm64), forced portable (-tags purego).
 PROJECT = simdjson-go
 
@@ -13,11 +13,11 @@ count  ?= 6
 # NEON-vs-portable fuzz targets: NEON build only, in internal/stage1.
 NEON_FUZZ = FuzzClassify FuzzUTF8
 FUZZ_ENV  = $(if $(or $(neon),$(filter $(target),$(NEON_FUZZ))),$(SIMD))
-FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,.)
+FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,$(if $(filter $(target),FuzzOnDemand),./ondemand/,.))
 
 .PHONY: help testdata clean fmt vet check \
         test test-neon test-purego test-amd64 test-race \
-        fuzz bench benchstat
+        fuzz bench benchstat oracle
 
 # ── Setup ────────────────────────────────────────────────────────────────────
 
@@ -71,9 +71,12 @@ test-race: testdata ## Race detector, short mode
 fuzz: ## Fuzz one target [target=FuzzParse time=60s neon=1]
 	$(FUZZ_ENV) $(GO) test -run '^$$' -fuzz '^$(target)$$' -fuzztime $(time) $(FUZZ_PKG)
 
-bench: testdata ## Benchmarks [bench=regex count=6 neon=1 out=file]
-	$(if $(neon),$(SIMD)) $(GO) test -run '^$$' -bench '$(or $(bench),.)' -count $(count) . \
+bench: testdata ## Benchmarks [bench=regex count=6 neon=1 pkg=./ondemand out=file]
+	$(if $(neon),$(SIMD)) $(GO) test -run '^$$' -bench '$(or $(bench),.)' -count $(count) $(or $(pkg),.) \
 		$(if $(out),> $(out) && cat $(out))
 
 benchstat: ## Compare two benchmark files [old=a.txt new=b.txt]
 	$(BENCHSTAT) $(old) $(new)
+
+oracle: testdata ## Regenerate testdata/ondemand/oracle.jsonl from C++ simdjson (needs a C++20 compiler)
+	./scripts/ondemand-oracle/regen.sh

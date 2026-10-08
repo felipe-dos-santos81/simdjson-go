@@ -150,7 +150,9 @@ marked **Go**.
 - **Scalar documents.** A root scalar is read with the document's getters (`Value` is
   `ErrScalarDocumentAsValue`); content after it is `ErrTrailingContent`. As C++ copies the root
   scalar and its trailing whitespace into a fixed buffer, a root integer longer than 21 bytes with
-  that whitespace, or a number longer than 1083, is `ErrNumber`; and a root `false` is recognised
+  that whitespace, or a number longer than 1083, is `ErrNumber`; past 1083 bytes, `NumberType`
+  classifies a root that is `-` or digits followed by whitespace as `BigInt` (read with `Raw`), as
+  C++'s `check_if_integer` does; and a root `false` is recognised
   by its first four bytes (`falsy` reads as `false`).
 - **Differences from the DOM** (all C++'s own): the exponent, `BigInt`, root-buffer and `false`
   rules above. Everything else a full walk accepts, the DOM accepts, with the same values.
