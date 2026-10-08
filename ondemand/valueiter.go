@@ -36,6 +36,7 @@ func (it valueIter) startOff() int { return int(it.d.idx[it.start]) }
 // startContainer checks that the value is the container opened by c and
 // steps inside it.
 func (it valueIter) startContainer(c byte) error {
+	it.d.reach()
 	if !it.isAtStart() {
 		if !it.isAtIteratorStart() {
 			return jsonerr.ErrOutOfOrderIteration
@@ -94,6 +95,7 @@ func (it valueIter) startRootObject() (bool, error) {
 }
 
 func (it valueIter) startedObject() (bool, error) {
+	it.d.reach()
 	it.d.setStart(it.depth, it.start)
 	if it.d.peek() == '}' {
 		it.d.advance()
@@ -122,6 +124,7 @@ func (it valueIter) checkRootContainer(end byte) error {
 }
 
 func (it valueIter) hasNextField() (bool, error) {
+	it.d.reach()
 	switch it.d.advance() {
 	case '}':
 		if err := it.endContainer(); err != nil {
@@ -136,6 +139,7 @@ func (it valueIter) hasNextField() (bool, error) {
 
 // fieldKey returns the input offset of the key's opening quote.
 func (it valueIter) fieldKey() (int, error) {
+	it.d.reach()
 	k := it.d.pos
 	if it.d.advance() != '"' {
 		return 0, it.d.fail(jsonerr.ErrTape)
@@ -148,6 +152,7 @@ func (it valueIter) fieldKey() (int, error) {
 // tokens, is checked in one go; anything else takes the two steps, so errors
 // and the cursor after them are as before.
 func (it valueIter) fieldHead() (int, error) {
+	it.d.reach()
 	d := it.d
 	if k := d.pos; uint(k)+1 < uint(len(d.idx)) {
 		idx, buf := d.idx, d.buf
@@ -166,6 +171,7 @@ func (it valueIter) fieldHead() (int, error) {
 }
 
 func (it valueIter) fieldValue() error {
+	it.d.reach()
 	if it.d.advance() != ':' {
 		return it.d.fail(jsonerr.ErrTape)
 	}
@@ -367,6 +373,7 @@ func (it valueIter) startRootArray() (bool, error) {
 }
 
 func (it valueIter) startedArray() (bool, error) {
+	it.d.reach()
 	if it.d.peek() == ']' {
 		it.d.advance()
 		if err := it.endContainer(); err != nil {
@@ -380,6 +387,7 @@ func (it valueIter) startedArray() (bool, error) {
 }
 
 func (it valueIter) hasNextElement() (bool, error) {
+	it.d.reach()
 	switch it.d.advance() {
 	case ']':
 		if err := it.endContainer(); err != nil {

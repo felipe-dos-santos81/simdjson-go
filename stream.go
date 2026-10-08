@@ -64,7 +64,7 @@ func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error] {
 		r.Reset(buf, f, p.BatchSize)
 		defer func() {
 			if p.streams == gen { // else the stream that reset r owns it
-				r.Close()
+				r.Release()
 			}
 		}()
 		for pos := 0; ; {

@@ -53,8 +53,8 @@ type Parser struct {
 	// TypeBigInt (their raw digits) instead of failing with ErrBigInt.
 	BigIntAsString bool
 	// BatchSize is how many bytes ParseMany runs stage 1 over at a time:
-	// 0 means 1,000,000; it is rounded up to a multiple of 64. It changes
-	// speed and memory, never results.
+	// 0 means 1,000,000; above 1 GiB it means 1 GiB; it is rounded up to a
+	// multiple of 64. It changes speed and memory, never results.
 	BatchSize int
 
 	// binding selects the encoding/json/v2 behaviour Unmarshal needs: input

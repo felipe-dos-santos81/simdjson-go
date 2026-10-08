@@ -14,8 +14,8 @@ import (
 // for concurrent use.
 type Parser struct {
 	// BatchSize is how many bytes IterateMany runs stage 1 over at a time:
-	// 0 means 1,000,000; it is rounded up to a multiple of 64. It changes
-	// speed and memory, never results.
+	// 0 means 1,000,000; above 1 GiB it means 1 GiB; it is rounded up to a
+	// multiple of 64. It changes speed and memory, never results.
 	BatchSize int
 
 	doc     Document
@@ -104,6 +104,11 @@ type Document struct {
 	comma  bool     // from a CommaDelimited stream (Source trims commas)
 	off    int      // IterateMany: where the document starts in the input
 	pad    byte     // the byte at len(buf): C++'s padding, 0, or CommaDelimitedArray's ']'
+	// IterateMany, before its input is all indexed: idx is rd.Idx[rpos:],
+	// final below n, and reach extends it (stream.go).
+	rd     *stream.Reader
+	rpos   int
+	repoch uint32
 }
 
 // peekAt returns the structural character at token position i (pad at the
@@ -136,7 +141,9 @@ func (d *Document) advance() byte {
 func (d *Document) exhausted() bool { return d.pos == d.n }
 
 // tokenLen is C++ peek_length: the distance to the next structural index.
-func (d *Document) tokenLen(i int) int { return int(d.idx[i+1]) - int(d.idx[i]) }
+// At the end of a stream, C++'s sentinels can make it negative (the dropped
+// tail starts before len(buf)), which C++ reads as huge: Go reads 0.
+func (d *Document) tokenLen(i int) int { return max(int(d.idx[i+1])-int(d.idx[i]), 0) }
 
 // rootTokenLen is C++ peek_root_length.
 func (d *Document) rootTokenLen(i int) int {
@@ -172,12 +179,27 @@ func (d *Document) start(depth int) int {
 	return -1
 }
 
+// reach is called by every step that moves the cursor, which then reads
+// and moves at most a few indices on: a stream document's view is first
+// extended to the whole input if those are not all final (more, in
+// stream.go).
+func (d *Document) reach() {
+	if d.rd != nil && d.pos+reachAhead >= d.n {
+		d.more()
+	}
+}
+
+// reachAhead is how far reach looks; IterateMany indexes that far past a
+// root before yielding it, so that reading the root never extends the view.
+const reachAhead = 4
+
 // skipChild is C++ json_iterator::skip_child: it skips the rest of the
 // value the cursor is in, until the cursor is back at parentDepth.
 func (d *Document) skipChild(parentDepth int) error {
 	if d.depth <= parentDepth {
 		return nil
 	}
+	d.reach()
 	switch d.advance() {
 	case '[', '{', ':':
 	case ',':
@@ -198,20 +220,24 @@ func (d *Document) skipChild(parentDepth int) error {
 			return nil
 		}
 	}
-	// Every index below n is inside the input.
-	idx, buf, depth := d.idx[:d.n], d.buf, d.depth
-	for pos := d.pos; pos < len(idx); {
-		c := buf[idx[pos]]
-		pos++
-		switch c {
-		case '[', '{':
-			depth++
-		case ']', '}':
-			depth--
-			if depth <= parentDepth {
-				d.pos, d.depth = pos, depth
-				return nil
+	buf, depth, pos := d.buf, d.depth, d.pos
+	for {
+		idx := d.idx[:d.n] // every index below n is inside the input
+		for ; pos < len(idx); pos++ {
+			switch buf[idx[pos]] {
+			case '[', '{':
+				depth++
+			case ']', '}':
+				depth--
+				if depth <= parentDepth {
+					d.pos, d.depth = pos+1, depth
+					d.reach() // it may have walked far: what follows reads on
+					return nil
+				}
 			}
+		}
+		if !d.more() {
+			break
 		}
 	}
 	d.pos, d.depth = d.n, depth

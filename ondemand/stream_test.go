@@ -3,9 +3,11 @@ package ondemand_test
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"math/rand/v2"
 	"strings"
 	"testing"
+	"testing/synctest"
 
 	"simdjson-go"
 	"simdjson-go/ondemand"
@@ -285,5 +287,152 @@ func TestStreamStage1Errors(t *testing.T) {
 			}
 		}
 		dp.BatchSize, op.BatchSize = 0, 0
+	}
+}
+
+// TestIterateManyAbandoned: after a read that abandons a document (a fatal
+// error), the next step skips from the document's root, as for an unread
+// document, and the stream goes on to the next record.
+func TestIterateManyAbandoned(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"{\"a\":1}\n{\"a\":}\n{\"a\":3}", `0:{"a":1} 8:{"a":}:dead 15:{"a":3}`},
+		{"[{\"a\":}, 1, [2, 3], {\"x\":1}]\n7", `0:[{"a":}, 1, [2, 3], {"x":1}]:dead 29:7`},
+	}
+	var p ondemand.Parser
+	for _, c := range cases {
+		for _, f := range []ondemand.Format{ondemand.NewlineDelimited, ondemand.Whitespace} {
+			for _, bs := range []int{0, 64} {
+				p.BatchSize = bs
+				var got []string
+				for doc, err := range p.IterateMany([]byte(c.in), f) {
+					if err != nil {
+						got = append(got, itemErr(err))
+						continue
+					}
+					item := fmt.Sprintf("%d:%s", doc.Offset(), doc.Source())
+					if walk(doc, new(strings.Builder)) != nil && ondemand.Abandoned(doc) {
+						item += ":dead"
+					}
+					got = append(got, item)
+				}
+				if s := strings.Join(got, " "); s != c.want {
+					t.Errorf("%q, format %d, BatchSize %d:\n got  %s\n want %s", c.in, f, bs, s, c.want)
+				}
+			}
+		}
+	}
+}
+
+// TestIterateManyNoLeak is the root package's TestStreamNoLeak for IterateMany.
+func TestIterateManyNoLeak(t *testing.T) {
+	in := []byte(strings.Repeat(`{"a":[1,2,3],"b":"xyz"}`+"\n", 400))
+	for stop := range 30 {
+		synctest.Test(t, func(t *testing.T) {
+			p := ondemand.Parser{BatchSize: 64}
+			n := 0
+			for range p.IterateMany(in, ondemand.Whitespace) {
+				if n++; n > stop*13 {
+					break
+				}
+			}
+		})
+	}
+}
+
+// TestIterateManyPull2 is the root package's TestStreamPull2 for IterateMany.
+func TestIterateManyPull2(t *testing.T) {
+	var a, b strings.Builder
+	for i := range 200 {
+		fmt.Fprintf(&a, "[%d]\n", i)
+		fmt.Fprintf(&b, "{\"b\":%d}\n", i)
+	}
+	synctest.Test(t, func(t *testing.T) {
+		p := ondemand.Parser{BatchSize: 64}
+		nextA, stopA := iter.Pull2(p.IterateMany([]byte(a.String()), ondemand.Whitespace))
+		defer stopA()
+		if doc, err, ok := nextA(); !ok || err != nil || string(doc.Source()) != "[0]" {
+			t.Fatalf("A: %v %v", err, ok)
+		}
+		nextB, stopB := iter.Pull2(p.IterateMany([]byte(b.String()), ondemand.Whitespace))
+		defer stopB()
+		for i := range 200 {
+			doc, err, ok := nextB()
+			if want := fmt.Sprintf(`{"b":%d}`, i); !ok || err != nil || string(doc.Source()) != want {
+				t.Fatalf("B document %d: %v %v, want %s", i, err, ok, want)
+			}
+			if i == 0 {
+				stopA()
+			}
+		}
+		if _, _, ok := nextB(); ok {
+			t.Fatal("B goes on past its end")
+		}
+		if _, err, ok := nextA(); ok && !errors.Is(err, simdjson.ErrOutOfOrderIteration) {
+			t.Fatalf("A after B: %v", err)
+		}
+	})
+}
+
+// TestIterateManyReadPastRoot: a read can run past the root's end by its
+// brackets, as far as C++'s one batch holds, whatever the batch size: on a
+// malformed root ("[}" leaves the array open for On-Demand), or out of
+// order (an empty root array started again, as C++'s release build allows,
+// reads on from its end).
+func TestIterateManyReadPastRoot(t *testing.T) {
+	rest := " " + strings.Repeat("[1] ", 40) + "} 0"
+	misuse := "[]," + strings.Repeat("1 ", 60) + "1]] 0"
+	for _, c := range []struct {
+		in   string
+		read func(*ondemand.Document) string
+		want string // at BatchSize 0
+	}{
+		{"[}" + rest, func(doc *ondemand.Document) string {
+			a, err := doc.Array()
+			if err != nil {
+				return err.Error()
+			}
+			raw, err := a.Raw()
+			if err != nil {
+				return err.Error()
+			}
+			return string(raw)
+		}, "0:[}:[}" + rest[:len(rest)-1] + fmt.Sprintf(" %d:0:%s", len(rest)+1, simdjson.ErrIncorrectType)},
+		{misuse, func(doc *ondemand.Document) string {
+			if _, err := doc.Raw(); err != nil {
+				return err.Error()
+			}
+			a, err := doc.Array()
+			if err != nil {
+				return err.Error()
+			}
+			raw, err := a.Raw()
+			if err != nil {
+				return err.Error()
+			}
+			return string(raw)
+		}, "0:[]:" + misuse[:len(misuse)-1] + fmt.Sprintf(" %d:0:%s", len(misuse)-1, simdjson.ErrIncorrectType)},
+	} {
+		var p ondemand.Parser
+		var want string
+		for _, bs := range []int{0, 64} {
+			p.BatchSize = bs
+			var got []string
+			for doc, err := range p.IterateMany([]byte(c.in), ondemand.Whitespace) {
+				if err != nil {
+					got = append(got, itemErr(err))
+					continue
+				}
+				got = append(got, fmt.Sprintf("%d:%s:%s", doc.Offset(), doc.Source(), c.read(doc)))
+			}
+			s := strings.Join(got, " ")
+			if bs == 0 {
+				want = s
+				if s != c.want {
+					t.Errorf("%.10q: got  %s\n want %s", c.in, s, c.want)
+				}
+			} else if s != want {
+				t.Errorf("%.10q, BatchSize %d:\n got  %s\n want %s", c.in, bs, s, want)
+			}
+		}
 	}
 }

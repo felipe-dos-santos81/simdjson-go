@@ -66,7 +66,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 		r.Reset(buf, f, p.BatchSize)
 		defer func() {
 			if p.streams == gen { // else the stream that reset r owns it
-				r.Close()
+				r.Release()
 			}
 		}()
 		var delim byte // C++ document_delimiter
@@ -87,22 +87,18 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				}
 				return
 			}
-			// The root value ends before end. Reads peek up to two indices
-			// past its last, so those must be final, and its bytes checked.
+			// The root value ends before end. Reads look up to reachAhead
+			// indices past the cursor, so those must be final (or the view
+			// grows, which a read of the root never needs), and the bytes
+			// checked.
 			end, _ := r.Skip(pos, 1)
-			for !r.Done && (r.Decided() <= end+1 || r.Checked() < r.End(r.Decided())) {
+			for !r.Done && (r.Decided() <= end+reachAhead || r.Checked() < r.End(r.Decided())) {
 				r.Load()
 			}
 			start := int(r.Idx[pos])
 			if err := r.Stage1Err(r.End(end)); err != nil {
 				fail(base+start, err)
 				return
-			}
-			if c := r.Buf[start]; c == ']' || c == '}' {
-				// C++'s Source walk then runs to the end of its batch, so the
-				// view must not end at the decided point.
-				for r.Load() {
-				}
 			}
 			d.view(r, pos, end, base+start, f == CommaDelimited, pad)
 			mine, nextOff := d.gen, base+r.End(end)
@@ -114,9 +110,11 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				return
 			}
 			// C++ next_document, from the reader's cursor, or from the root
-			// if an Iterate on p replaced the document.
+			// if an Iterate on p replaced the document or a read abandoned
+			// it (C++ is undefined there; a root read to its end also has
+			// depth 0, but no error).
 			cur, depth := pos, 1
-			if d.gen == mine {
+			if d.gen == mine && (d.depth > 0 || d.err == nil) {
 				cur, depth = pos+d.pos, d.depth
 			}
 			if delim != 0 && depth > 0 {
@@ -145,12 +143,22 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 
 // view points d at the stream document starting at r.Idx[pos], whose root
 // value ends before position end: C++'s json_iterator re-anchored at the
-// document, over indices that run past it.
+// document, over indices that run past it. Until the input is all indexed,
+// those are final up to the decided point only; a read that would go past
+// it (on a malformed root, or out of order) first indexes the rest, as C++
+// reads on to the end of its one batch (reach, more).
 func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool, pad byte) {
+	rd := r
+	if r.Done {
+		rd = nil
+	}
 	*d = Document{
 		buf:    r.Buf,
 		idx:    r.Idx[pos:],
 		n:      r.Decided() - pos,
+		rd:     rd,
+		rpos:   pos,
+		repoch: r.Epoch(),
 		end:    end - pos,
 		depth:  1,
 		gen:    d.gen + 1,
@@ -184,6 +192,9 @@ func (d *Document) Source() []byte {
 	}
 	i := 1
 	for ; i <= d.n; i++ {
+		if i == d.n {
+			d.more() // C++'s walk reaches the end of its one batch
+		}
 		switch d.peekAt(i) {
 		case '{', '[':
 			depth++
@@ -202,4 +213,18 @@ func (d *Document) Source() []byte {
 	}
 	end := min(int(d.idx[min(i, len(d.idx)-1)])+1, limit)
 	return d.buf[start:end:end]
+}
+
+// more extends a stream document's view to the whole input, loading every
+// window, and reports whether it grew. A view whose stream has ended or
+// been reset by another cannot grow.
+func (d *Document) more() bool {
+	r := d.rd
+	if r == nil || r.Epoch() != d.repoch {
+		return false
+	}
+	for r.Load() {
+	}
+	d.rd, d.idx, d.n = nil, r.Idx[d.rpos:], r.N-d.rpos
+	return true
 }

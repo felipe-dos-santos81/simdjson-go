@@ -54,9 +54,11 @@ document that holds the bad byte instead of failing the whole input.
 - **Regression vs `main`:** `BenchmarkParse` +1.54% and the On-Demand tasks +1.12% (geometric
   mean), within the 2% bar.
 - **Added since the plan:** `CommaDelimitedArray` documents read the array's own `]` (both APIs);
-  an On-Demand root that starts with a closer indexes the whole input first (§5.5); bytes
-  On-Demand's delimiter skip passes over are checked by stage 1; `ParseMany` waits after a failed
-  walk in `CommaDelimitedArray` (§5.4).
+  an On-Demand read that runs past the decided indices (a malformed root, or out of order) first
+  indexes the whole input (§5.5); bytes On-Demand's delimiter skip passes over are checked by
+  stage 1; `ParseMany` waits after a failed walk in `CommaDelimitedArray` (§5.4); after a read
+  that abandons a document, the next step skips from its root (§3); the stage 1 worker's state
+  sits on its own cache lines (§5.2).
 
 ## 2. Decisions
 
@@ -95,8 +97,8 @@ const (
 type Parser struct {
 	MaxDepth       int
 	BigIntAsString bool
-	// BatchSize is the stage 1 window of ParseMany, in bytes: 0 means 1,000,000; it is rounded up
-	// to a multiple of 64. It changes speed and memory, never results.
+	// BatchSize is the stage 1 window of ParseMany, in bytes: 0 means 1,000,000; above 1 GiB it
+	// means 1 GiB; it is rounded up to a multiple of 64. It changes speed and memory, never results.
 	BatchSize int
 	// ...
 }
@@ -146,6 +148,8 @@ for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
 - On-Demand: `Document.AtEnd` says whether this document has been read to its end (C++ compares
   with the end of the batch). Read errors (wrong type, bad number, missing field) belong to the
   read and do not end the stream; the next step skips the rest of the document, as in C++.
+  After a read that abandons a document (a fatal error), the next step skips from the document's
+  root, as for an unread document; C++ leaves this undefined.
   Handles from an earlier document return `ErrOutOfOrderIteration`.
 
 ## 4. Behaviour
@@ -192,7 +196,8 @@ where a stage 1 error is the first and only item and a bad tail is dropped witho
   after its input is that `]`).
 - A number or literal that ends the input inside a container fails as C++'s does (`ErrNumber`,
   `ErrTAtom`, …): C++ parses it in place, before a `\0` padding byte.
-- `BatchSize` below 64 becomes 64; at most `min(BatchSize, len(b))` is allocated.
+- `BatchSize` below 64 becomes 64, and above 1 GiB becomes 1 GiB; at most `min(BatchSize, len(b))`
+  is allocated.
 
 ### 4.3 C++ behaviour deliberately not ported
 
@@ -226,10 +231,16 @@ validates each window with `utf8.Valid`, holding back a character cut at the win
 
 If `len(b) <= BatchSize` there is one window and no goroutine. Otherwise a goroutine runs `Next`
 window by window into two index buffers that alternate, handed over on channels (filled one way,
-empty the other). Breaking out of the loop cancels the worker and waits for it.
+empty the other). Breaking out of the loop cancels the worker and waits for it. The state the
+worker writes (`stage1.Stream`, the two windows) is padded onto its own cache lines: sharing one
+with the fields the consumer reads per index cost `ParseMany` 15% and `IterateMany` 7% on
+`large_amazon_cellphones`, depending on how the `Parser` happened to be laid out. When a stream
+ends, the `Parser` drops its references to the input (`Release`); a document already yielded
+keeps its own.
 
-When a window reports a UTF-8 or unescaped-character error, the consumer rescans that window
-block by block from its saved start state to find the first bad byte (error path only).
+When a window holds a UTF-8 or unescaped-character error, `stage1.Stream.Next` (on the worker,
+when pipelined) rescans that window block by block from its saved start state to find the first
+bad byte (error path only).
 
 ### 5.3 Segmenter (`internal/stream`)
 
@@ -264,8 +275,8 @@ checks this.
 ### 5.5 On-Demand
 
 Before a document is yielded, the segmenter extends the decided prefix to the document's
-bracket-count end plus one structural (`rootTokenLen` peeks two ahead and, in C++, sees the next
-document's start). Moving to the next document (C++ `next_document`) runs in the segmenter, not
+bracket-count end plus four structurals (`reachAhead`: `rootTokenLen` peeks two ahead and, in C++,
+sees the next document's start). Moving to the next document (C++ `next_document`) runs in the segmenter, not
 in the `Document`, so it can load windows: a bracket count from the reader's cursor and depth
 (`skip_child`), or, for `NewlineDelimited` and `JSONSequence` when the document was not read to
 its end, a forward scan with `bytes.IndexByte` for the delimiter (`skip_to_delimiter`). The
@@ -273,9 +284,17 @@ its end, a forward scan with `bytes.IndexByte` for the delimiter (`skip_to_delim
 sentinels once the input is done. Handles keep positions, not pointers, and `pending` is compacted
 only between documents (once the consumed half is at least half of it, so copying stays linear).
 `Iterate` gets its own index buffer, so calling it inside the loop cannot overwrite `pending`. The
-fuzzer checks that no read reaches the view's end before the input's. A root starting with `]` or
-`}` makes C++'s source walk run to the end of its batch, so for such a root the whole input is
-indexed before it is yielded.
+fuzzer checks that no read reaches the view's end before the input's. A read can still run past the
+root to the end of C++'s one batch: on a malformed root (`[}` leaves the array open for
+On-Demand; C++'s source walk of a root starting with `]` or `}`), or out of order (an empty root
+array started again, which C++'s release build allows, reads on from its end). So every step
+that moves the cursor (`reach`, at the entry of the `valueIter` steps and `skipChild`, and in
+`skipChild`'s and `Source`'s walks) first checks that the indices it can read are final; if
+not, the view grows to the whole input (`more`), as one window would see it. Reading a root in
+order never grows the view, since the decided prefix runs `reachAhead` past it. A view whose
+stream has ended (`Release`) or been replaced cannot grow. `peekAt` and `advance` carry no
+check, so they stay inlined. Past the last document, C++'s sentinels (`len`, where the dropped tail
+starts, 0) can make `peek_length` negative, which C++ reads as a huge `size_t`: Go reads 0.
 
 ## 6. Changes to existing code
 
@@ -321,10 +340,12 @@ indexed before it is yielded.
   holding p, then a `StreamError` at that document's start.
 - **Fuzzing.** `FuzzParseMany` and `FuzzIterateMany` take bytes, a format and a batch size from 64
   to a few KB. Items (offsets, sources, errors, the DOM's `AppendJSON` or a full On-Demand walk)
-  must equal those of a single window. Each DOM document must equal `Parse(doc.Source())`
+  must equal those of a single window, also past a document a read abandoned (where the oracle
+  stops). Each DOM document must equal `Parse(doc.Source())`
   whenever that `Parse` succeeds.
-- **Lifecycle.** A `testing/synctest` test breaks out of the loop at every position, including
-  while the worker is blocked, and checks no goroutine is left. The race run covers the buffer
+- **Lifecycle.** `testing/synctest` tests break out of the loop at many positions, including
+  while the worker is blocked, and check no goroutine is left; with `iter.Pull2`, a second stream
+  on the same `Parser` runs to its end after the first is stopped mid-way. The race run covers the buffer
   handoff. A second stream on one `Parser` ends the first with `ErrOutOfOrderIteration`.
 - **Benchmarks.** `BenchmarkParseMany` and `BenchmarkIterateMany` on `amazon_cellphones.ndjson`
   (277 KB) and `large_amazon_cellphones` (the same file repeated 40 times, 11 MB), computing C++'s

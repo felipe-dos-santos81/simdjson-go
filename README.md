@@ -157,7 +157,7 @@ Corpora come from [simdjson-data](https://github.com/simdjson/simdjson-data), pi
 
 ## Status
 
-Done: core and DOM (sub-project 1), the On-Demand API (3a), data binding (4). `Unmarshal` on On-Demand (3b) was prototyped and dropped: with v2's full validation it gained only 1.13–1.26×. Done: streams (2). amd64 uses the portable kernel (no x86 SIMD yet).
+Done: core and DOM (sub-project 1), streams (2), the On-Demand API (3a), data binding (4). `Unmarshal` on On-Demand (3b) was prototyped and dropped: with v2's full validation it gained only 1.13–1.26×. amd64 uses the portable kernel (no x86 SIMD yet).
 
 ## License
 

@@ -106,8 +106,16 @@ type Reader struct {
 	insert  int  // JSONSequence: a value start to add before the next index, or -1
 	skipTo  int  // JSONSequence: raw indices below it are inside an RS run
 
-	st     stage1.Stream
-	wins   [2]window
+	epoch uint32 // see Epoch
+
+	// The worker writes st and wins as it scans (Load reads a window only
+	// once handed over): their own cache lines keep its writes off the
+	// fields above, which the consumer reads per index.
+	_    [128]byte
+	st   stage1.Stream
+	wins [2]window
+	_    [128]byte
+
 	work   chan *window // filled windows, from the worker
 	free   chan *window // windows to fill, to the worker
 	quit   chan struct{}
@@ -126,7 +134,7 @@ func (r *Reader) Reset(buf []byte, f Format, batch int) {
 	*r = Reader{
 		Buf: buf, Idx: r.Idx[:0], Drop: -1, format: f, batch: batch,
 		badCtrl: math.MaxInt, badUTF8: math.MaxInt, cand: -1, prev: -1, insert: -1,
-		wins: r.wins,
+		wins: r.wins, epoch: r.epoch + 1,
 	}
 	r.st.Reset(buf)
 	if len(buf) == 0 {
@@ -196,6 +204,19 @@ func (r *Reader) Close() {
 	<-r.exited
 	r.work, r.free, r.quit, r.exited = nil, nil, nil, nil
 }
+
+// Release is Close, and drops the reader's references to its input so a
+// Parser does not keep it reachable once its stream ends.
+func (r *Reader) Release() {
+	r.Close()
+	r.Buf = nil
+	r.st.Reset(nil)
+	r.epoch++
+}
+
+// Epoch changes with every Reset and Release: a view of Idx taken in one
+// epoch must not load more in another.
+func (r *Reader) Epoch() uint32 { return r.epoch }
 
 // scan runs stage 1 up to end into w.
 func (r *Reader) scan(w *window, end int) {

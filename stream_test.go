@@ -3,6 +3,7 @@ package simdjson
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"strings"
 	"testing"
 	"testing/synctest"
@@ -205,4 +206,43 @@ func TestStreamNoLeak(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestStreamPull2 interleaves two pipelined streams on one Parser: B starts
+// while A is suspended, A is stopped while B is live, and B must still
+// yield every document; A then ends (synctest fails on a leaked goroutine).
+func TestStreamPull2(t *testing.T) {
+	var a, b strings.Builder
+	for i := range 200 {
+		fmt.Fprintf(&a, "[%d]\n", i)
+		fmt.Fprintf(&b, "{\"b\":%d}\n", i)
+	}
+	synctest.Test(t, func(t *testing.T) {
+		p := Parser{BatchSize: 64}
+		nextA, stopA := iter.Pull2(p.ParseMany([]byte(a.String()), Whitespace))
+		defer stopA()
+		if doc, err, ok := nextA(); !ok || err != nil || string(doc.Source()) != "[0]" {
+			t.Fatalf("A: %v %v", err, ok)
+		}
+		nextB, stopB := iter.Pull2(p.ParseMany([]byte(b.String()), Whitespace))
+		defer stopB()
+		for i := range 200 {
+			doc, err, ok := nextB()
+			if want := fmt.Sprintf(`{"b":%d}`, i); !ok || err != nil || string(doc.Source()) != want {
+				t.Fatalf("B document %d: %v %v, want %s", i, err, ok, want)
+			}
+			if i == 0 {
+				stopA()
+			}
+		}
+		if _, _, ok := nextB(); ok {
+			t.Fatal("B goes on past its end")
+		}
+		if _, err, ok := nextA(); ok && !errors.Is(err, ErrOutOfOrderIteration) {
+			t.Fatalf("A after B: %v", err)
+		}
+		if p.stream.Buf != nil {
+			t.Error("the Parser keeps B's input")
+		}
+	})
 }
