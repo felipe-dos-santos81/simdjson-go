@@ -3,17 +3,9 @@ package simdjson
 import (
 	"encoding/binary"
 	"math"
-	"strconv"
-	"unsafe"
 
 	"simdjson-go/internal/number"
 )
-
-// maxExp10 bounds the decimal exponents number passes to
-// number.DecimalToFloat64: past ±maxExp10 every 19-digit significand
-// underflows to ±0 (below -345) or overflows (above 310), so larger
-// exponents need not be kept exactly.
-const maxExp10 = 400
 
 // number parses the number at buf[off] and appends it to the tape. Port of
 // parse_number (include/simdjson/generic/numberparsing.h). While checking the
@@ -74,9 +66,9 @@ func (b *builder) number(off int) error {
 		}
 		expStart, e := p, int64(0)
 		for p < len(buf) && number.IsDigit(buf[p]) {
-			// Saturate above maxSize+maxExp10: leading fraction zeros can lower
+			// Saturate above maxSize+number.MaxExp10: leading fraction zeros can lower
 			// exp10 by up to maxSize, and an exponent must still cancel them.
-			if e <= maxSize+maxExp10 {
+			if e <= maxSize+number.MaxExp10 {
 				e = 10*e + int64(buf[p]-'0')
 			}
 			p++
@@ -93,17 +85,7 @@ func (b *builder) number(off int) error {
 		if !number.Terminates(buf, p) {
 			return ErrNumber
 		}
-		var f float64
-		var ok bool
-		if trunc {
-			var err error
-			f, err = strconv.ParseFloat(unsafe.String(&buf[off], p-off), 64)
-			ok = err == nil
-		} else {
-			// Clamping to ±maxExp10 keeps the result (see maxExp10) and the
-			// int64 exponent within int on 32-bit builds.
-			f, ok = number.DecimalToFloat64(mant, int(max(-maxExp10, min(maxExp10, exp10))), neg)
-		}
+		f, ok := number.ToFloat64(buf[off:p], mant, exp10, neg, trunc)
 		if !ok {
 			if !b.binding {
 				return ErrNumber

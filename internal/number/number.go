@@ -21,10 +21,10 @@ func Terminates(buf []byte, p int) bool { return p == len(buf) || IsStructuralOr
 // IsDigit reports whether c is an ASCII digit.
 func IsDigit(c byte) bool { return c-'0' < 10 }
 
-// maxExp10 bounds the decimal exponents ToFloat64 passes to
-// DecimalToFloat64: past ±maxExp10 every 19-digit significand underflows to
+// MaxExp10 bounds the decimal exponents ToFloat64 passes to
+// DecimalToFloat64: past ±MaxExp10 every 19-digit significand underflows to
 // ±0 (below -345) or overflows (above 310).
-const maxExp10 = 400
+const MaxExp10 = 400
 
 // ToFloat64 converts the float written as text, whose significand (its
 // first 19 significant digits, or all of them) is mant and whose value is
@@ -36,7 +36,7 @@ func ToFloat64(text []byte, mant uint64, exp10 int64, neg, trunc bool) (f float6
 		f, err := strconv.ParseFloat(unsafe.String(unsafe.SliceData(text), len(text)), 64)
 		return f, err == nil
 	}
-	// Clamping to ±maxExp10 keeps the result (see maxExp10) and the int64
+	// Clamping to ±MaxExp10 keeps the result (see MaxExp10) and the int64
 	// exponent within int on 32-bit builds.
-	return DecimalToFloat64(mant, int(max(-maxExp10, min(maxExp10, exp10))), neg)
+	return DecimalToFloat64(mant, int(max(-MaxExp10, min(MaxExp10, exp10))), neg)
 }

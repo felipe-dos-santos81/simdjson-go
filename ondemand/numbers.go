@@ -99,7 +99,7 @@ func parseDouble(s []byte, pad byte) (float64, error) {
 	// mant accumulates every digit (it may wrap); with at most 19 digits
 	// it is exact.
 	var mant uint64
-	for p < len(s) && s[p]-'0' < 10 {
+	for p < len(s) && number.IsDigit(s[p]) {
 		mant = 10*mant + uint64(s[p]-'0')
 		p++
 	}
@@ -131,7 +131,7 @@ func parseDouble(s []byte, pad byte) (float64, error) {
 			mant = mant*100000000 + parseEightDigits(v-0x3030303030303030)
 			p += 8
 		}
-		for !tail && p < len(s) && s[p]-'0' < 10 { // within 8 bytes of the end
+		for !tail && p < len(s) && number.IsDigit(s[p]) { // within 8 bytes of the end
 			mant = 10*mant + uint64(s[p]-'0')
 			p++
 		}
@@ -149,7 +149,7 @@ func parseDouble(s []byte, pad byte) (float64, error) {
 		}
 		expStart := p
 		var e int64
-		for p < len(s) && s[p]-'0' < 10 {
+		for p < len(s) && number.IsDigit(s[p]) {
 			if e <= 1<<32 { // saturate: past ±400 the value is 0 or ±Inf anyway
 				e = 10*e + int64(s[p]-'0')
 			}
