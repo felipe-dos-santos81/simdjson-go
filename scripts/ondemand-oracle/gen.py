@@ -174,9 +174,73 @@ def mutation_cases():
             yield case(d, script=script)
 
 
+RS_ = random.Random(20261008)  # separate, so the On-Demand cases stay byte-identical
+SFORMATS = ["whitespace", "newline", "sequence", "comma", "array"]
+SDOCS = ["1", "-2.5", "1e400", '"a\\"b"', '"é"', "true", "nul", "null", "[]", "{}", "[1,[2,{\"a\":3}]]",
+         '{"a":{"b":[1,2]},"c":"x"}', '{"a":1,"b":[true,null]}', "[1,", '{"a":', "]", "}", '"open',
+         "[1 2]", "[1,23", "18446744073709551616", '{"a":1,"a":2}']
+SSCRIPTS = [[], ["walk"], ["get a", "walk"], ["find b", "walk"], ["type"], ["obj", "keys"],
+            ["arr", "each"], ["raw"], ["int64"], ["ptr /a/b/1", "walk"]]
+PINNED = [
+    (" 1111 }", "whitespace"), ('[1,23] "lone string" {"key":"unfinished value}', "whitespace"),
+    ('{"a":1},{"b":', "comma"), ('1,2,"abc', "comma"), ("\x1e1\n\x1e2\n\x1e \"abc", "sequence"),
+    ("\x1e\x1e1\n\x1e\x1e\x1e2\n\x1e", "sequence"), (',1,,2,,"x",,', "comma"), ("true  {  ", "whitespace"),
+    ("1 2 34", "whitespace"), ("\x1e\x1e \x1e", "sequence"), ("[1,23 [1,23]", "whitespace"),
+    ("[1,23 [1,23] [1,23 [1,23]", "whitespace"), ("﻿[1] [2]", "whitespace"),
+    ('  [ {"a":1} , 2 ]  ', "array"), ("[]", "array"), ("[ ]", "array"), ("{}", "array"), ("[", "array"),
+    ('[{"a":1},2]]', "array"), ('{"id":1}\n12\n"a,\\"b"', "comma"), ("{\"a\":1}\r\n{\"a\":2}", "newline"),
+    ('{"a":1,\n"b":2}\n[3]', "newline"), ("\x1e1\x1e2", "sequence"), ('\x1e"abc"\x1e[1]', "sequence"),
+    ("1\n2\n", "newline"), ("", "whitespace"), ("   ", "whitespace"),
+]
+
+
+def scase(doc=None, file=None, fmt="whitespace", api="dom", script=()):
+    c = case(doc, file, script)
+    c["stream"] = {"api": api, "format": fmt}
+    return c
+
+
+def joined(docs, fmt):
+    if fmt == "array":
+        return "[" + ",".join(docs) + "]"
+    if fmt == "comma":
+        return RS_.choice([",", " , ", ",\n"]).join(docs)
+    if fmt == "sequence":
+        return "".join("\x1e" + d + RS_.choice(["", "\n", " "]) for d in docs)
+    if fmt == "newline":
+        return RS_.choice(["\n", "\r\n"]).join(docs)
+    return "".join(d + RS_.choice([" ", "\n", ""]) for d in docs)
+
+
+def stream_cases():
+    for doc, fmt in PINNED:
+        yield scase(doc, fmt=fmt)
+        for script in ([], ["walk"]):
+            yield scase(doc, fmt=fmt, api="ondemand", script=script)
+    for _ in range(600):
+        fmt = RS_.choice(SFORMATS)
+        doc = joined([RS_.choice(SDOCS) for _ in range(RS_.randint(1, 8))], fmt)
+        yield scase(doc, fmt=fmt)
+        yield scase(doc, fmt=fmt, api="ondemand", script=RS_.choice(SSCRIPTS))
+    for _ in range(40):  # every byte prefix: the trim at every possible end
+        fmt = RS_.choice(["whitespace", "comma", "sequence"])
+        doc = joined([RS_.choice(SDOCS[:13]) for _ in range(3)], fmt)
+        for k in range(len(doc) + 1):
+            yield scase(doc[:k], fmt=fmt)
+            yield scase(doc[:k], fmt=fmt, api="ondemand", script=["walk"])
+    files = sorted(f for f in os.listdir("testdata/jsonexamples") if f.endswith((".json", ".ndjson")))
+    for f in files:
+        if f in FILES_SKIP:
+            continue
+        path = "testdata/jsonexamples/" + f
+        for fmt in (["whitespace", "newline"] if f.endswith(".ndjson") else ["whitespace"]):
+            yield scase(file=path, fmt=fmt)
+            yield scase(file=path, fmt=fmt, api="ondemand", script=["walk"])
+
+
 def main():
     seen = set()
-    for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases):
+    for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, stream_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

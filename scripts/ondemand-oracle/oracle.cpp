@@ -23,6 +23,15 @@
 //   walk             read the top (document or value) completely, print it; pop
 // An error prints !<code> and ends the script. Output tokens are joined by
 // spaces; output over 2000 bytes is replaced by #<fnv1a64>:<length>.
+//
+// A stream case adds "stream":{"api":"dom"|"ondemand","format":F}, F one of
+// whitespace newline sequence comma array, and runs the input through
+// parse_many or iterate_many in one batch. Its output, per document:
+//   @<current_index> h<hex source>, then w<walk_dom> (dom) or the script's
+//   tokens on the document, plus x<code> if a read failed, then "dead" and
+//   nothing more if that read abandoned the document (ondemand)
+// and at the end !<code> if the stream failed or ~<truncated_bytes> if not.
+// An up-front comma_delimited_array failure prints only !3.
 #include "simdjson.h"
 #include <cinttypes>
 #include <cstdio>
@@ -215,7 +224,7 @@ template <typename V> static error_code read(V &v, const std::string &op, out_t 
   return SUCCESS;
 }
 
-static error_code run(ondemand::document &doc, const std::vector<std::string> &script, out_t &out) {
+template <typename D> static error_code run(D &doc, const std::vector<std::string> &script, out_t &out) {
   std::vector<slot> st;
   st.push_back(slot{K_DOC, {}, {}, {}});
   for (const std::string &line : script) {
@@ -344,6 +353,97 @@ static std::string unhex(std::string_view h) {
   return out;
 }
 
+static std::string tohex(std::string_view s) {
+  static const char *digits = "0123456789abcdef";
+  std::string out;
+  for (unsigned char c : s) { out += digits[c >> 4]; out += digits[c & 15]; }
+  return out;
+}
+
+// walk_dom prints a DOM value in walk's format (DOM keys are unescaped).
+static void walk_dom(dom::element e, std::string &out) {
+  switch (e.type()) {
+    case dom::element_type::ARRAY: {
+      dom::array a = e.get_array().value_unsafe(); // a named copy: the result is a temporary
+      out += '[';
+      for (dom::element x : a) { walk_dom(x, out); out += ','; }
+      out += ']';
+      break;
+    }
+    case dom::element_type::OBJECT: {
+      dom::object o = e.get_object().value_unsafe();
+      out += '{';
+      for (dom::key_value_pair kv : o) {
+        out += esc(kv.key); out += ':'; walk_dom(kv.value, out); out += ',';
+      }
+      out += '}';
+      break;
+    }
+    case dom::element_type::INT64: out += "i" + std::to_string(e.get_int64().value_unsafe()); break;
+    case dom::element_type::UINT64: out += "u" + std::to_string(e.get_uint64().value_unsafe()); break;
+    case dom::element_type::DOUBLE: out += f64(e.get_double().value_unsafe()); break;
+    case dom::element_type::STRING: out += "s" + esc(e.get_string().value_unsafe()); break;
+    case dom::element_type::BOOL: out += e.get_bool().value_unsafe() ? "true" : "false"; break;
+    case dom::element_type::NULL_VALUE: out += "null"; break;
+    default: out += "?"; break;
+  }
+}
+
+static stream_format parse_format(std::string_view f) {
+  if (f == "newline") { return stream_format::newline_delimited; }
+  if (f == "sequence") { return stream_format::json_sequence; }
+  if (f == "comma") { return stream_format::comma_delimited; }
+  if (f == "array") { return stream_format::comma_delimited_array; }
+  return stream_format::whitespace_delimited;
+}
+
+// clip bounds a source to the input: C++ can end one byte into the padding.
+static std::string_view clip(std::string_view s, const padded_string &json) {
+  size_t room = size_t(json.data() + json.size() - s.data());
+  return s.substr(0, std::min(s.size(), room));
+}
+
+static dom::parser dom_stream_parser;
+static ondemand::parser od_stream_parser;
+
+// run_stream runs a stream in one batch (batch_size >= len, so no thread).
+static void run_stream(const std::string &input, std::string_view api, std::string_view fmt,
+                       const std::vector<std::string> &script, out_t &out) {
+  padded_string json(input);
+  size_t batch = std::max<size_t>(input.size(), 32);
+  stream_format f = parse_format(fmt);
+  if (api == "dom") {
+    dom::document_stream s;
+    error_code err = dom_stream_parser.parse_many(json.data(), json.size(), batch, f).get(s);
+    if (err) { out.add("!" + std::to_string(int(err))); return; }
+    for (auto it = s.begin(); it != s.end(); ++it) {
+      out.add("@" + std::to_string(it.current_index()));
+      dom::element e;
+      if ((err = (*it).get(e))) { out.add("!" + std::to_string(int(err))); return; }
+      out.add("h" + tohex(clip(it.source(), json)));
+      std::string w;
+      walk_dom(e, w);
+      out.add("w" + w);
+    }
+    out.add("~" + std::to_string(s.truncated_bytes()));
+    return;
+  }
+  ondemand::document_stream s;
+  error_code err = od_stream_parser.iterate_many(json.data(), json.size(), batch, f).get(s);
+  if (err) { out.add("!" + std::to_string(int(err))); return; }
+  for (auto it = s.begin(); it != s.end(); ++it) {
+    out.add("@" + std::to_string(it.current_index()));
+    ondemand::document_reference d;
+    if ((err = (*it).get(d))) { out.add("!" + std::to_string(int(err))); return; }
+    out.add("h" + tohex(clip(it.source(), json)));
+    if ((err = run(d, script, out))) { out.add("x" + std::to_string(int(err))); }
+    // A read that abandoned the document leaves C++ with a null parser,
+    // which the next step can dereference: nothing past it is defined.
+    if (!static_cast<ondemand::document &>(d).is_alive()) { out.add("dead"); return; }
+  }
+  out.add("~" + std::to_string(s.truncated_bytes()));
+}
+
 int main() {
   dom::parser cases;
   ondemand::parser parser;
@@ -364,11 +464,19 @@ int main() {
     std::vector<std::string> script;
     for (auto op : c["script"].get_array()) { script.push_back(std::string(std::string_view(op))); }
     out_t out;
-    padded_string json(input);
-    ondemand::document doc;
-    error_code err = parser.iterate(json).get(doc);
-    if (!err) { err = run(doc, script, out); }
-    if (err) { out.add("!" + std::to_string(int(err))); }
+    dom::element stc;
+    if (!c["stream"].get(stc)) {
+      std::string_view api, fmt;
+      (void)stc["api"].get(api);
+      (void)stc["format"].get(fmt);
+      run_stream(input, api, fmt, script, out);
+    } else {
+      padded_string json(input);
+      ondemand::document doc;
+      error_code err = parser.iterate(json).get(doc);
+      if (!err) { err = run(doc, script, out); }
+      if (err) { out.add("!" + std::to_string(int(err))); }
+    }
     std::string joined;
     for (size_t i = 0; i < out.toks.size(); i++) { joined += (i ? " " : "") + out.toks[i]; }
     if (joined.size() > 2000) {

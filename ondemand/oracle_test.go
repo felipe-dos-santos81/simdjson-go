@@ -287,6 +287,11 @@ func runScript(p *ondemand.Parser, in []byte, script []string) string {
 	if err != nil {
 		toks = append(toks, errToken(err))
 	}
+	return joinOut(toks)
+}
+
+// joinOut joins output tokens, hashing output over 2000 bytes as oracle.cpp does.
+func joinOut(toks []string) string {
 	out := strings.Join(toks, " ")
 	if len(out) > 2000 {
 		h := fnv.New64a()
