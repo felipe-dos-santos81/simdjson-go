@@ -1,7 +1,7 @@
 # simdjson-go — Sub-project 2: Streams — Design
 
 - **Date:** 2026-10-08
-- **Status:** Approved in brainstorming; not yet prototyped
+- **Status:** Approved; implemented
 - **Builds on:** sub-project 1 (core + DOM), `docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`;
   sub-project 3a (On-Demand), `docs/superpowers/specs/2026-10-07-simdjson-go-ondemand-design.md`
 - **Reference semantics:** C++ simdjson v5.0.2 `dom::parser::parse_many` and
@@ -39,6 +39,24 @@ document that holds the bad byte instead of failing the whole input.
 5. **No per-document allocation.** Once the `Parser` is warm, a stream allocates a constant amount
    (closure, goroutine, channels) whatever the number of documents.
 6. `make check` passes, including the race run.
+
+### Results
+
+- **Oracle.** `testdata/stream/oracle.jsonl` has 2,911 cases. 106 are skipped for a stage 1 error
+  (covered by the stage 1 tests and the fuzzers) and 4 are compared up to the DOM document that
+  closes on the array's `]`.
+- **Fuzzing** (Task 6). `FuzzParseMany`: 600 s pure Go (60.3M execs) and 300 s NEON after a fix
+  (61.2M). `FuzzIterateMany`: 600 s (41.0M). `FuzzStream` (`internal/stage1`, NEON build): 120 s
+  (5.9M).
+- **Pipelining** (NEON, M3 Max, `large_amazon_cellphones`, default `BatchSize` vs one window):
+  `ParseMany` 1.25× (704 to 884 MiB/s), `IterateMany` 1.56× (873 to 1360 MiB/s). The goroutine
+  stays (§9).
+- **Regression vs `main`:** `BenchmarkParse` +1.54% and the On-Demand tasks +1.12% (geometric
+  mean), within the 2% bar.
+- **Added since the plan:** `CommaDelimitedArray` documents read the array's own `]` (both APIs);
+  an On-Demand root that starts with a closer indexes the whole input first (§5.5); bytes
+  On-Demand's delimiter skip passes over are checked by stage 1; `ParseMany` waits after a failed
+  walk in `CommaDelimitedArray` (§5.4).
 
 ## 2. Decisions
 
@@ -198,7 +216,7 @@ All of it is a consequence of C++'s windows or threads:
 ### 5.1 Stage 1 as a resumable scan
 
 `internal/stage1` gains a `Stream` holding the state `Index` already carries from block to block
-(`scanner`, `utf8Checker`, offset). `Stream.Next(buf, end, idx)` scans the 64-byte blocks of
+(`scanner`, `utf8Checker`, offset). `Stream.Reset(buf)` binds the input and `Stream.Next(end, idx)` scans the 64-byte blocks of
 `buf[off:end]`, `end` a multiple of 64 or `len(buf)`, and appends absolute offsets. `Index`
 becomes one `Next` over the whole buffer plus its existing end-of-input checks, so the kernels are
 unchanged and the indices of any window sequence equal a single pass. The portable UTF-8 path
@@ -236,10 +254,12 @@ document).
 no trailing-content check, and it returns where it stopped, which is where the next document
 starts. It never reads past a boundary candidate inside a document without failing first: inside
 a container, a value start where `,`, `]` or `}` was expected is `ErrTape`. So parsing from the
-decided prefix gives the same result as one window. One exception: a `CommaDelimitedArray`
-document whose walk reaches the candidate reads the array's `]` there if that candidate turns out
-to start the dropped tail (C++'s sentinel, §4.2), so a walk that fails there waits until that is
-known and, if so, runs again reading `]`. The fuzzer (§8) checks this.
+decided prefix gives the same result as one window. One exception: in a `CommaDelimitedArray`
+stream, a walk that fails before the input is done may have read 0 at the decided limit where, had
+that candidate turned out to start the dropped tail, it would have read the array's `]` (C++'s
+sentinel, §4.2). So after any failed walk the stream loads until the limit moves or the input is
+done and, if the limit is then the end of the indices, walks again reading `]`. The fuzzer (§8)
+checks this.
 
 ### 5.5 On-Demand
 
@@ -284,8 +304,8 @@ indexed before it is yielded.
   document; On-Demand runs the existing script language, including partial reads and documents
   left unread. The case ends with `!code` or `~truncated_bytes`. `make oracle` regenerates
   `testdata/stream/oracle.jsonl` beside the On-Demand file. `TestStreamOracle` (package `ondemand`,
-  covering both APIs) replays it, translating indices to offsets and `~n` to the final `ErrTrailingContent`. Cases
-  whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
+  covering both APIs) replays it, translating indices to offsets and `~n` to the final
+  `ErrTrailingContent`. Cases whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
   where C++ reports `UNESCAPED_CHARS` are skipped there and covered by the next test. DOM
   `CommaDelimitedArray` cases where C++ goes on after a document that closed on the array's `]`
   (§4.3) are compared only up to that document, and counted apart. C++'s next step after a read

@@ -62,6 +62,20 @@ Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the 
 
 As in C++: values are validated only when read ("validate what you use"); objects and arrays are read once, in order (`Count`, `Reset`, `Rewind` and `AtPointer` go back); a scalar `Value` may be read later; field names are compared as written, without decoding escapes; and nothing checks what follows a root array or object unless you call `AtEnd`. Reading out of order, or a handle after the next `Iterate`, returns `ErrOutOfOrderIteration` (C++ leaves it undefined); the `*Document` itself is reused by its `Parser`, so an old one reads the new document. Everything read is valid until the next `Iterate` (`StringBytes` until the next `Rewind` too). Errors are the `simdjson` package's sentinels.
 
+### Streams
+
+```go
+var p simdjson.Parser // or ondemand.Parser with IterateMany
+for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
+	if err != nil {
+		return err // *simdjson.StreamError, always the last item
+	}
+	…
+}
+```
+
+`ParseMany` and `ondemand.Parser.IterateMany` read many documents from one buffer, as C++'s `parse_many` and `iterate_many`. The formats are `Whitespace` (NDJSON, concatenated JSON), `NewlineDelimited`, `JSONSequence` (RFC 7464), `CommaDelimited` and `CommaDelimitedArray` (a top-level array's elements). Stage 1 runs `BatchSize` bytes at a time, one window ahead in a goroutine, and the batch size never changes what is yielded. That is C++'s result with the whole input in one batch, with two differences. An incomplete last document, which C++ drops silently, ends the stream with `ErrTrailingContent`. Invalid UTF-8 or a control character in a string is reported at the document that holds it, after the documents before it. `Document.Offset` and `Source` give each document's place in the input.
+
 ### Data binding
 
 ```go
@@ -121,13 +135,20 @@ On-Demand against `Parse` plus the DOM, on C++ simdjson's benchmark tasks (`onde
 |---|---|---|---|---|---|
 | 1.69× | 1.76× | 1.96× | 1.65× | 1.63× | 1.61× |
 
+Streams, `large_amazon_cellphones` (`amazon_cellphones.ndjson` repeated 40 times, 11 MB), default `BatchSize` against a single window:
+
+| | single window | pipelined | |
+|---|---|---|---|
+| `ParseMany` | 704 MiB/s | 884 MiB/s | 1.25× |
+| `IterateMany` | 873 MiB/s | 1360 MiB/s | 1.56× |
+
 ## Development
 
 ```sh
 make             # list targets
 make test        # pure-Go build (downloads the corpora into testdata/ on first run)
 make check       # gofmt, vet, every build, race; run before committing
-make fuzz target=FuzzUnmarshal time=60s   # or FuzzOnDemand, FuzzParse
+make fuzz target=FuzzUnmarshal time=60s   # or FuzzOnDemand, FuzzParse, FuzzParseMany
 make bench neon=1 bench=Unmarshal/
 make bench neon=1 pkg=./ondemand bench=Tasks
 ```
@@ -136,7 +157,7 @@ Corpora come from [simdjson-data](https://github.com/simdjson/simdjson-data), pi
 
 ## Status
 
-Done: core and DOM (sub-project 1), the On-Demand API (3a), data binding (4). `Unmarshal` on On-Demand (3b) was prototyped and dropped: with v2's full validation it gained only 1.13–1.26×. Next: streams (`ParseMany`, 2). amd64 uses the portable kernel (no x86 SIMD yet).
+Done: core and DOM (sub-project 1), the On-Demand API (3a), data binding (4). `Unmarshal` on On-Demand (3b) was prototyped and dropped: with v2's full validation it gained only 1.13–1.26×. Done: streams (2). amd64 uses the portable kernel (no x86 SIMD yet).
 
 ## License
 
