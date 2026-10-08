@@ -1,36 +1,5 @@
 package number
 
-import (
-	"encoding/binary"
-	"math/bits"
-)
-
-// Digits reads the digits at s[p:], eight at a time where it can (C++
-// parse_number's fraction loop), appending them to mant: mant*10**n plus
-// their value, which may wrap. It returns the end of the digits and mant.
-// The caller counts the digits (end - p) and, past 19, decides with
-// SignificantDigits whether mant is exact. Package ondemand keeps an
-// inlined copy (see parseDouble).
-func Digits(s []byte, p int, mant uint64) (int, uint64) {
-	for p+8 <= len(s) {
-		v := binary.LittleEndian.Uint64(s[p:])
-		if !IsEightDigits(v) {
-			// Fewer than 8 digits left: take them all at once. The value is
-			// what the digit-by-digit loop gives, wrapping included.
-			t := v ^ 0x3030303030303030
-			n := bits.TrailingZeros64(((t+0x7676767676767676)|t)&0x8080808080808080) >> 3
-			return p + n, mant*Pow10Uint64[n] + ParseEightDigits(t<<(64-8*n)) // n == 0 shifts by 64: 0
-		}
-		mant = mant*100000000 + ParseEightDigits(v-0x3030303030303030)
-		p += 8
-	}
-	for p < len(s) && IsDigit(s[p]) { // within 8 bytes of the end
-		mant = 10*mant + uint64(s[p]-'0')
-		p++
-	}
-	return p, mant
-}
-
 // SignificantDigits counts the digits of a number's significand from the
 // first nonzero one (num holds the digits and maybe a '.' and exponent).
 func SignificantDigits(num []byte) int {

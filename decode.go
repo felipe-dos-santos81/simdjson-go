@@ -602,9 +602,7 @@ func makeSliceDecoder(t reflect.Type) decodeFunc {
 			v.SetLen(n)
 		} else {
 			v.SetLen(n)
-			for i := range n {
-				v.Index(i).SetZero()
-			}
+			v.Clear()
 		}
 		i := 0
 		for c := range e.items() {

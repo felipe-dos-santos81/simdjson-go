@@ -29,9 +29,7 @@ const MaxExp10 = 400
 // ToFloat64 converts the float written as text, whose significand digits,
 // read in order into mant, make its value mant * 10**exp10, negated if neg;
 // if trunc (more than 19 significant digits, so mant may have wrapped), text
-// is parsed instead, as C++ does. Callers test trunc as
-// nDigits > 19 && SignificantDigits(digits) > 19, inline: slicing digits
-// for every float costs canada.json 1%. ok is false if the result rounds to ±Inf.
+// is parsed instead, as C++ does. ok is false if the result rounds to ±Inf.
 func ToFloat64(text []byte, mant uint64, exp10 int64, neg, trunc bool) (f float64, ok bool) {
 	if trunc {
 		f, err := strconv.ParseFloat(unsafe.String(unsafe.SliceData(text), len(text)), 64)

@@ -1,8 +1,10 @@
 package simdjson
 
 import (
+	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -100,5 +102,32 @@ func TestNumberErrors(t *testing.T) {
 	for _, in := range []string{"1e400", "-1e400", "1e99999999999999999999", "1.", "1.e5", "1e", "1e+", "01", "-", "-a", "1.5.2", "1ee5", "2x"} {
 		var p Parser
 		checkErr(t, in, errOf(p.Parse([]byte(in))), ErrNumber)
+	}
+}
+
+// TestFractionDigits: the fraction is read eight digits at a time, so check
+// every length around the 8-byte steps, at the end of the input and before
+// an exponent or a terminator, against strconv.
+func TestFractionDigits(t *testing.T) {
+	var p Parser
+	for n := 1; n <= 40; n++ {
+		frac := "9876543210987654321098765432109876543210"[:n]
+		for _, form := range []string{"1.%s", "1.%se5", "[1.%s]", "[1.%s,2]"} {
+			in := fmt.Sprintf(form, frac)
+			doc, err := p.Parse([]byte(in))
+			if err != nil {
+				t.Fatalf("%s: %v", in, err)
+			}
+			e := doc.Root()
+			if a, err := e.Array(); err == nil {
+				e, _ = a.At(0)
+			}
+			got, _ := e.Float64()
+			num := strings.Trim(in, "[]")
+			num, _, _ = strings.Cut(num, ",")
+			if want, _ := strconv.ParseFloat(num, 64); got != want {
+				t.Errorf("%s: %v, want %v", in, got, want)
+			}
+		}
 	}
 }

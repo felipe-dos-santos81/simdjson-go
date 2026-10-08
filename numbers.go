@@ -3,6 +3,7 @@ package simdjson
 import (
 	"encoding/binary"
 	"math"
+	"math/bits"
 
 	"simdjson-go/internal/number"
 )
@@ -13,12 +14,8 @@ import (
 // fraction, as C++) and decimal exponent for number.DecimalToFloat64; a float
 // with more than 19 significant digits falls back to strconv.ParseFloat. Both
 // fail only on overflow to ±Inf, which C++ also rejects.
-//
-// Tried and dropped (2026-10-08, round-robin against main): reading the
-// integer part with number.Digits (canada +3.4%), deciding truncation in a
-// helper or in ToFloat64 rather than inline, and sparing trailing zeros the
-// strconv fallback (+1.5-2% on most files: the bigger function slows the
-// common paths).
+// Measured slower (2026-10-08): number.Digits for the integer part, and the
+// truncation test anywhere but inline here.
 func (b *builder) number(off int) error {
 	buf := b.buf
 	p := off
@@ -44,7 +41,31 @@ func (b *builder) number(off int) error {
 		isFloat = true
 		p++
 		frac := p
-		p, mant = number.Digits(buf, p, mant)
+		// The fraction, eight digits at a time where it can (C++
+		// parse_number); mant may wrap. The same loop is in
+		// ondemand.parseDouble; keep the two in step. A shared function
+		// was 4% slower on canada.json.
+		tail := false
+		for p+8 <= len(buf) {
+			v := binary.LittleEndian.Uint64(buf[p : p+8])
+			if !number.IsEightDigits(v) {
+				// Fewer than 8 digits left: take them all at once. The
+				// value is what the digit-by-digit loop gives, wrapping
+				// included.
+				t := v ^ 0x3030303030303030
+				n := bits.TrailingZeros64(((t+0x7676767676767676)|t)&0x8080808080808080) >> 3
+				mant = mant*number.Pow10Uint64[n] + number.ParseEightDigits(t<<(64-8*n)) // n == 0 shifts by 64: 0
+				p += n
+				tail = true
+				break
+			}
+			mant = mant*100000000 + number.ParseEightDigits(v-0x3030303030303030)
+			p += 8
+		}
+		for !tail && p < len(buf) && number.IsDigit(buf[p]) { // within 8 bytes of the end
+			mant = 10*mant + uint64(buf[p]-'0')
+			p++
+		}
 		if p == frac {
 			return ErrNumber
 		}

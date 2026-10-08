@@ -114,11 +114,12 @@ func parseDouble(s []byte, pad byte) (float64, error) {
 	if at(s, p, pad) == '.' {
 		p++
 		fracStart := p
-		// number.Digits, inlined (the call costs large_random 1.5%); keep
-		// the two in step.
+		// The fraction, eight digits at a time where it can; mant may wrap.
+		// The same loop is in stage 2 (numbers.go, builder.number); keep the
+		// two in step. A shared function cost large_random 1.5%.
 		tail := false
 		for p+8 <= len(s) {
-			v := binary.LittleEndian.Uint64(s[p:])
+			v := binary.LittleEndian.Uint64(s[p : p+8])
 			if !number.IsEightDigits(v) {
 				t := v ^ 0x3030303030303030
 				n := bits.TrailingZeros64(((t+0x7676767676767676)|t)&0x8080808080808080) >> 3
