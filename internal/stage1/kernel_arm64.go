@@ -159,7 +159,13 @@ func (u *utf8Checker) check(in, prev archsimd.Uint8x16) {
 	u.err = u.err.Or(must23.And(archsimd.BroadcastUint8x16(0x80)).Xor(sc))
 }
 
-func (u *utf8Checker) valid([]byte) bool {
-	e := u.err.Or(u.prevIncomplete).ReshapeToUint64s()
-	return e.GetElem(0)|e.GetElem(1) == 0
+// validWindow reports whether no invalid UTF-8 has been seen; at the end of
+// the input it also rejects a character left incomplete.
+func (u *utf8Checker) validWindow(buf []byte, _, end int) bool {
+	e := u.err
+	if end == len(buf) {
+		e = e.Or(u.prevIncomplete)
+	}
+	r := e.ReshapeToUint64s()
+	return r.GetElem(0)|r.GetElem(1) == 0
 }

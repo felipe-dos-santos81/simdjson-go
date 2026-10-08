@@ -51,7 +51,7 @@ func neonValid(buf []byte) bool {
 		blk, _ := block(buf, off, &tail)
 		u.next(blk)
 	}
-	return u.valid(buf)
+	return u.validWindow(buf, 0, len(buf))
 }
 
 func TestUTF8MatchesStdlib(t *testing.T) {

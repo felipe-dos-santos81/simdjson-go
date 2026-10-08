@@ -5,6 +5,7 @@ package stage1
 
 import (
 	"errors"
+	"math"
 	"math/bits"
 )
 
@@ -95,28 +96,17 @@ func Index(buf []byte, idx []uint32) ([]uint32, error) {
 		// twice, and it reserves an eighth of the one-per-byte worst case.
 		idx = make([]uint32, 0, len(buf)/8+64)
 	}
-	var (
-		s    scanner
-		u    utf8Checker
-		tail [64]byte
-	)
-	for off := 0; off < len(buf); off += 64 {
-		blk, _ := block(buf, off, &tail)
-		u.next(blk)
-		structurals, _ := s.next(classify(blk))
-		for structurals != 0 { // ponytail: plain loop; unroll if BenchmarkIndex shows it hot
-			idx = append(idx, uint32(off+bits.TrailingZeros64(structurals)))
-			structurals &= structurals - 1
-		}
-	}
+	var st Stream
+	st.Reset(buf)
+	idx = st.Next(len(buf), idx)
 	switch {
-	case s.prevInString != 0:
+	case st.Unclosed():
 		return idx, ErrUnclosedString
-	case s.unescaped != 0:
+	case st.BadCtrl != math.MaxInt:
 		return idx, ErrUnescapedChars
 	case len(idx) == 0:
 		return idx, ErrEmpty
-	case !u.valid(buf):
+	case st.BadUTF8 != math.MaxInt:
 		return idx, ErrUTF8
 	}
 	return idx, nil

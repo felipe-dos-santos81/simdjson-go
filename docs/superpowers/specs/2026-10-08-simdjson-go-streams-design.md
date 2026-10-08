@@ -145,10 +145,14 @@ Every error ends the stream, as in C++. `Offset` is C++'s `current_index` transl
 | Tail dropped by C++'s final trim (§5.3) | `ErrTrailingContent` | start of the dropped region: `len − truncated_bytes` in C++ terms |
 | `CommaDelimitedArray` input not `[`…`]` after trimming whitespace | `ErrTape`, as the only item | 0 |
 
-Within the document that holds a bad byte, C++'s check order applies (`ErrUnescapedChars` before
-`ErrUTF8`), so a stream of one document reports what `Parse` reports. This and the trailing error
-are the two differences from C++ in one window, where a stage 1 error is the first and only item
-and a bad tail is dropped without an error.
+A document *holds* the bytes from its first structural up to the next document's first structural
+(or the end of the input). For the DOM, the next document starts where stage 2 stopped; if stage 2
+fails, and for On-Demand, it starts where a bracket count from the root ends (C++ `skip_child`).
+The dropped tail holds its own bytes, so a bad byte there is reported at the tail's start with the
+stage 1 error instead of `ErrTrailingContent`. Within the document that holds a bad byte, C++'s
+check order applies (`ErrUnescapedChars` before `ErrUTF8`), so a stream of one document reports
+what `Parse` reports. This and the trailing error are the two differences from C++ in one window,
+where a stage 1 error is the first and only item and a bad tail is dropped without an error.
 
 ### 4.2 Input rules
 
@@ -175,6 +179,9 @@ All of it is a consequence of C++'s windows or threads:
 - The threaded path's two divergences: settings lost after the first batch, and documents skipped
   after an empty mid-stream batch.
 - The fallback kernel's narrower UTF-8 check (Go has one checker, equal to NEON).
+- `trim_partial_utf8`: C++ drops a UTF-8 character cut at the end of every window, the final one
+  included, without an error. In Go a character cut at the end of the input is invalid UTF-8
+  (§4.1); a character cut at a window's end is completed by the next window.
 
 ## 5. Internals
 
@@ -225,11 +232,15 @@ decided prefix gives the same result as one window. The fuzzer (§8) checks this
 
 Before a document is yielded, the segmenter extends the decided prefix to the document's
 bracket-count end plus one structural (`rootTokenLen` peeks two ahead and, in C++, sees the next
-document's start). For `NewlineDelimited` and `JSONSequence`, skipping an unread document scans
-forward with `bytes.IndexByte` for the delimiter, loading windows as needed. The `Document` reads
-a view of `pending` ending at the decided point plus C++'s sentinels. Handles keep positions, not
-pointers, and `pending` is compacted only between documents. The fuzzer checks that no read
-reaches the view's end before the input's.
+document's start). Moving to the next document (C++ `next_document`) runs in the segmenter, not
+in the `Document`, so it can load windows: a bracket count from the reader's cursor and depth
+(`skip_child`), or, for `NewlineDelimited` and `JSONSequence` when the document was not read to
+its end, a forward scan with `bytes.IndexByte` for the delimiter (`skip_to_delimiter`). The
+`Document` reads a view of `pending` that runs past the decided point, followed by C++'s
+sentinels once the input is done. Handles keep positions, not pointers, and `pending` is compacted
+only between documents (once the consumed half is at least half of it, so copying stays linear).
+`Iterate` gets its own index buffer, so calling it inside the loop cannot overwrite `pending`. The
+fuzzer checks that no read reaches the view's end before the input's.
 
 ## 6. Changes to existing code
 
@@ -259,7 +270,8 @@ reaches the view's end before the input's.
   left unread. The case ends with `!code` or `~truncated_bytes`. `make oracle` regenerates
   `testdata/stream/oracle.jsonl` beside the On-Demand file. `TestStreamOracle` in both packages
   replays it, translating indices to offsets and `~n` to the final `ErrTrailingContent`. Cases
-  where C++ reports a stage 1 error are skipped there and covered by the next test.
+  whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
+  where C++ reports `UNESCAPED_CHARS` are skipped there and covered by the next test.
 - **Cases** (`gen.py`): the C++ tests' inputs (`issue2181`, `issue2170`, `test_naked_iterators`,
   `issue1977`, `issue2137`, `fuzzaccess`, `truncated_bytes_filtered_formats`,
   `source_scalar_before_truncated`, the comma and RS runs); corpus scalars and containers joined
