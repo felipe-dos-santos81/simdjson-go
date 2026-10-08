@@ -1,19 +1,22 @@
-# simdjson-go: Go port of the simdjson parser and On-Demand API, with encoding/json/v2-style binding.
-# Builds: pure Go (default), NEON (GOEXPERIMENT=simd, arm64), forced portable (-tags purego).
+# simdjson-go: a pure-Go port of simdjson (parser, DOM, On-Demand, streams) with
+# encoding/json/v2-style binding.
+# Builds: pure Go (default), NEON (GOEXPERIMENT=simd, arm64), portable only (-tags purego).
 PROJECT = simdjson-go
 
 GO        = go
 SIMD      = GOEXPERIMENT=simd
-# Dev tooling only, pinned; the library stays standard-library only.
+# Dev tooling only, pinned; the library uses the standard library only.
 BENCHSTAT = $(GO) run golang.org/x/perf/cmd/benchstat@v0.0.0-20260929162123-406019bb8b68
 target ?= FuzzParse
 time   ?= 60s
 count  ?= 6
 
-# NEON-vs-portable fuzz targets: NEON build only, in internal/stage1.
-NEON_FUZZ = FuzzClassify FuzzUTF8 FuzzStream
-FUZZ_ENV  = $(if $(or $(neon),$(filter $(target),$(NEON_FUZZ))),$(SIMD))
-FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,$(if $(filter $(target),FuzzOnDemand FuzzIterateMany),./ondemand/,.))
+# The package of each fuzz target (the root package by default).
+# The stage 1 targets compare the NEON and portable kernels, so they run on the NEON build.
+STAGE1_FUZZ   = FuzzClassify FuzzUTF8 FuzzStream
+ONDEMAND_FUZZ = FuzzOnDemand FuzzIterateMany
+FUZZ_PKG = $(if $(filter $(target),$(STAGE1_FUZZ)),./internal/stage1/,$(if $(filter $(target),$(ONDEMAND_FUZZ)),./ondemand/,.))
+FUZZ_ENV = $(if $(or $(neon),$(filter $(target),$(STAGE1_FUZZ))),$(SIMD))
 
 .PHONY: help testdata clean fmt vet check \
         test test-neon test-purego test-amd64 test-race \
@@ -47,7 +50,7 @@ vet: ## Vet pure Go and NEON; type-check 386 and wasm
 	GOOS=linux GOARCH=386 $(GO) vet ./...
 	GOOS=wasip1 GOARCH=wasm $(GO) vet ./...
 
-check: fmt vet test test-purego test-neon test-amd64 test-race ## Everything; run before committing
+check: fmt vet test test-purego test-neon test-amd64 test-race ## All checks; run before you commit
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -68,7 +71,7 @@ test-race: testdata ## Race detector, short mode
 
 # ── Fuzzing and benchmarks ───────────────────────────────────────────────────
 
-fuzz: ## Fuzz one target [target=FuzzParse time=60s neon=1]
+fuzz: ## Fuzz one target in its package [target=FuzzParse time=60s neon=1]
 	$(FUZZ_ENV) $(GO) test -run '^$$' -fuzz '^$(target)$$' -fuzztime $(time) $(FUZZ_PKG)
 
 bench: testdata ## Benchmarks [bench=regex count=6 neon=1 pkg=./ondemand out=file]
@@ -78,5 +81,5 @@ bench: testdata ## Benchmarks [bench=regex count=6 neon=1 pkg=./ondemand out=fil
 benchstat: ## Compare two benchmark files [old=a.txt new=b.txt]
 	$(BENCHSTAT) $(old) $(new)
 
-oracle: testdata ## Regenerate testdata/ondemand/oracle.jsonl from C++ simdjson (needs a C++20 compiler)
+oracle: testdata ## Record C++ simdjson's results in testdata/{ondemand,stream}/ (needs a C++20 compiler)
 	./scripts/ondemand-oracle/regen.sh

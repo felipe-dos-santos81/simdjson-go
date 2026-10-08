@@ -2,7 +2,7 @@
 
 A pure-Go port of [simdjson](https://github.com/simdjson/simdjson): its parser, DOM and On-Demand APIs, plus `Unmarshal` and `Marshal` that behave like `encoding/json/v2`. No cgo, no dependencies outside the standard library. On arm64, an optional NEON kernel speeds up the structural scan.
 
-The parser and On-Demand reader match C++ simdjson v5.0.2 (tape format, error codes, edge cases) and are checked against it: the parser on the simdjson-data corpora, On-Demand on 30,000 scripted reads recorded from C++.
+The parser, the On-Demand reader and the document streams match C++ simdjson v5.0.2: tape format, error codes and edge cases. Tests check them against C++: the parser on the simdjson-data corpora, On-Demand on about 30,000 reads recorded from C++, and the streams on about 3,000 recorded streams.
 
 ## Usage
 
@@ -68,13 +68,20 @@ As in C++: values are validated only when read ("validate what you use"); object
 var p simdjson.Parser // or ondemand.Parser with IterateMany
 for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
 	if err != nil {
-		return err // *simdjson.StreamError, always the last item
+		return err // a *simdjson.StreamError, always the last item
 	}
 	…
 }
 ```
 
-`ParseMany` and `ondemand.Parser.IterateMany` read many documents from one buffer, as C++'s `parse_many` and `iterate_many`. The formats are `Whitespace` (NDJSON, concatenated JSON), `NewlineDelimited`, `JSONSequence` (RFC 7464), `CommaDelimited` and `CommaDelimitedArray` (a top-level array's elements). Stage 1 runs `BatchSize` bytes at a time, one window ahead in a goroutine, and the batch size never changes what is yielded. That is C++'s result with the whole input in one batch, with two differences. An incomplete last document, which C++ drops silently, ends the stream with `ErrTrailingContent`. Invalid UTF-8 or a control character in a string is reported at the document that holds it, after the documents before it. `Document.Offset` and `Source` give each document's place in the input.
+`ParseMany` and `ondemand.Parser.IterateMany` read many documents from one buffer, as C++'s `parse_many` and `iterate_many` do.
+
+- **Formats:** `Whitespace` (NDJSON, concatenated JSON), `NewlineDelimited`, `JSONSequence` (RFC 7464), `CommaDelimited`, and `CommaDelimitedArray` (the elements of one top-level array).
+- **`BatchSize`** (default 1,000,000 bytes) sets how much input stage 1 indexes at a time. A goroutine indexes the next window while you read the current one. The batch size changes speed and memory, never the result.
+- **Results** are C++'s results with the whole input in one batch, with two differences. An incomplete last document ends the stream with `ErrTrailingContent` (C++ drops it silently). Invalid UTF-8 or a control character in a string is reported at the document that holds it, after the documents before it.
+- **`Document.Offset` and `Source`** give each document's position and bytes in the input.
+
+**Lifetime:** a yielded document is valid until the loop's next step, or the next parse on the same `Parser`. After its step, an On-Demand document returns `ErrOutOfOrderIteration`. A second stream on the same `Parser` ends the first.
 
 ### Data binding
 
@@ -135,9 +142,9 @@ On-Demand against `Parse` plus the DOM, on C++ simdjson's benchmark tasks (`onde
 |---|---|---|---|---|---|
 | 1.69× | 1.76× | 1.96× | 1.65× | 1.63× | 1.61× |
 
-Streams, `large_amazon_cellphones` (`amazon_cellphones.ndjson` repeated 40 times, 11 MB), default `BatchSize` against a single window:
+Streams on `large_amazon_cellphones` (`amazon_cellphones.ndjson` repeated 40 times, 11 MB), one window against the default `BatchSize`:
 
-| | single window | pipelined | |
+| | One window | Default (pipelined) | Speed-up |
 |---|---|---|---|
 | `ParseMany` | 704 MiB/s | 884 MiB/s | 1.25× |
 | `IterateMany` | 873 MiB/s | 1360 MiB/s | 1.56× |
@@ -145,15 +152,16 @@ Streams, `large_amazon_cellphones` (`amazon_cellphones.ndjson` repeated 40 times
 ## Development
 
 ```sh
-make             # list targets
-make test        # pure-Go build (downloads the corpora into testdata/ on first run)
-make check       # gofmt, vet, every build, race; run before committing
-make fuzz target=FuzzUnmarshal time=60s   # or FuzzOnDemand, FuzzParse, FuzzParseMany, FuzzIterateMany
+make             # list the targets
+make test        # tests, pure-Go build (downloads the corpora into testdata/ on first run)
+make check       # gofmt, vet, every build, race: run before you commit
+make fuzz target=FuzzParseMany time=60s   # any Fuzz* target; make picks its package
 make bench neon=1 bench=Unmarshal/
 make bench neon=1 pkg=./ondemand bench=Tasks
+make oracle      # record the C++ results again (needs a C++20 compiler)
 ```
 
-Corpora come from [simdjson-data](https://github.com/simdjson/simdjson-data), pinned by commit. Designs and plans are in [`docs/superpowers/`](docs/superpowers/); contributor and agent guidance is in [`AGENTS.md`](AGENTS.md).
+The corpora come from [simdjson-data](https://github.com/simdjson/simdjson-data), pinned to one commit. The designs and plans are in [`docs/superpowers/`](docs/superpowers/). [`AGENTS.md`](AGENTS.md) has guidance for contributors and agents.
 
 ## Status
 

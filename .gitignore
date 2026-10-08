@@ -1,5 +1,5 @@
 # Test corpora, downloaded by scripts/fetch-testdata.sh (make testdata).
-# testdata/fuzz/ is NOT ignored: commit fuzz regressions found there.
+# The testdata/fuzz/ directories (root and ondemand/) are NOT ignored: commit fuzz regressions.
 testdata/jsonchecker/
 testdata/jsonexamples/
 
