@@ -85,12 +85,12 @@ func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			// A document still open at the end of the input reads pad there
 			// (C++'s sentinel structural_indexes[n] = len); it then ends the
 			// stream, where C++ goes on past its sentinel.
-			end := byte(0)
+			last := byte(0) // what a read past lim sees
 			if r.Done {
-				end = pad
+				last = pad
 			}
-			n, err := p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true, end)
-			if err != nil && end != pad {
+			n, err := p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true, last)
+			if err != nil && last != pad {
 				// A failed walk may have read 0 at lim. Had lim started the
 				// dropped tail, it would have read pad (only a
 				// CommaDelimitedArray has one): find out.

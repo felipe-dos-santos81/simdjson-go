@@ -74,7 +74,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 		case NewlineDelimited:
 			delim = '\n'
 		case JSONSequence:
-			delim = 0x1E
+			delim = stream.RS
 		}
 		for pos := 0; ; {
 			pos = r.Compact(pos)
@@ -116,6 +116,11 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			cur, depth := pos, 1
 			if d.gen == mine && (d.depth > 0 || d.err == nil) {
 				cur, depth = pos+d.pos, d.depth
+			}
+			if d.gen == mine {
+				// The document's step is over; Compact may move the indices
+				// it views, so later reads report ErrOutOfOrderIteration.
+				d.kill()
 			}
 			if delim != 0 && depth > 0 {
 				if i, ok := r.SkipTo(cur, delim); ok {

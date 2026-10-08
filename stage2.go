@@ -201,10 +201,11 @@ arrayContinue:
 documentEnd:
 	b.tape = append(b.tape, word(tagRoot, 0))
 	b.tape[0] = word(tagRoot, uint64(len(b.tape)))
-	if !b.streaming && b.pos != len(b.idx) { // more than one root value, or trailing content
-		return ErrTape
-	}
-	if b.streaming && b.pos > len(b.idx)+1 { // read past pad: never a document
+	if b.streaming {
+		if b.pos > len(b.idx)+1 { // read past pad: never a document
+			return ErrTape
+		}
+	} else if b.pos != len(b.idx) { // more than one root value, or trailing content
 		return ErrTape
 	}
 	return nil

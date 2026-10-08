@@ -436,3 +436,62 @@ func TestIterateManyReadPastRoot(t *testing.T) {
 		}
 	}
 }
+
+// TestStreamStage1Formats: stage 1 errors in the comma and RS formats, and
+// in the dropped tail, are reported where spec §4.1 says, by both APIs.
+func TestStreamStage1Formats(t *testing.T) {
+	var dp simdjson.Parser
+	var op ondemand.Parser
+	for _, c := range []struct {
+		in   string
+		f    simdjson.Format
+		want string
+	}{
+		{"{\"a\":\"x\"},{\"b\":\"\xff\"},{\"c\":1}", simdjson.CommaDelimited, `0:{"a":"x"} !10 utf8`},
+		{"\x1e{\"a\":1}\n\x1e{\"b\":\"\x01\"}\n\x1e2", simdjson.JSONSequence, `1:{"a":1} !10 ctrl`},
+		{"[1] [2 \"\xff", simdjson.Whitespace, "0:[1] !4 utf8"},       // in the dropped tail
+		{"1,2,[3,\"\xff", simdjson.CommaDelimited, "0:1 2:2 !4 utf8"}, // ditto
+	} {
+		for _, bs := range []int{0, 64} {
+			dp.BatchSize, op.BatchSize = bs, bs
+			if got := domItems(&dp, []byte(c.in), c.f); got != c.want {
+				t.Errorf("DOM %q BatchSize %d: %s, want %s", c.in, bs, got, c.want)
+			}
+			if got := odItems(&op, []byte(c.in), c.f); got != c.want {
+				t.Errorf("On-Demand %q BatchSize %d: %s, want %s", c.in, bs, got, c.want)
+			}
+		}
+	}
+}
+
+// TestIterateManyStaleDocument reads the previous document while the stream
+// yields its final error, after the reader compacted its indices: it must
+// report ErrOutOfOrderIteration, never panic.
+func TestIterateManyStaleDocument(t *testing.T) {
+	for _, in := range []string{
+		strings.Repeat("0 ", 12) + "[1,1] [\"\xff\",1,2,3] 7 8",
+		strings.Repeat("[1] ", 29) + "{\"a\":[ 7 7 \"\xff\" [2]",
+	} {
+		for _, bs := range []int{0, 64} {
+			p := ondemand.Parser{BatchSize: bs}
+			var prev *ondemand.Document
+			sawErr := false
+			for doc, err := range p.IterateMany([]byte(in), ondemand.Whitespace) {
+				if err != nil {
+					sawErr = true
+					if src := prev.Source(); src != nil {
+						t.Errorf("%q BatchSize %d: stale Source = %q", in, bs, src)
+					}
+					if _, err := prev.Type(); !errors.Is(err, simdjson.ErrOutOfOrderIteration) {
+						t.Errorf("%q BatchSize %d: stale Type: %v", in, bs, err)
+					}
+					continue
+				}
+				prev = doc
+			}
+			if !sawErr {
+				t.Errorf("%q BatchSize %d: no error item", in, bs)
+			}
+		}
+	}
+}

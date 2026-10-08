@@ -27,7 +27,7 @@ const (
 // DefaultBatchSize is C++'s DEFAULT_BATCH_SIZE.
 const DefaultBatchSize = 1000000
 
-const rs = 0x1E // RFC 7464 record separator
+const RS = 0x1E // RFC 7464 record separator
 
 func isSpace(c byte) bool { return c == ' ' || c == '\t' || c == '\n' || c == '\r' }
 
@@ -102,7 +102,7 @@ type Reader struct {
 	held    uint32 // the last raw index: added once the next one arrives
 	hasHeld bool
 	depth   int  // CommaDelimited: bracket depth
-	rs      bool // JSONSequence: an RS was seen
+	sawRS   bool // JSONSequence: an RS was seen
 	insert  int  // JSONSequence: a value start to add before the next index, or -1
 	skipTo  int  // JSONSequence: raw indices below it are inside an RS run
 
@@ -268,10 +268,10 @@ func (r *Reader) push(i uint32) {
 			}
 			r.insert = -1
 		}
-		if c == rs {
-			r.rs = true
+		if c == RS {
+			r.sawRS = true
 			v := int(i) + 1
-			for v < len(r.Buf) && (isSpace(r.Buf[v]) || r.Buf[v] == rs) {
+			for v < len(r.Buf) && (isSpace(r.Buf[v]) || r.Buf[v] == RS) {
 				v++
 			}
 			r.skipTo = v
@@ -321,7 +321,7 @@ func (r *Reader) finish(unclosed bool) {
 	r.insert = -1
 	n := len(r.Idx)
 	r.N = n
-	if r.format != JSONSequence || !r.rs { // with an RS, every record is kept
+	if r.format != JSONSequence || !r.sawRS { // with an RS, every record is kept
 		r.N = r.keep()
 	}
 	switch {
@@ -520,7 +520,7 @@ func ScalarSource(buf []byte, start, next int, comma bool) []byte {
 		}
 	} else {
 		for tok < n {
-			if c := s[tok]; isCSpace(c) || c == ',' || c == '{' || c == '[' || c == 0 || c == rs {
+			if c := s[tok]; isCSpace(c) || c == ',' || c == '{' || c == '[' || c == 0 || c == RS {
 				break
 			}
 			tok++
@@ -529,7 +529,7 @@ func ScalarSource(buf []byte, start, next int, comma bool) []byte {
 	if tok > 0 && tok < n {
 		n = tok
 	}
-	for n > 1 && (isCSpace(s[n-1]) || s[n-1] == 0 || s[n-1] == rs || comma && s[n-1] == ',') {
+	for n > 1 && (isCSpace(s[n-1]) || s[n-1] == 0 || s[n-1] == RS || comma && s[n-1] == ',') {
 		n--
 	}
 	return s[:n:n]

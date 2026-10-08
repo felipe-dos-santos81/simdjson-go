@@ -38,8 +38,7 @@ const maxSize = 0xFFFFFFFF - 3
 // The Document, every handle obtained from it and every slice returned by
 // Raw and RawKey are valid until the next Iterate on p, or the next step of
 // an IterateMany loop on p; slices from StringBytes until then or the next
-// Rewind. The returned *Document is
-// the same for every call on p.
+// Rewind. The returned *Document is the same for every call on p.
 func (p *Parser) Iterate(b []byte) (*Document, error) {
 	b = bytes.TrimPrefix(b, bom)
 	d := &p.doc

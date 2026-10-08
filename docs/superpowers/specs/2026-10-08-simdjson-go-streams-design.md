@@ -137,7 +137,8 @@ for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
 - The `Seq2` is not single-use: ranging over it again starts again.
 - Breaking out of the loop stops the stage 1 goroutine before `range` returns.
 - A yielded `*Document`, and everything read from it, is valid until the loop's next step or the
-  next `Parse`, `ParseMany`, `Iterate` or `IterateMany` on `p`. The stream keeps its own index
+  next `Parse`, `ParseMany`, `Iterate` or `IterateMany` on `p`; On-Demand's document reports
+  `ErrOutOfOrderIteration` once its step is over. The stream keeps its own index
   buffers in the `Parser`, so a `Parse` or `Iterate` inside the loop only invalidates the current
   document. Starting a second stream on `p` while one runs ends the older one with
   `ErrOutOfOrderIteration`.
@@ -180,7 +181,8 @@ where a stage 1 error is the first and only item and a bad tail is dropped witho
 
 ### 4.2 Input rules
 
-- Empty, whitespace-only, BOM-only input and `[]` (array format) yield nothing.
+- Empty, whitespace-only and BOM-only input yield nothing, and so does `[]` in `CommaDelimitedArray`
+  (where input that is not an array at all is `ErrTape`, §4.1).
 - A leading UTF-8 BOM is skipped.
 - `1 2 34` yields `1`, `2`, `34`. As in C++ streams, a root scalar never gets
   `ErrTrailingContent`, and the DOM skips the unmatched-outer-brace check (C++ issue 906).
@@ -223,8 +225,8 @@ All of it is a consequence of C++'s windows or threads:
 `internal/stage1` gains a `Stream` holding the state `Index` already carries from block to block
 (`scanner`, `utf8Checker`, offset). `Stream.Reset(buf)` binds the input and `Stream.Next(end, idx)` scans the 64-byte blocks of
 `buf[off:end]`, `end` a multiple of 64 or `len(buf)`, and appends absolute offsets. `Index`
-becomes one `Next` over the whole buffer plus its existing end-of-input checks, so the kernels are
-unchanged and the indices of any window sequence equal a single pass. The portable UTF-8 path
+becomes one `Next` over the whole buffer plus its existing end-of-input checks, so the classifiers
+are unchanged (the UTF-8 checker's end-of-input `valid` becomes the per-window `validWindow`) and the indices of any window sequence equal a single pass. The portable UTF-8 path
 validates each window with `utf8.Valid`, holding back a character cut at the window's end.
 
 ### 5.2 Pipelining
@@ -284,7 +286,9 @@ its end, a forward scan with `bytes.IndexByte` for the delimiter (`skip_to_delim
 sentinels once the input is done. Handles keep positions, not pointers, and `pending` is compacted
 only between documents (once the consumed half is at least half of it, so copying stays linear).
 `Iterate` gets its own index buffer, so calling it inside the loop cannot overwrite `pending`. The
-fuzzer checks that no read reaches the view's end before the input's. A read can still run past the
+loop's next step ends the yielded document (as a failed `Iterate` does) before `pending` is
+compacted, so reading it afterwards returns `ErrOutOfOrderIteration` instead of reading moved
+indices. `FuzzIterateMany` checks that every read gives the same result at every batch size. A read can still run past the
 root to the end of C++'s one batch: on a malformed root (`[}` leaves the array open for
 On-Demand; C++'s source walk of a root starting with `]` or `}`), or out of order (an empty root
 array started again, which C++'s release build allows, reads on from its end). So every step
@@ -325,7 +329,7 @@ starts, 0) can make `peek_length` negative, which C++ reads as a huge `size_t`: 
   `testdata/stream/oracle.jsonl` beside the On-Demand file. `TestStreamOracle` (package `ondemand`,
   covering both APIs) replays it, translating indices to offsets and `~n` to the final
   `ErrTrailingContent`. Cases whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
-  where C++ reports `UNESCAPED_CHARS` are skipped there and covered by the next test. DOM
+  where C++ reports `UNESCAPED_CHARS` are skipped there and covered by `TestStreamStage1Errors` and `TestStreamStage1Formats`. DOM
   `CommaDelimitedArray` cases where C++ goes on after a document that closed on the array's `]`
   (§4.3) are compared only up to that document, and counted apart. C++'s next step after a read
   that abandons a stream document dereferences a null parser, so the oracle ends such a case

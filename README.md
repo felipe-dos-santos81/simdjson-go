@@ -148,7 +148,7 @@ Streams, `large_amazon_cellphones` (`amazon_cellphones.ndjson` repeated 40 times
 make             # list targets
 make test        # pure-Go build (downloads the corpora into testdata/ on first run)
 make check       # gofmt, vet, every build, race; run before committing
-make fuzz target=FuzzUnmarshal time=60s   # or FuzzOnDemand, FuzzParse, FuzzParseMany
+make fuzz target=FuzzUnmarshal time=60s   # or FuzzOnDemand, FuzzParse, FuzzParseMany, FuzzIterateMany
 make bench neon=1 bench=Unmarshal/
 make bench neon=1 pkg=./ondemand bench=Tasks
 ```
