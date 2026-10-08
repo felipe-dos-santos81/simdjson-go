@@ -174,12 +174,11 @@ stage 1 copies only the final partial block into a padded stack buffer (as C++
     `ErrNumber`.
   - Integers: port of the simdjson fast path. Fits int64 → `'l'`; else fits uint64 → `'u'`;
     else → `ErrBigInt`, or a `'Z'` big-integer string when `Parser.BigIntAsString` is set.
-  - Any number with `.` or `e/E` is a float. While validating it, stage 2 collects up to 19
-    significant digits and the decimal exponent and converts them with `decimalToFloat64`, a
-    port of the Go standard library's unrounded-scaling `parseFloat64` (`fastfloat.go`,
-    `pow10tab.go`; BSD, see `LICENSE-GO`). When a dropped digit is non-zero (a significand
-    longer than 19 significant digits, or an integer part longer than 19 digits) it falls back
-    to `strconv.ParseFloat` on the validated bytes; dropped zeros do not change the value.
+  - Any number with `.` or `e/E` is a float. While validating it, stage 2 collects its digits
+    (the fraction eight at a time, as C++'s `parse_number`) and the decimal exponent and
+    converts them with `decimalToFloat64`, a port of the Go standard library's
+    unrounded-scaling `parseFloat64` (`internal/number`; BSD, see `LICENSE-GO`). With more
+    than 19 significant digits it falls back to `strconv.ParseFloat` on the validated bytes.
     Results are bit-identical to
     `strconv.ParseFloat`. Result ±Inf → `ErrNumber`. Underflow yields ±0 / subnormals, as C++.
 
