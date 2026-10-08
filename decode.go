@@ -595,7 +595,10 @@ func makeSliceDecoder(t reflect.Type) decodeFunc {
 			return nil
 		}
 		if v.Cap() < n {
-			v.Set(reflect.MakeSlice(t, n, n))
+			// a new zeroed array, as MakeSlice, without boxing the header
+			v.SetLen(0)
+			v.Grow(n)
+			v.SetLen(n)
 		} else {
 			v.SetLen(n)
 			for i := range n {
