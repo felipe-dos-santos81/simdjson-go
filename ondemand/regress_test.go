@@ -102,6 +102,15 @@ func TestMisuseRegressions(t *testing.T) {
 		}
 	})
 
+	t.Run("String out of range", func(t *testing.T) {
+		if s := ondemand.Type(99).String(); s != "Type(99)" {
+			t.Errorf("Type(99).String() = %q", s)
+		}
+		if s := ondemand.NumberType(9).String(); s != "NumberType(9)" {
+			t.Errorf("NumberType(9).String() = %q", s)
+		}
+	})
+
 	t.Run("failed Iterate", func(t *testing.T) {
 		var p ondemand.Parser
 		d, err := p.Iterate([]byte(`[1,2,3,4,5,6,7,8]`))

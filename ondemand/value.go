@@ -1,6 +1,8 @@
 package ondemand
 
 import (
+	"strconv"
+
 	"simdjson-go/internal/jsonerr"
 	"simdjson-go/internal/number"
 )
@@ -19,6 +21,9 @@ const (
 )
 
 func (t Type) String() string {
+	if t > TypeNull {
+		return "Type(" + strconv.Itoa(int(t)) + ")"
+	}
 	return [...]string{"unknown", "array", "object", "number", "string", "bool", "null"}[t]
 }
 
@@ -33,6 +38,9 @@ const (
 )
 
 func (t NumberType) String() string {
+	if t > BigInt {
+		return "NumberType(" + strconv.Itoa(int(t)) + ")"
+	}
 	return [...]string{"", "int64", "uint64", "float64", "bigint"}[t]
 }
 

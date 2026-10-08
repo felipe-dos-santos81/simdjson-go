@@ -62,9 +62,14 @@ func TestMisuse(t *testing.T) {
 	_, err := first.Object()
 	ooo("object after the loop moved past it", err)
 
-	// Iterating an array a second time.
+	// Iterating an array a second time yields the error once.
+	yields := 0
 	for _, err := range arr.All() {
 		ooo("second iteration", err)
+		yields++
+	}
+	if yields != 1 {
+		t.Errorf("second iteration yielded %d times, want 1", yields)
 	}
 
 	// A field kept from an earlier step of the loop.

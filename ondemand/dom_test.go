@@ -26,7 +26,10 @@ func must[T any](x T, err error) T {
 // walkInfo records what a walk saw that C++'s On-Demand/DOM differences
 // depend on.
 type walkInfo struct {
-	badBigInt bool // an integer too long for 64 bits with a leading zero (the DOM rejects it)
+	// badBigInt: a BigInt the DOM rejects: an integer too long for 64 bits
+	// with a leading zero, or a bare "-" (a root past the 1083-byte buffer,
+	// which C++'s check_if_integer accepts).
+	badBigInt bool
 }
 
 // fullWalk reads the whole document with On-Demand into a canonical text,
@@ -135,9 +138,8 @@ func odWalk(v odReader, b *strings.Builder, info *walkInfo) error {
 			}
 			trimmed := strings.TrimRight(string(r), " \t\n\r")
 			fmt.Fprintf(b, "B%s", trimmed)
-			// Check if this is a big integer with leading zero
 			digits := strings.TrimPrefix(trimmed, "-")
-			if len(digits) > 1 && digits[0] == '0' {
+			if digits == "" || len(digits) > 1 && digits[0] == '0' {
 				info.badBigInt = true
 			}
 		}
@@ -229,16 +231,18 @@ func domWalk(p *simdjson.Parser, in []byte) (string, error) {
 var bom = []byte{0xEF, 0xBB, 0xBF}
 
 // knownDifference reports C++'s known differences between On-Demand and
-// the DOM when one fails and the other does not: On-Demand rejects an
-// exponent of more than 19 digits, reads a root "falsX" (any fifth byte)
-// as false, does not validate an integer too long for 64 bits (read with
-// Raw), such as one with leading zeros, and the root-buffer rule below.
-func knownDifference(in []byte, info walkInfo) bool {
+// the DOM when one fails and the other does not. On-Demand alone fails on
+// an exponent of more than 19 digits and by the root-buffer rule below;
+// On-Demand alone succeeds on a root "falsX" (any fifth byte, read as
+// false) and on an integer too long for 64 bits that it does not validate
+// (read with Raw; see walkInfo.badBigInt).
+func knownDifference(in []byte, info walkInfo, errOD, errDOM error) bool {
+	if errOD != nil && errDOM == nil {
+		return exponentTooLong(in) || rootBufferDifference(in)
+	}
 	root := bytes.TrimLeft(bytes.TrimPrefix(in, bom), " \t\n\r")
-	return exponentTooLong(in) ||
-		bytes.HasPrefix(root, []byte("fals")) && !bytes.HasPrefix(root, []byte("false")) ||
-		info.badBigInt ||
-		rootBufferDifference(in)
+	return errOD == nil && errDOM != nil &&
+		(bytes.HasPrefix(root, []byte("fals")) && !bytes.HasPrefix(root, []byte("false")) || info.badBigInt)
 }
 
 // rootBufferDifference reports C++'s root-buffer rule: C++ copies a root
@@ -301,7 +305,7 @@ func agree(t *testing.T, od *ondemand.Parser, dom *simdjson.Parser, in []byte) {
 	want, errDOM := domWalk(dom, in)
 	switch {
 	case (errOD == nil) != (errDOM == nil):
-		if knownDifference(in, info) {
+		if knownDifference(in, info, errOD, errDOM) {
 			return
 		}
 		t.Errorf("%.80q: On-Demand err %v, DOM err %v", in, errOD, errDOM)
