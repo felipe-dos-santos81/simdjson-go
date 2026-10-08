@@ -13,6 +13,12 @@ import (
 // fraction, as C++) and decimal exponent for number.DecimalToFloat64; a float
 // with more than 19 significant digits falls back to strconv.ParseFloat. Both
 // fail only on overflow to ±Inf, which C++ also rejects.
+//
+// Tried and dropped (2026-10-08, round-robin against main): reading the
+// integer part with number.Digits (canada +3.4%), deciding truncation in a
+// helper or in ToFloat64 rather than inline, and sparing trailing zeros the
+// strconv fallback (+1.5-2% on most files: the bigger function slows the
+// common paths).
 func (b *builder) number(off int) error {
 	buf := b.buf
 	p := off
