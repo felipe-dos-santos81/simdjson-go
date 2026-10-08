@@ -1,0 +1,293 @@
+# simdjson-go — Sub-project 2: Streams — Design
+
+- **Date:** 2026-10-08
+- **Status:** Approved in brainstorming; not yet prototyped
+- **Builds on:** sub-project 1 (core + DOM), `docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`;
+  sub-project 3a (On-Demand), `docs/superpowers/specs/2026-10-07-simdjson-go-ondemand-design.md`
+- **Reference semantics:** C++ simdjson v5.0.2 `dom::parser::parse_many` and
+  `ondemand::parser::iterate_many` (`include/simdjson/dom/document_stream*.h`,
+  `include/simdjson/generic/ondemand/document_stream*.h`,
+  `src/generic/stage1/find_next_document_index.h`, `json_structural_indexer.h`,
+  `doc/parse_many.md`, `doc/iterate_many.md`)
+
+## 1. Goal
+
+Read many JSON documents from one buffer: NDJSON, concatenated JSON, comma-separated documents,
+RFC 7464 sequences and the elements of a top-level array, through the DOM (`ParseMany`) and
+On-Demand (`IterateMany`). C++ is the reference for *what* is read; the API and the batching are
+Go's own. Stage 1 of the next window runs in a goroutine while the caller reads the current one.
+
+The governing rule: **the batch size is a tuning knob and never changes results.** Every stream
+yields what C++ yields when its whole input fits in one batch, with two deliberate differences
+(§4.1): a bad tail is reported instead of dropped silently, and a stage 1 error is reported at the
+document that holds the bad byte instead of failing the whole input.
+
+### Success criteria
+
+1. **Same results as C++ in one window.** For every case in `testdata/stream/oracle.jsonl` (§8)
+   that has no stage 1 error, `ParseMany` and `IterateMany` yield the same documents (offset,
+   source, contents read by the script) and the same final error as C++ run with
+   `batch_size ≥ len`, translated as in §4.1.
+2. **Batch size never changes results.** `FuzzParseMany` and `FuzzIterateMany` find no input,
+   format and batch size whose items differ from the same input in a single window, over 10
+   minutes each.
+3. **Pipelining pays.** On `large_amazon_cellphones` (§8), the default `BatchSize` is at least
+   1.15× faster than a single window, NEON build, Apple M3 Max. If the prototype misses this, the
+   goroutine is dropped (§9) and the figure recorded here.
+4. **No regression.** `BenchmarkParse` and the On-Demand task benchmarks stay within 2% of `main`
+   in geometric mean.
+5. **No per-document allocation.** Once the `Parser` is warm, a stream allocates a constant amount
+   (closure, goroutine, channels) whatever the number of documents.
+6. `make check` passes, including the race run.
+
+## 2. Decisions
+
+| Topic | Decision | Why |
+|---|---|---|
+| Scope | DOM `ParseMany` and On-Demand `IterateMany`, in-memory `[]byte` | C++ parity; C++ has no reader form either |
+| Shape | `iter.Seq2[*Document, error]`, `Offset`/`Source` on the document, an error type with the offset | Go 1.23 iterators, as `Array.All` and `Object.All` |
+| Formats | All five C++ `stream_format` values | Requested; they share one segmenter |
+| Batching | A knob that never changes results; equal to C++ in one window | C++'s window artefacts are limitations, not features |
+| Engine | One continuous stage 1 cut into 64-byte-aligned windows, then a document segmenter | Index stream identical to a single pass by construction |
+| Bad tail | A final `ErrTrailingContent` item | A plain range loop cannot lose data unnoticed |
+| Stage 1 errors | Reported at the document holding the bad byte | Reporting them first would need all of stage 1 before the first document |
+| Threading | Always pipelined when there is more than one window; no switch | C++'s `threaded` flag only exists to work around missing threads |
+
+**Out of scope:** `load_many` (`os.ReadFile` covers it); `io.Reader` input; streams in
+`Unmarshal`; C++'s `size_in_bytes`, `truncated_bytes` (replaced by the final error) and iterator
+class; an x86 SIMD kernel.
+
+## 3. Public API
+
+```go
+package simdjson
+
+// Format says how documents are separated. It is defined in internal/stream; both packages
+// alias the type and its constants.
+type Format = stream.Format
+
+const (
+	Whitespace          Format = iota // C++ whitespace_delimited: NDJSON, concatenated JSON
+	NewlineDelimited                  // DOM: as Whitespace. On-Demand: unread documents skip to '\n'
+	JSONSequence                      // RFC 7464: each record starts with RS (0x1E)
+	CommaDelimited                    // {...},{...}
+	CommaDelimitedArray               // [{...},{...}]: the array's elements
+)
+
+type Parser struct {
+	MaxDepth       int
+	BigIntAsString bool
+	// BatchSize is the stage 1 window of ParseMany, in bytes: 0 means 1,000,000; it is rounded up
+	// to a multiple of 64. It changes speed and memory, never results.
+	BatchSize int
+	// ...
+}
+
+func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error]
+func (d *Document) Offset() int    // where the document starts in b
+func (d *Document) Source() []byte // its bytes in b, as C++ source()
+
+// StreamError ends a stream. Unwrap returns Err, so errors.Is(err, ErrTape) works.
+// Defined in internal/jsonerr, as the sentinels.
+type StreamError = jsonerr.StreamError // struct{ Offset int; Err error }: Offset is where the
+                                       // failing document (or the dropped tail) starts in b
+```
+
+```go
+package ondemand
+
+type Parser struct{ BatchSize int /* as above */ }
+func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error]
+func (d *Document) Offset() int
+func (d *Document) Source() []byte
+type StreamError = jsonerr.StreamError // shared with package simdjson, as the error sentinels
+```
+
+```go
+for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
+	if err != nil {
+		return err // always the last item
+	}
+	...
+}
+```
+
+- One `(doc, nil)` per document; an error is always the last item, as `(nil, *StreamError)`.
+  Empty input yields nothing.
+- The `Seq2` is not single-use: ranging over it again starts again.
+- Breaking out of the loop stops the stage 1 goroutine before `range` returns.
+- A yielded `*Document`, and everything read from it, is valid until the loop's next step or the
+  next `Parse`, `ParseMany`, `Iterate` or `IterateMany` on `p`. The stream keeps its own index
+  buffers in the `Parser`, so a `Parse` or `Iterate` inside the loop only invalidates the current
+  document. Starting a second stream on `p` while one runs ends the older one with
+  `ErrOutOfOrderIteration`.
+- Offsets index the caller's `b`, so they count a skipped BOM and the brackets of
+  `CommaDelimitedArray` (C++'s `current_index` does not).
+- `MaxDepth` and `BigIntAsString` apply to every document (C++'s threaded path loses them after
+  the first batch).
+- On-Demand: `Document.AtEnd` says whether this document has been read to its end (C++ compares
+  with the end of the batch). Read errors (wrong type, bad number, missing field) belong to the
+  read and do not end the stream; the next step skips the rest of the document, as in C++.
+  Handles from an earlier document return `ErrOutOfOrderIteration`.
+
+## 4. Behaviour
+
+### 4.1 Errors
+
+Every error ends the stream, as in C++. `Offset` is C++'s `current_index` translated into `b`.
+
+| Cause | `Err` | `Offset` |
+|---|---|---|
+| `len(b)` over 0xFFFFFFFC | `ErrCapacity` | 0 |
+| Invalid UTF-8, or a control character in a string | `ErrUTF8` / `ErrUnescapedChars` | start of the document holding the first bad byte |
+| DOM stage 2 failure | what `Parse` reports for that document | document start |
+| On-Demand skip whose brackets never balance | `ErrIncompleteArrayOrObject` | as C++ |
+| Tail dropped by C++'s final trim (§5.3) | `ErrTrailingContent` | start of the dropped region: `len − truncated_bytes` in C++ terms |
+| `CommaDelimitedArray` input not `[`…`]` after trimming whitespace | `ErrTape`, as the only item | 0 |
+
+Within the document that holds a bad byte, C++'s check order applies (`ErrUnescapedChars` before
+`ErrUTF8`), so a stream of one document reports what `Parse` reports. This and the trailing error
+are the two differences from C++ in one window, where a stage 1 error is the first and only item
+and a bad tail is dropped without an error.
+
+### 4.2 Input rules
+
+- Empty, whitespace-only, BOM-only input and `[]` (array format) yield nothing.
+- A leading UTF-8 BOM is skipped.
+- `1 2 34` yields `1`, `2`, `34`. As in C++ streams, a root scalar never gets
+  `ErrTrailingContent`, and the DOM skips the unmatched-outer-brace check (C++ issue 906).
+- Comma formats: commas at depth 0 only separate; `,1,,2,,"x",,` yields three documents.
+- `JSONSequence`: RS bytes are dropped and runs of RS and whitespace collapse. If any RS is
+  present, every record is kept without a balance check (C++'s final-window rule), so an
+  incomplete last record is a stage 2 error, not trailing content. Without any RS, the
+  `Whitespace` rules apply. RS-only input yields nothing.
+- `NewlineDelimited`: as `Whitespace` in the DOM. In On-Demand, a document not read to its end is
+  skipped to the next `\n` without validating the rest, as C++'s `skip_to_delimiter`.
+- `BatchSize` below 64 becomes 64; at most `min(BatchSize, len(b))` is allocated.
+
+### 4.3 C++ behaviour deliberately not ported
+
+All of it is a consequence of C++'s windows or threads:
+
+- `CAPACITY` for a document longer than `batch_size`, and for a scalar touching the window edge.
+- A stage 1 error failing every document of its batch.
+- `json_sequence` silently skipping a window without RS.
+- The threaded path's two divergences: settings lost after the first batch, and documents skipped
+  after an empty mid-stream batch.
+- The fallback kernel's narrower UTF-8 check (Go has one checker, equal to NEON).
+
+## 5. Internals
+
+### 5.1 Stage 1 as a resumable scan
+
+`internal/stage1` gains a `Stream` holding the state `Index` already carries from block to block
+(`scanner`, `utf8Checker`, offset). `Stream.Next(buf, end, idx)` scans the 64-byte blocks of
+`buf[off:end]`, `end` a multiple of 64 or `len(buf)`, and appends absolute offsets. `Index`
+becomes one `Next` over the whole buffer plus its existing end-of-input checks, so the kernels are
+unchanged and the indices of any window sequence equal a single pass. The portable UTF-8 path
+validates each window with `utf8.Valid`, holding back a character cut at the window's end.
+
+### 5.2 Pipelining
+
+If `len(b) <= BatchSize` there is one window and no goroutine. Otherwise a goroutine runs `Next`
+window by window into two index buffers that alternate, handed over on channels (filled one way,
+empty the other). Breaking out of the loop cancels the worker and waits for it.
+
+When a window reports a UTF-8 or unescaped-character error, the consumer rescans that window
+block by block from its saved start state to find the first bad byte (error path only).
+
+### 5.3 Segmenter (`internal/stream`)
+
+The segmenter reads the index stream in order and keeps `pending`, the unread indices: before each
+new window is appended, the unread tail moves to the front. Memory is O(window + largest
+document).
+
+- **Format filters**, applied as indices arrive: drop depth-0 commas (comma formats); drop RS and
+  insert missing value starts (`JSONSequence`), as C++'s stage 1 does in those modes.
+- **Decided point.** A *boundary candidate* is a structural that starts a value (not a closer, `:`
+  or `,`) and whose predecessor is not `{`, `[`, `:` or `,`: C++'s `find_next_document_index`
+  rule. C++ trims only after the last boundary of its window, so with one window everything before
+  the latest candidate seen is final. Documents are handed out only from that decided prefix.
+- **End of input.** C++'s final trim runs once, ported exactly, on the region after the last
+  candidate: drop a trailing unclosed-string quote, keep the region if its brackets balance,
+  otherwise drop it. With no candidate at all, the whole input is the region. A dropped region
+  becomes the final `ErrTrailingContent`.
+
+### 5.4 DOM
+
+`builder` gains a streaming mode, as C++'s `walk_document<true>`: no unmatched-outer-brace check,
+no trailing-content check, and it returns where it stopped, which is where the next document
+starts. It never reads past a boundary candidate inside a document without failing first: inside
+a container, a value start where `,`, `]` or `}` was expected is `ErrTape`. So parsing from the
+decided prefix gives the same result as one window. The fuzzer (§8) checks this.
+
+### 5.5 On-Demand
+
+Before a document is yielded, the segmenter extends the decided prefix to the document's
+bracket-count end plus one structural (`rootTokenLen` peeks two ahead and, in C++, sees the next
+document's start). For `NewlineDelimited` and `JSONSequence`, skipping an unread document scans
+forward with `bytes.IndexByte` for the delimiter, loading windows as needed. The `Document` reads
+a view of `pending` ending at the decided point plus C++'s sentinels. Handles keep positions, not
+pointers, and `pending` is compacted only between documents. The fuzzer checks that no read
+reaches the view's end before the input's.
+
+## 6. Changes to existing code
+
+- `internal/stage1`: `Stream` (§5.1); `Index` built on it.
+- `stage2.go`: the streaming mode of `builder` (§5.4), behind one flag so `Parse` is unchanged.
+- `ondemand/iter.go`: `Iterate`'s setup split so `IterateMany` can point a `Document` at a view.
+- `internal/jsonerr`: `StreamError`, re-exported by both packages.
+
+## 7. Layout
+
+| Path | What |
+|---|---|
+| `internal/stage1/stream.go` | The resumable scan |
+| `internal/stream/` | `Format`, the window worker, the segmenter, the port of `find_next_document_index` |
+| `stream.go`, `stream_test.go` | `ParseMany`, `Document.Offset`/`Source` |
+| `ondemand/stream.go`, `ondemand/stream_test.go` | `IterateMany` |
+| `scripts/ondemand-oracle/` | Gains a stream mode (§8); the directory keeps its name |
+| `testdata/stream/oracle.jsonl` | C++'s recorded stream results; never edited by hand |
+
+## 8. Testing
+
+- **Stream oracle.** `oracle.cpp` gains cases
+  `{"doc":hex|"file":path, "stream":{"api":"dom"|"ondemand","format":...}, "script":[...]}`, run
+  with `batch_size = max(len, 32)` (one window, no thread). Per document it prints
+  `@current_index`, the source in hex, then the script's output: the DOM walks the whole
+  document; On-Demand runs the existing script language, including partial reads and documents
+  left unread. The case ends with `!code` or `~truncated_bytes`. `make oracle` regenerates
+  `testdata/stream/oracle.jsonl` beside the On-Demand file. `TestStreamOracle` in both packages
+  replays it, translating indices to offsets and `~n` to the final `ErrTrailingContent`. Cases
+  where C++ reports a stage 1 error are skipped there and covered by the next test.
+- **Cases** (`gen.py`): the C++ tests' inputs (`issue2181`, `issue2170`, `test_naked_iterators`,
+  `issue1977`, `issue2137`, `fuzzaccess`, `truncated_bytes_filtered_formats`,
+  `source_scalar_before_truncated`, the comma and RS runs); corpus scalars and containers joined
+  with each format's separators; every byte prefix of small streams; malformed documents
+  mid-stream; whole corpus files as one document.
+- **Stage 1 errors.** A valid stream with one byte corrupted at p (invalid UTF-8, or a control
+  character inside a string) yields the clean stream's documents that start before the document
+  holding p, then a `StreamError` at that document's start.
+- **Fuzzing.** `FuzzParseMany` and `FuzzIterateMany` take bytes, a format and a batch size from 64
+  to a few KB. Items (offsets, sources, errors, the DOM's `AppendJSON` or a full On-Demand walk)
+  must equal those of a single window. Each DOM document must equal `Parse(doc.Source())`
+  whenever that `Parse` succeeds.
+- **Lifecycle.** A `testing/synctest` test breaks out of the loop at every position, including
+  while the worker is blocked, and checks no goroutine is left. The race run covers the buffer
+  handoff. A second stream on one `Parser` ends the first with `ErrOutOfOrderIteration`.
+- **Benchmarks.** `BenchmarkParseMany` and `BenchmarkIterateMany` on `amazon_cellphones.ndjson`
+  (277 KB) and `large_amazon_cellphones` (the same file repeated 40 times, 11 MB), computing C++'s
+  `amazon_cellphones` benchmark answer: count and mean rating by brand.
+- **AGENTS.md** gains: "A stream change needs `TestStreamOracle` and both stream fuzzers."
+
+## 9. Risks
+
+- **The decided-point arguments (§5.4, §5.5) fail on some input.** The fuzzers compare against a
+  single window, so a counterexample shows up as a failing case. The fix widens what is loaded
+  before a document is handed out (up to the next candidate after its end); it never changes the
+  single-window semantics.
+- **The port of `find_next_document_index` drifts from C++.** The oracle's byte-prefix cases run
+  the trim at every possible end.
+- **Pipelining misses its bar (§1.3).** On Apple silicon stage 1 is a small share of `Parse` with
+  NEON. If the gain is below 1.15×, the goroutine is removed and the stream runs stage 1 over the
+  whole input first; the API and results are unchanged, and the figures go in this section.
