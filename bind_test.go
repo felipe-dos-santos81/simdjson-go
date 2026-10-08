@@ -500,3 +500,29 @@ func TestToFromMethodsUnsupported(t *testing.T) {
 		t.Errorf("Marshal = %v, want %v", err, errUnsupportedMethods)
 	}
 }
+
+// TestUnmarshalIntoUsedSlice: decoding into a slice whose capacity is too
+// small must start from zeroed elements, as v2 does, and leave the old
+// elements (and maps they hold) alone.
+func TestUnmarshalIntoUsedSlice(t *testing.T) {
+	type T struct{ A, B int }
+	got, want := []T{{0, 5}, {0, 6}}, []T{{0, 5}, {0, 6}}
+	in := []byte(`[{"A":1},{"A":2},{"A":3}]`)
+	if err := Unmarshal(in, &got); err != nil {
+		t.Fatal(err)
+	}
+	if err := jsonv2.Unmarshal(in, &want); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("structs: got %v, v2 %v", got, want)
+	}
+	old := map[string]int{"x": 1}
+	gotM := []map[string]int{old}
+	if err := Unmarshal([]byte(`[{"y":1},{"z":2}]`), &gotM); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(gotM, []map[string]int{{"y": 1}, {"z": 2}}) || len(old) != 1 {
+		t.Errorf("maps: got %v, old map now %v", gotM, old)
+	}
+}
