@@ -1,7 +1,9 @@
 package ondemand
 
 import (
+	"encoding/binary"
 	"math"
+	"math/bits"
 
 	"simdjson-go/internal/jsonerr"
 	"simdjson-go/internal/number"
@@ -112,7 +114,25 @@ func parseDouble(s []byte, pad byte) (float64, error) {
 	if at(s, p, pad) == '.' {
 		p++
 		fracStart := p
-		p, mant = number.Digits(s, p, mant)
+		// number.Digits, inlined: the call costs large_random 1.5%.
+		tail := false
+		for p+8 <= len(s) {
+			v := binary.LittleEndian.Uint64(s[p:])
+			if !number.IsEightDigits(v) {
+				t := v ^ 0x3030303030303030
+				n := bits.TrailingZeros64(((t+0x7676767676767676)|t)&0x8080808080808080) >> 3
+				mant = mant*number.Pow10u[n] + number.ParseEightDigits(t<<(64-8*n))
+				p += n
+				tail = true
+				break
+			}
+			mant = mant*100000000 + number.ParseEightDigits(v-0x3030303030303030)
+			p += 8
+		}
+		for !tail && p < len(s) && number.IsDigit(s[p]) {
+			mant = 10*mant + uint64(s[p]-'0')
+			p++
+		}
 		if p == fracStart {
 			return 0, jsonerr.ErrNumber
 		}
