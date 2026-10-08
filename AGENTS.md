@@ -31,6 +31,8 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `stream.go`, `ondemand/stream.go` | `ParseMany`, `IterateMany` |
 | `ondemand/` | On-Demand: `iter.go` and `valueiter.go` port C++'s `json_iterator` and `value_iterator`; `numbers.go` its typed number parsers; `document.go`, `value.go`, `object.go`, `array.go` the API |
 | `scripts/ondemand-oracle/` | The C++ program and case generator behind `make oracle` |
+| `scripts/cpp-bench/` | `make bench-cpp`: the C++ harness (C++'s own benchmark bodies, printed as Go benchmark lines), the run script and the table script |
+| `scripts/fetch-simdjson.sh` | Gets C++ v5.0.2's single header for `make oracle` and `make bench-cpp` |
 | `testdata/ondemand/`, `testdata/stream/` | C++'s recorded results (`TestOracle`, `TestStreamOracle`) |
 | `element.go`, `pointer.go`, `serialize.go` | DOM API, JSON Pointer, `AppendJSON` and `Minify` |
 | `options.go`, `typeplan.go` | Data binding: options, the per-type codec cache, struct field plans (adapted from v2's `fields.go`) |
@@ -48,6 +50,7 @@ make check        # gofmt, vet, tests on every build, race; must pass before com
 make fuzz target=FuzzParse time=60s       # any Fuzz* target; the Makefile picks its package and build
 make bench neon=1 bench=Unmarshal/        # binding benchmarks sit beside their v2 equivalents
 make oracle       # record C++'s results again (needs a C++20 compiler, curl, python3)
+make bench-cpp    # Go vs C++ simdjson, benchstat and a Markdown table (needs a C++20 compiler)
 ```
 
 Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates about 0.5 GB.
@@ -60,6 +63,7 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 - **An On-Demand change** needs `TestOracle` passing and `make fuzz target=FuzzOnDemand`. If C++'s behaviour is in doubt, add a case to `scripts/ondemand-oracle/gen.py` and run `make oracle`; differences between On-Demand and the DOM that C++ has too are listed in `knownDifference` (`ondemand/dom_test.go`).
 - **A data binding change** needs `make fuzz target=FuzzUnmarshal` and `make fuzz target=FuzzMarshal`. If they fail, fix the binding: do not loosen `sameUnmarshal`/`sameMarshal` in `bind_test.go`.
 - **A stream change** needs `TestStreamOracle`, `make fuzz target=FuzzParseMany` and `make fuzz target=FuzzIterateMany` (`FuzzStream`, in `internal/stage1`, runs on the NEON build). The batch size must never change results; do not loosen the fuzzers' comparison.
+- **A benchmark change** to `BenchmarkParse`, `BenchmarkParseMany`, `BenchmarkTasks` or `BenchmarkIterateMany` needs the same change in `scripts/cpp-bench/bench.cpp`, so both sides keep timing the same work; `make bench-cpp` fails if a row loses its pair.
 - **If a fuzzer fails, investigate the parser first.** Do not loosen the oracle in `fuzz_test.go` to make it pass. Each adjustment the oracle makes to `encoding/json` models a documented difference from C++.
 - **Never skip the corpus tests.** They `t.Fatal` when `testdata/` is missing, and that's deliberate.
 - `Parse` must not read past `len(b)`, must not keep or modify `b`, and must not allocate once the `Parser` has grown its buffers. `BenchmarkParse` reports allocs/op.
@@ -106,7 +110,7 @@ Write fewer, better tests. Someone has to read, maintain and wait in CI for ever
 - **Depth.** Empty `[]` and `{}` don't count toward `MaxDepth`, as in C++ (but they do in binding mode, as in v2). The parser and DOM never recurse per nesting level (`AppendJSON` and `AtPointer` walk the tape iteratively); keep it that way so a raised `MaxDepth` cannot overflow the stack. The binding codecs do recurse, as v2's do, bounded by v2's depth limit of 10,000.
 - **Binding mode.** `Parser.binding` (set only by `Unmarshal`) makes stage 2 record input offsets and repeated names. Keep every binding-only step behind `if b.binding`, so plain `Parse` and its tape stay as C++ defines them.
 - **Duplicate-name hashing.** `checkNames` (stage 2) hashes names with seeded `hash/maphash`. A cheaper unseeded or prefix/suffix hash lets crafted or ordinary input (same-length URLs, timestamps) make `Unmarshal` quadratic; `TestCollidingNames` guards it.
-- **Benchmark noise.** Speed bars (binding spec §1) are ratios against v2 or against `main`; twitter `Unmarshal` sits near its 1.4× bar. On a loaded machine, compare in the same binary or alternate old/new test binaries run by run, and record `uptime`.
+- **Benchmark noise.** Speed bars (binding spec §1) are ratios against v2 or against `main`; twitter `Unmarshal` sits near its 1.4× bar. On a loaded machine, compare in the same binary or alternate old/new test binaries run by run, and record `uptime`. `make bench-cpp` alternates C++ and Go rounds for the same reason.
 - **On-Demand ports C++'s release build.** C++'s debug-only checks (`SIMDJSON_DEVELOPMENT_CHECKS`) become `ErrOutOfOrderIteration`, but its end-of-input checks (`SIMDJSON_CHECK_EOF`) are off, as in release: past the last structural the iterator reads 0, like C++'s padding. Keep every index into the input bounds-safe; `FuzzOnDemand` runs arbitrary read sequences to catch panics.
 - **Streams' decided point.** Documents are handed out only before the last boundary candidate (`Reader.Decided`), because C++ trims only after it. Stage 2 and On-Demand must not read past a candidate inside a document; the fuzzers check this.
 - **Stream document lifetime.** `IterateMany` invalidates the document it yielded at the loop's next step, before `Reader.Compact` moves the indices the document views. `Iterate` keeps its own index buffer (`Parser.idx`), so a call inside the loop cannot overwrite the stream's.

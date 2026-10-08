@@ -158,6 +158,7 @@ make check       # gofmt, vet, every build, race: run before you commit
 make fuzz target=FuzzParseMany time=60s   # any Fuzz* target; make picks its package
 make bench neon=1 bench=Unmarshal/
 make bench neon=1 pkg=./ondemand bench=Tasks
+make bench-cpp   # Go vs C++ simdjson, as a table (needs a C++20 compiler)
 make oracle      # record the C++ results again (needs a C++20 compiler)
 ```
 

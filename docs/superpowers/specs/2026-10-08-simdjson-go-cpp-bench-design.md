@@ -1,7 +1,10 @@
 # simdjson-go — Benchmark against C++ simdjson — Design
 
 - **Date:** 2026-10-08
-- **Status:** Approved
+- **Status:** Approved; implemented. The measured results (README tables, a Results section here)
+  wait for a `make bench-cpp` run on a quiet machine: the first full run had a load average of
+  about 19, so its numbers were not used. Until then, README's streams table still shows the old
+  input (40 whole copies).
 - **Builds on:** the DOM (`docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`),
   On-Demand (`docs/superpowers/specs/2026-10-07-simdjson-go-ondemand-design.md`) and streams
   (`docs/superpowers/specs/2026-10-08-simdjson-go-streams-design.md`), and the benchmarks
