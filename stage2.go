@@ -28,6 +28,7 @@ type builder struct {
 	maxDepth       int
 	bigIntAsString bool
 	binding        bool     // see Parser.binding
+	streaming      bool     // one document of a stream (C++ walk_document<true>): no outer-bracket or trailing check
 	offs           []uint32 // binding mode: offs[i] is the input offset behind tape word i
 	dups           []uint32 // binding mode: first repeated name per object (see checkNames)
 	keys           []uint32 // binding mode: tape indices of the names of the open objects, innermost last
@@ -77,9 +78,11 @@ func (b *builder) walk() error {
 
 	c, off = b.advance()
 	// An unmatched outer brace or bracket is rejected up front (simdjson issue 906).
-	if last := b.buf[b.idx[len(b.idx)-1]]; c == '{' && last != '}' ||
-		c == '[' && last != ']' {
-		return ErrTape
+	if !b.streaming {
+		if last := b.buf[b.idx[len(b.idx)-1]]; c == '{' && last != '}' ||
+			c == '[' && last != ']' {
+			return ErrTape
+		}
 	}
 	goto value
 
@@ -188,7 +191,7 @@ arrayContinue:
 documentEnd:
 	b.tape = append(b.tape, word(tagRoot, 0))
 	b.tape[0] = word(tagRoot, uint64(len(b.tape)))
-	if b.pos != len(b.idx) { // more than one root value, or trailing content
+	if !b.streaming && b.pos != len(b.idx) { // more than one root value, or trailing content
 		return ErrTape
 	}
 	return nil
