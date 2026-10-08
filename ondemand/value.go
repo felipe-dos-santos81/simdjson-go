@@ -248,13 +248,28 @@ func (v Value) Get(name string) (Value, error) {
 	return o.find(name, false)
 }
 
-// FindNext is Object.FindNext on the value.
+// FindNext is Object.FindNext on the value. It inlines object and find:
+// this is the hot path of field-by-field reading.
 func (v Value) FindNext(name string) (Value, error) {
-	o, err := v.object()
+	if err := v.check(); err != nil {
+		return Value{}, err
+	}
+	it := v.it
+	if it.isAtStart() {
+		if _, err := it.startObject(); err != nil {
+			return Value{}, err
+		}
+	} else if it.peekStart() != '{' {
+		return Value{}, jsonerr.ErrIncorrectType
+	}
+	found, err := it.findFieldRaw(name)
 	if err != nil {
 		return Value{}, err
 	}
-	return o.find(name, true)
+	if !found {
+		return Value{}, jsonerr.ErrNoSuchField
+	}
+	return newValue(it.child()), nil
 }
 
 // AtPointer returns the value at the RFC 6901 JSON Pointer ptr below v,
