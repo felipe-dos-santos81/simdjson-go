@@ -19,7 +19,7 @@ func (o Object) Get(name string) (Value, error) {
 	if err := o.check(); err != nil {
 		return Value{}, err
 	}
-	return o.find(name, false)
+	return o.it.foundValue(o.it.findFieldUnorderedRaw(name))
 }
 
 // FindNext returns the value of the field named name, searching only
@@ -29,26 +29,19 @@ func (o Object) FindNext(name string) (Value, error) {
 	if err := o.check(); err != nil {
 		return Value{}, err
 	}
-	return o.find(name, true)
+	return o.it.foundValue(o.it.findFieldRaw(name))
 }
 
-// find looks name up, forward only (C++ find_field) or wrapping around
-// (find_field_unordered), on a checked object.
-func (o Object) find(name string, forward bool) (Value, error) {
-	var found bool
-	var err error
-	if forward {
-		found, err = o.it.findFieldRaw(name)
-	} else {
-		found, err = o.it.findFieldUnorderedRaw(name)
-	}
+// foundValue is a lookup's result: the field's value, ErrNoSuchField or the
+// lookup's error.
+func (it valueIter) foundValue(found bool, err error) (Value, error) {
 	if err != nil {
 		return Value{}, err
 	}
 	if !found {
 		return Value{}, jsonerr.ErrNoSuchField
 	}
-	return newValue(o.it.child()), nil
+	return newValue(it.child()), nil
 }
 
 // All iterates over the object's fields in order. Values not read in the
@@ -66,16 +59,19 @@ func (o Object) All() iter.Seq2[Field, error] {
 		}
 		for it.isOpen() {
 			if err := it.d.err; err != nil {
-				yield(Field{}, it.abandonWith(err))
+				it.d.abandon()
+				yield(Field{}, err)
 				return
 			}
 			key := it.d.pos
 			if _, err := it.fieldKey(); err != nil {
-				yield(Field{}, it.abandonWith(err))
+				it.d.abandon()
+				yield(Field{}, err)
 				return
 			}
 			if err := it.fieldValue(); err != nil {
-				yield(Field{}, it.abandonWith(err))
+				it.d.abandon()
+				yield(Field{}, err)
 				return
 			}
 			if !yield(Field{key: key, value: newValue(it.child())}, nil) {

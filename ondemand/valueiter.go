@@ -30,12 +30,6 @@ func (it valueIter) child() valueIter {
 }
 func (it valueIter) skipChild() error { return it.d.skipChild(it.depth) }
 
-// abandonWith stops the document after a fatal error and returns it.
-func (it valueIter) abandonWith(err error) error {
-	it.d.abandon()
-	return err
-}
-
 // startOff is the input offset where the value starts.
 func (it valueIter) startOff() int { return int(it.d.idx[it.start]) }
 
@@ -73,6 +67,20 @@ func (it valueIter) startObject() (bool, error) {
 		return false, err
 	}
 	return it.startedObject()
+}
+
+// startOrResumeObject starts the object at it, or, if it was started,
+// checks that it is an object (C++ start_or_resume_object; Go: C++ resumes
+// without checking and then misreads).
+func (it valueIter) startOrResumeObject() error {
+	if it.isAtStart() {
+		_, err := it.startObject()
+		return err
+	}
+	if it.peekStart() != '{' {
+		return jsonerr.ErrIncorrectType
+	}
+	return nil
 }
 
 func (it valueIter) startRootObject() (bool, error) {

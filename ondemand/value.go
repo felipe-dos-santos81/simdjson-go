@@ -222,34 +222,20 @@ func (v Value) Array() (Array, error) {
 	return Array{v.handle}, nil
 }
 
-// object starts the object, or resumes it if it was started (C++
-// start_or_resume_object). Resuming a value that is not an object is
-// ErrIncorrectType (Go: C++ resumes without checking and then misreads).
-func (v Value) object() (Object, error) {
-	if err := v.check(); err != nil {
-		return Object{}, err
-	}
-	if v.it.isAtStart() {
-		if _, err := v.it.startObject(); err != nil {
-			return Object{}, err
-		}
-	} else if v.it.peekStart() != '{' {
-		return Object{}, jsonerr.ErrIncorrectType
-	}
-	return Object{v.handle}, nil
-}
-
-// Get is Object.Get on the value.
+// Get is Object.Get on the value, starting the object or resuming it.
 func (v Value) Get(name string) (Value, error) {
-	o, err := v.object()
-	if err != nil {
+	if err := v.check(); err != nil {
 		return Value{}, err
 	}
-	return o.find(name, false)
+	if err := v.it.startOrResumeObject(); err != nil {
+		return Value{}, err
+	}
+	return v.it.foundValue(v.it.findFieldUnorderedRaw(name))
 }
 
-// FindNext is Object.FindNext on the value. It inlines object and find:
-// this is the hot path of field-by-field reading.
+// FindNext is Object.FindNext on the value, starting the object or
+// resuming it. It inlines startOrResumeObject (too large for the compiler
+// to inline): this is the hot path of field-by-field reading.
 func (v Value) FindNext(name string) (Value, error) {
 	if err := v.check(); err != nil {
 		return Value{}, err
@@ -262,14 +248,7 @@ func (v Value) FindNext(name string) (Value, error) {
 	} else if it.peekStart() != '{' {
 		return Value{}, jsonerr.ErrIncorrectType
 	}
-	found, err := it.findFieldRaw(name)
-	if err != nil {
-		return Value{}, err
-	}
-	if !found {
-		return Value{}, jsonerr.ErrNoSuchField
-	}
-	return newValue(it.child()), nil
+	return it.foundValue(it.findFieldRaw(name))
 }
 
 // AtPointer returns the value at the RFC 6901 JSON Pointer ptr below v,

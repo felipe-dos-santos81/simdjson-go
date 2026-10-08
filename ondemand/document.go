@@ -70,8 +70,7 @@ func (d *Document) NumberType() (NumberType, error) {
 	it := d.root()
 	s, ok := it.rootScalar(maxRootFloat)
 	if !ok {
-		off := it.scalarStart()
-		if !checkIfInteger(d.buf[off : off+d.rootTokenLen(0)]) {
+		if !checkIfInteger(d.rootText()) {
 			return 0, jsonerr.ErrNumber
 		}
 		if it.trailing() {
@@ -93,8 +92,7 @@ func (d *Document) Bool() (bool, error) {
 	}
 	it := d.root()
 	s := d.rootText()
-	isTrue := rootLiteral(s, "true", 4)
-	isFalse := rootLiteral(s, "fals", 5) // as in C++, only "fals" is compared
+	isTrue, isFalse := rootLiteral(s, "true"), rootLiteral(s, "false")
 	if !isTrue && !isFalse {
 		return false, jsonerr.ErrIncorrectType
 	}
@@ -112,10 +110,12 @@ func (d *Document) rootText() []byte {
 	return d.buf[off : off+d.rootTokenLen(0)]
 }
 
-// rootLiteral is C++ get_root_bool/is_root_null's test: s starts with the
-// four bytes of lit and has n bytes, or more after a terminator at s[n].
-func rootLiteral(s []byte, lit string, n int) bool {
-	return len(s) >= n && string(s[:4]) == lit && (len(s) == n || number.IsStructuralOrSpace[s[n]])
+// rootLiteral is C++ get_root_bool/is_root_null's test: s is lit, or lit
+// and a terminator, comparing only lit's first four bytes (so "falsy"
+// reads as false, as in C++).
+func rootLiteral(s []byte, lit string) bool {
+	n := len(lit)
+	return len(s) >= n && string(s[:4]) == lit[:4] && (len(s) == n || number.IsStructuralOrSpace[s[n]])
 }
 
 // IsNull is Value.IsNull for a scalar document.
@@ -124,7 +124,7 @@ func (d *Document) IsNull() (bool, error) {
 		return false, err
 	}
 	it := d.root()
-	isNull := rootLiteral(d.rootText(), "null", 4)
+	isNull := rootLiteral(d.rootText(), "null")
 	switch {
 	case isNull:
 		if it.trailing() {
@@ -222,10 +222,11 @@ func (d *Document) object() (Object, error) {
 	if d.atRoot() {
 		return d.Object()
 	}
-	if d.peekAt(0) != '{' { // Go: C++ resumes without checking and then misreads
-		return Object{}, jsonerr.ErrIncorrectType
+	it := d.root()
+	if err := it.startOrResumeObject(); err != nil { // resumes: not at the start
+		return Object{}, err
 	}
-	return Object{newHandle(d.root())}, nil
+	return Object{newHandle(it)}, nil
 }
 
 // Get is Object.Get on the root object.

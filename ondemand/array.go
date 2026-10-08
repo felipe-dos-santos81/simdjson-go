@@ -26,7 +26,8 @@ func (a Array) All() iter.Seq2[Value, error] {
 		}
 		for it.isOpen() {
 			if err := it.d.err; err != nil {
-				yield(Value{}, it.abandonWith(err))
+				it.d.abandon()
+				yield(Value{}, err)
 				return
 			}
 			if !yield(newValue(it.child()), nil) {
