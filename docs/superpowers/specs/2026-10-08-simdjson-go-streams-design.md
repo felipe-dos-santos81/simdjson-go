@@ -355,9 +355,9 @@ starts, 0) can make `peek_length` negative, which C++ reads as a huge `size_t`: 
   on the same `Parser` runs to its end after the first is stopped mid-way. The race run covers the buffer
   handoff. A second stream on one `Parser` ends the first with `ErrOutOfOrderIteration`.
 - **Benchmarks.** `BenchmarkParseMany` and `BenchmarkIterateMany` on `amazon_cellphones.ndjson`
-  (277 KB) and `large_amazon_cellphones` (C++'s build: the file, then copies without its header line until it
-  spans 10 MiB), computing C++'s
-  `amazon_cellphones` benchmark answer: count and mean rating by brand.
+  (277 KB) and `large_amazon_cellphones` (C++'s build: the file, then copies without its header
+  line until it spans 10 MiB), computing C++'s `amazon_cellphones` benchmark answer: count and
+  mean rating by brand.
 - **AGENTS.md** gains: "A stream change needs `TestStreamOracle` and both stream fuzzers."
 
 ## 9. Risks

@@ -16,7 +16,7 @@ and compares them. It needs a C++20 compiler, curl (or
   (`TestWriteBenchInputs`), so that C++ parses the same bytes.
 - `table.py` turns benchstat's CSV into a Markdown table and fails if a
   benchmark has a result on one side only. `python3 -I table.py --check`
-  tests it.
+  tests it; `run.sh` runs that check first.
 
 ```sh
 make bench-cpp                                # the six BenchmarkParse files, count=6

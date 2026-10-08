@@ -3,8 +3,9 @@
 - **Date:** 2026-10-08
 - **Status:** Approved; implemented. The measured results (README tables, a Results section here)
   wait for a `make bench-cpp` run on a quiet machine: the first full run had a load average of
-  about 19, so its numbers were not used. Until then, README's streams table still shows the old
-  input (40 whole copies).
+  about 19, so its numbers were not used. Until then, two README numbers are stale: the streams
+  table (measured on the old input, 40 whole copies) and the `top_tweet` ratio of the On-Demand
+  table (measured before `domTopTweet` changed to read the top tweet once, as C++ does).
 - **Builds on:** the DOM (`docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`),
   On-Demand (`docs/superpowers/specs/2026-10-07-simdjson-go-ondemand-design.md`) and streams
   (`docs/superpowers/specs/2026-10-08-simdjson-go-streams-design.md`), and the benchmarks
@@ -75,7 +76,7 @@ python3 and the corpora (`make testdata`), as `make oracle` does.
 | `scripts/cpp-bench/README.md` | What it measures, the flags, the generated inputs, the outputs |
 | `ondemand/bench_test.go` | `TestWriteBenchInputs`: skipped unless `BENCH_INPUTS=dir`; writes `kostya.json` and `large_random.json` there, the bytes `BenchmarkTasks` uses (`kostyaJSON()`, `largeRandomJSON()`) |
 | `bench_test.go` | `BenchmarkParse` reads the paths in `BENCH_FILES` (separated by spaces, read with `os.ReadFile`) instead of `benchFiles` when it is set; the sub-benchmark name is the file's base name. `largeAmazon` builds the `large_amazon_cellphones` input (§2) |
-| `ondemand/bench_test.go` (again) | The same `largeAmazon`, for `BenchmarkIterateMany` (another package, so a copy) |
+| `ondemand/bench_test.go` (again) | The same `largeAmazon`, for `BenchmarkIterateMany` (another package, so a copy). `domTopTweet` keeps the top tweet and reads `text` and `screen_name` once, after the loop, as C++'s DOM body does (it read them on every new maximum) |
 | `Makefile` | `bench-cpp: testdata ## Go vs C++ simdjson [count=6 file="a.json b.json"]` |
 
 ## 5. The C++ harness
@@ -108,7 +109,9 @@ Each row times exactly what the Go benchmark of the same name times.
 - `large_amazon_cellphones` is built in memory as C++'s `build_json(10*1024*1024)` (§2), as in Go.
 - Streams: `default` is C++'s default batch (1,000,000 bytes) with `threaded = true`, against
   Go's default `BatchSize` with its stage 1 goroutine. `single` is `batch_size = len(input)`,
-  against Go's one window. The brand map lives across iterations on both sides.
+  against Go's one window. The brand map lives across iterations on both sides, as it always
+  did in Go; v5.0.2's runner clears it before each run, outside the timed body, and the keys
+  stop changing after the first run, so the timed work is the same.
 - Each input is copied into a `padded_string` once, outside the timed loop: Go's `Parse` needs
   no padding.
 - The task bodies use C++ exceptions, as in C++'s suite.
@@ -121,7 +124,8 @@ a second, at most 100×; here at least 2×) until one timed run of `n` iteration
 1 s. It prints `n`, the time per iteration in ns and the MB/s
 (10⁶ bytes per second, as Go's `SetBytes`). The name's suffix `-N` is
 `std::thread::hardware_concurrency()`, which is Go's default GOMAXPROCS, so the names match
-exactly. Any error (a parse error, a `simdjson_result` error, an exception) prints the
+exactly. Where the two differ (a container CPU limit, which Go respects), no row pairs and
+`table.py` fails. Any error (a parse error, a `simdjson_result` error, an exception) prints the
 benchmark's name and exits non-zero; an unreadable input file prints its path.
 
 ## 6. Run flow and table
@@ -180,7 +184,8 @@ benchmark fails the run instead of shortening the table.
   run); a "Against C++ simdjson v5.0.2" table in Performance, from a real run (machine,
   `count`); `make bench-cpp` under Development.
 - `AGENTS.md`: layout rows for `scripts/cpp-bench/` and `scripts/fetch-simdjson.sh`; the command;
-  in the Benchmark-noise trap, that the comparison alternates its runs.
+  in the Benchmark-noise trap, that the comparison alternates its runs; under "When you change
+  code", that a change to one of the four Go benchmarks needs the same change in `bench.cpp`.
 - `.gitignore`: `bench-cpp/`.
 - The streams spec (§8, Benchmarks) names the new `large_amazon_cellphones` input.
 

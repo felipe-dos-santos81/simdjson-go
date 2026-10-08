@@ -410,9 +410,9 @@ int main(int argc, char **argv) {
   }
   padded_string small = load(corpus + "/amazon_cellphones.ndjson");
   padded_string large(large_amazon_cellphones(std::string(small.data(), small.size())));
-  for (auto *in : {&small, &large}) {
-    std::string name = in == &small ? "amazon_cellphones" : "large_amazon_cellphones";
-    stream<amazon_cellphones_dom>("ParseMany/" + name, *in, dom::DEFAULT_BATCH_SIZE);
+  std::pair<const char *, padded_string *> amazon[] = {{"amazon_cellphones", &small}, {"large_amazon_cellphones", &large}};
+  for (auto [name, in] : amazon) {
+    stream<amazon_cellphones_dom>(std::string("ParseMany/") + name, *in, dom::DEFAULT_BATCH_SIZE);
   }
 
   std::printf("pkg: simdjson-go/ondemand\n");
@@ -449,9 +449,8 @@ int main(int argc, char **argv) {
   task<kostya_dom, point>("kostya/dom", kostya);
   task<large_random_ondemand, point>("large_random/ondemand", large_random);
   task<large_random_dom, point>("large_random/dom", large_random);
-  for (auto *in : {&small, &large}) {
-    std::string name = in == &small ? "amazon_cellphones" : "large_amazon_cellphones";
-    stream<amazon_cellphones_ondemand>("IterateMany/" + name, *in, ondemand::DEFAULT_BATCH_SIZE);
+  for (auto [name, in] : amazon) {
+    stream<amazon_cellphones_ondemand>(std::string("IterateMany/") + name, *in, ondemand::DEFAULT_BATCH_SIZE);
   }
   return 0;
 }

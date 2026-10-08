@@ -26,6 +26,7 @@ if [ -z "$files" ]; then
 	done
 fi
 
+python3 -I scripts/cpp-bench/table.py --check >/dev/null
 mkdir -p "$out/build" "$out/gen"
 scripts/fetch-simdjson.sh "$out/build"
 c++ -std=c++20 -O3 -DNDEBUG -DSIMDJSON_THREADS_ENABLED=1 -pthread -I"$out/build" \

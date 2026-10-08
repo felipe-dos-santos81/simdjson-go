@@ -975,6 +975,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 4: The full run and the docs
 
+> **Status:** Step 3 and the README's Development line are done (ea6ce7a). Steps 1, 2 (the tables) and 4 wait for a run on a quiet machine; Step 5 follows them.
+
 **Files:**
 - Modify: `README.md` (Performance: the streams table and a new C++ table; Development)
 - Modify: `AGENTS.md` (Layout, Commands, When you change code, Traps)
@@ -987,7 +989,7 @@ Expected (about 10 minutes): exit 0; `bench-cpp/table.md` has 26 rows (6 `Parse`
 
 - [ ] **Step 2: Update `README.md`**
 
-In Performance, replace the streams paragraph's input description and refresh its four numbers from `bench-cpp/benchstat.txt` (the Go column of the B/s tables, rows `ParseMany/large_amazon_cellphones/{single,default}` and `IterateMany/large_amazon_cellphones/{single,default}`; speed-up = default / single, two decimals):
+In Performance, replace the streams paragraph's input description and refresh its four numbers from `bench-cpp/benchstat.txt` (the Go column of the B/s tables, rows `ParseMany/large_amazon_cellphones/{single,default}` and `IterateMany/large_amazon_cellphones/{single,default}`; speed-up = default / single, two decimals). Also refresh the `top_tweet` cell of the On-Demand table (`Tasks/top_tweet/dom` sec/op ÷ `Tasks/top_tweet/ondemand` sec/op, Go column, two decimals): `domTopTweet` changed after it was measured.
 
 ```markdown
 Streams on `large_amazon_cellphones` (C++'s 10 MiB build of `amazon_cellphones.ndjson`), one window against the default `BatchSize`:
