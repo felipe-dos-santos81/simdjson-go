@@ -60,6 +60,9 @@ func (a Array) All() iter.Seq2[Value, error] {
 // an error while iterating counts as an element: if it is not at index i,
 // the result is ErrIndexOutOfBounds.
 func (a Array) At(i int) (Value, error) {
+	if err := a.check(); err != nil {
+		return Value{}, err
+	}
 	n := 0
 	for v, err := range a.All() {
 		if n == i {

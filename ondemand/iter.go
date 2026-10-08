@@ -30,14 +30,14 @@ const maxSize = 0xFFFFFFFF - 3
 // StringBytes, Raw and RawKey are valid until the next Iterate on p.
 func (p *Parser) Iterate(b []byte) (*Document, error) {
 	b = bytes.TrimPrefix(b, bom)
+	d := &p.doc
 	if uint64(len(b)) > maxSize {
+		d.kill(d.idx)
 		return nil, jsonerr.ErrCapacity
 	}
-	d := &p.doc
 	idx, err := stage1.Index(b, d.idx[:0])
 	if err != nil {
-		d.idx = idx
-		d.gen++ // invalidate handles into the previous document
+		d.kill(idx)
 		return nil, err
 	}
 	n := len(idx)
@@ -50,11 +50,26 @@ func (p *Parser) Iterate(b []byte) (*Document, error) {
 		n:      n,
 		depth:  1,
 		gen:    d.gen + 1,
-		alive:  true,
 		strs:   d.strs[:0],
 		starts: d.starts[:0],
 	}
 	return d, nil
+}
+
+// kill turns d into a dead document (n == 0) after a failed Iterate, keeping
+// only the reusable buffers; gen advances so handles into the previous
+// document go stale.
+func (d *Document) kill(idx []uint32) {
+	*d = Document{idx: idx, gen: d.gen + 1, strs: d.strs[:0], starts: d.starts[:0]}
+}
+
+// check rejects a dead document: one that never was iterated, or whose last
+// Iterate failed. A live document has n > 0 (stage 1 rejects empty input).
+func (d *Document) check() error {
+	if d.n == 0 {
+		return jsonerr.ErrOutOfOrderIteration
+	}
+	return nil
 }
 
 // Document is a JSON document being read On-Demand: a cursor over the
@@ -66,7 +81,6 @@ type Document struct {
 	pos    int      // the cursor: an index into idx
 	depth  int      // depth of the cursor (the root value is at depth 1)
 	err    error    // a fatal error; reads fail with it from then on
-	alive  bool     // false once abandoned after a fatal error
 	gen    uint32   // incremented by every Iterate, to detect stale handles
 	strs   []byte   // unescaped strings, until the next Iterate or Rewind
 	starts []int    // starts[depth]: start of the container open at depth (misuse checks)
@@ -117,7 +131,6 @@ func (d *Document) fail(err error) error {
 
 // abandon stops all further iteration after a fatal error.
 func (d *Document) abandon() {
-	d.alive = false
 	d.depth = 0
 }
 
@@ -216,12 +229,15 @@ func (d *Document) rawText(start int) ([]byte, error) {
 // AtEnd reports whether the whole document has been read (C++ at_end). As
 // in C++, reading a root array or object does not check what follows it:
 // call AtEnd after reading to reject trailing content such as "[1] [2]".
-func (d *Document) AtEnd() bool { return d.pos == d.n }
+func (d *Document) AtEnd() bool { return d.n > 0 && d.pos == d.n }
 
 // Rewind moves the cursor back to the start of the document, so it can be
 // read again (C++ document::rewind). Slices from StringBytes and Key read
 // before the Rewind may be overwritten.
 func (d *Document) Rewind() {
+	if d.n == 0 {
+		return
+	}
 	d.pos = 0
 	d.depth = 1
 	d.strs = d.strs[:0]

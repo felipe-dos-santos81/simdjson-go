@@ -243,14 +243,23 @@ func (it valueIter) findFieldUnorderedRaw(key string) (bool, error) {
 	if atFirst {
 		return false, nil
 	}
-	// Wrap around: search from the first field up to where we started. The
-	// fields before searchStart were read before, so they are valid.
+	// Wrap around: search from the first field up to where we started. C++
+	// assumes the fields before searchStart were read without error, so none
+	// of these steps can fail; Go checks, so that misuse (a handle used out
+	// of order over malformed input) ends in an error instead of a loop.
 	if _, err := it.resetObject(); err != nil {
 		return false, err
 	}
 	for {
-		off, _ := it.fieldKey()
-		_ = it.fieldValue()
+		off, err := it.fieldKey()
+		if err != nil {
+			it.d.abandon()
+			return false, err
+		}
+		if err := it.fieldValue(); err != nil {
+			it.d.abandon()
+			return false, err
+		}
 		if it.keyEquals(off, key) {
 			return true, nil
 		}
@@ -260,7 +269,13 @@ func (it valueIter) findFieldUnorderedRaw(key string) (bool, error) {
 		if it.d.pos == searchStart {
 			return false, nil
 		}
-		_, _ = it.hasNextField()
+		if it.d.pos > searchStart {
+			return false, jsonerr.ErrOutOfOrderIteration
+		}
+		if _, err := it.hasNextField(); err != nil {
+			it.d.abandon()
+			return false, err
+		}
 	}
 }
 

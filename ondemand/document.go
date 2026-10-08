@@ -39,16 +39,34 @@ func rootScalar[T any](d *Document, n int, parse func([]byte, byte) (T, error)) 
 }
 
 // Int64 is Value.Int64 for a scalar document.
-func (d *Document) Int64() (int64, error) { return rootScalar(d, maxRootInt, parseInteger) }
+func (d *Document) Int64() (int64, error) {
+	if err := d.check(); err != nil {
+		return 0, err
+	}
+	return rootScalar(d, maxRootInt, parseInteger)
+}
 
 // Uint64 is Value.Uint64 for a scalar document.
-func (d *Document) Uint64() (uint64, error) { return rootScalar(d, maxRootInt, parseUnsigned) }
+func (d *Document) Uint64() (uint64, error) {
+	if err := d.check(); err != nil {
+		return 0, err
+	}
+	return rootScalar(d, maxRootInt, parseUnsigned)
+}
 
 // Float64 is Value.Float64 for a scalar document.
-func (d *Document) Float64() (float64, error) { return rootScalar(d, maxRootFloat, parseDouble) }
+func (d *Document) Float64() (float64, error) {
+	if err := d.check(); err != nil {
+		return 0, err
+	}
+	return rootScalar(d, maxRootFloat, parseDouble)
+}
 
 // NumberType is Value.NumberType for a scalar document.
 func (d *Document) NumberType() (NumberType, error) {
+	if err := d.check(); err != nil {
+		return 0, err
+	}
 	it := d.root()
 	s, ok := it.rootScalar(maxRootFloat)
 	if !ok {
@@ -70,6 +88,9 @@ func (d *Document) NumberType() (NumberType, error) {
 
 // Bool is Value.Bool for a scalar document.
 func (d *Document) Bool() (bool, error) {
+	if err := d.check(); err != nil {
+		return false, err
+	}
 	it := d.root()
 	off, l := it.scalarStart(), d.rootTokenLen(0)
 	s := d.buf[off : off+l]
@@ -88,6 +109,9 @@ func (d *Document) Bool() (bool, error) {
 
 // IsNull is Value.IsNull for a scalar document.
 func (d *Document) IsNull() (bool, error) {
+	if err := d.check(); err != nil {
+		return false, err
+	}
 	it := d.root()
 	off, l := it.scalarStart(), d.rootTokenLen(0)
 	s := d.buf[off : off+l]
@@ -106,6 +130,9 @@ func (d *Document) IsNull() (bool, error) {
 
 // StringBytes is Value.StringBytes for a scalar document.
 func (d *Document) StringBytes() ([]byte, error) {
+	if err := d.check(); err != nil {
+		return nil, err
+	}
 	it := d.root()
 	if d.peekAt(0) != '"' {
 		return nil, jsonerr.ErrIncorrectType
@@ -127,10 +154,18 @@ func (d *Document) String() (string, error) {
 }
 
 // Type returns the root value's JSON type.
-func (d *Document) Type() (Type, error) { return d.root().typ(), nil }
+func (d *Document) Type() (Type, error) {
+	if err := d.check(); err != nil {
+		return 0, err
+	}
+	return d.root().typ(), nil
+}
 
 // Object returns the root as an object, ready to be read.
 func (d *Document) Object() (Object, error) {
+	if err := d.check(); err != nil {
+		return Object{}, err
+	}
 	it := d.root()
 	if _, err := it.startRootObject(); err != nil {
 		return Object{}, err
@@ -140,6 +175,9 @@ func (d *Document) Object() (Object, error) {
 
 // Array returns the root as an array, ready to be read.
 func (d *Document) Array() (Array, error) {
+	if err := d.check(); err != nil {
+		return Array{}, err
+	}
 	it := d.root()
 	if _, err := it.startRootArray(); err != nil {
 		return Array{}, err
@@ -151,6 +189,9 @@ func (d *Document) Array() (Array, error) {
 // Value's methods. A scalar root is ErrScalarDocumentAsValue: read it with
 // the document's own getters.
 func (d *Document) Value() (Value, error) {
+	if err := d.check(); err != nil {
+		return Value{}, err
+	}
 	if !d.atRoot() {
 		return Value{}, jsonerr.ErrOutOfOrderIteration
 	}
@@ -179,6 +220,9 @@ func (d *Document) object() (Object, error) {
 
 // Get is Object.Get on the root object.
 func (d *Document) Get(name string) (Value, error) {
+	if err := d.check(); err != nil {
+		return Value{}, err
+	}
 	o, err := d.object()
 	if err != nil {
 		return Value{}, err
@@ -188,6 +232,9 @@ func (d *Document) Get(name string) (Value, error) {
 
 // FindNext is Object.FindNext on the root object.
 func (d *Document) FindNext(name string) (Value, error) {
+	if err := d.check(); err != nil {
+		return Value{}, err
+	}
 	o, err := d.object()
 	if err != nil {
 		return Value{}, err
@@ -198,6 +245,9 @@ func (d *Document) FindNext(name string) (Value, error) {
 // Raw returns the whole document's JSON text from its first character to
 // the next structural character after the root value, consuming it.
 func (d *Document) Raw() ([]byte, error) {
+	if err := d.check(); err != nil {
+		return nil, err
+	}
 	if !d.atRoot() {
 		return nil, jsonerr.ErrOutOfOrderIteration
 	}
@@ -217,6 +267,9 @@ func (d *Document) Raw() ([]byte, error) {
 // AtPointer rewinds the document and returns the value at the RFC 6901 JSON
 // Pointer ptr, looking fields up in order. An empty pointer is the root.
 func (d *Document) AtPointer(ptr string) (Value, error) {
+	if err := d.check(); err != nil {
+		return Value{}, err
+	}
 	d.Rewind()
 	if ptr == "" {
 		return d.Value()
