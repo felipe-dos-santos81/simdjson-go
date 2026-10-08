@@ -226,11 +226,12 @@ func numberType(s []byte, pad byte) (NumberType, error) {
 	if !number.IsStructuralOrSpace[at(s, p, pad)] {
 		return Float64, nil
 	}
-	d := string(s[start:p])
+	if n > 20 {
+		return BigInt, nil
+	}
+	d := string(s[start:p])              // at most 20 bytes: no allocation
 	const minBig = "9223372036854775808" // 2**63
 	switch {
-	case n > 20:
-		return BigInt, nil
 	case neg:
 		if n > 19 || n == 19 && d > minBig {
 			return BigInt, nil

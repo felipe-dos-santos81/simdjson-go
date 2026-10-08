@@ -119,38 +119,48 @@ func (a Array) AtPointer(ptr string) (Value, error) {
 	if err := a.check(); err != nil {
 		return Value{}, err
 	}
+	v, rest, err := a.step(ptr)
+	if err != nil || rest == "" {
+		return v, err
+	}
+	return atPointer(v, rest)
+}
+
+// step follows the first segment of ptr (C++ array::at_pointer without its
+// recursion) and returns the child and the rest of ptr, from its '/'.
+func (a Array) step(ptr string) (Value, string, error) {
 	if ptr == "" || ptr[0] != '/' {
-		return Value{}, jsonerr.ErrInvalidJSONPointer
+		return Value{}, "", jsonerr.ErrInvalidJSONPointer
 	}
 	ptr = ptr[1:]
 	if ptr == "-" {
-		return Value{}, jsonerr.ErrIndexOutOfBounds
+		return Value{}, "", jsonerr.ErrIndexOutOfBounds
 	}
 	// C++ parse_json_pointer_array_index.
-	tok, rest, more := strings.Cut(ptr, "/")
+	tok, rest := ptr, ""
+	if i := strings.IndexByte(ptr, '/'); i >= 0 {
+		tok, rest = ptr[:i], ptr[i:]
+	}
 	index := uint64(0)
 	for i := 0; i < len(tok); i++ {
 		d := tok[i] - '0'
 		if d > 9 {
-			return Value{}, jsonerr.ErrIncorrectType
+			return Value{}, "", jsonerr.ErrIncorrectType
 		}
 		if i > 0 && tok[0] == '0' {
-			return Value{}, jsonerr.ErrInvalidJSONPointer
+			return Value{}, "", jsonerr.ErrInvalidJSONPointer
 		}
 		if index > (math.MaxUint64-uint64(d))/10 {
-			return Value{}, jsonerr.ErrIndexOutOfBounds
+			return Value{}, "", jsonerr.ErrIndexOutOfBounds
 		}
 		index = index*10 + uint64(d)
 	}
 	if tok == "" {
-		return Value{}, jsonerr.ErrInvalidJSONPointer
+		return Value{}, "", jsonerr.ErrInvalidJSONPointer
 	}
 	if index > math.MaxInt {
-		return Value{}, jsonerr.ErrIndexOutOfBounds
+		return Value{}, "", jsonerr.ErrIndexOutOfBounds
 	}
-	child, err := a.At(int(index))
-	if err != nil || !more {
-		return child, err
-	}
-	return child.AtPointer("/" + rest)
+	v, err := a.At(int(index))
+	return v, rest, err
 }

@@ -258,24 +258,37 @@ func (v Value) AtPointer(ptr string) (Value, error) {
 	if err := v.check(); err != nil {
 		return Value{}, err
 	}
-	switch v.it.typ() {
-	case TypeArray:
-		a, err := v.Array()
-		if err != nil {
-			return Value{}, err
+	return atPointer(v, ptr)
+}
+
+// atPointer is C++ value::at_pointer: it follows ptr one segment at a time,
+// in a loop where C++ recurses, so a deep pointer costs no stack.
+func atPointer(v Value, ptr string) (Value, error) {
+	for {
+		var err error
+		switch v.it.typ() {
+		case TypeArray:
+			var a Array
+			if a, err = v.Array(); err != nil {
+				return Value{}, err
+			}
+			v, ptr, err = a.step(ptr)
+		case TypeObject:
+			var o Object
+			if o, err = v.Object(); err != nil {
+				return Value{}, err
+			}
+			v, ptr, err = o.step(ptr)
+		default:
+			if pointerWellFormed(ptr) {
+				return Value{}, jsonerr.ErrNoSuchField
+			}
+			return Value{}, jsonerr.ErrInvalidJSONPointer
 		}
-		return a.AtPointer(ptr)
-	case TypeObject:
-		o, err := v.Object()
-		if err != nil {
-			return Value{}, err
+		if err != nil || ptr == "" {
+			return v, err
 		}
-		return o.AtPointer(ptr)
 	}
-	if pointerWellFormed(ptr) {
-		return Value{}, jsonerr.ErrNoSuchField
-	}
-	return Value{}, jsonerr.ErrInvalidJSONPointer
 }
 
 // pointerWellFormed is C++ is_pointer_well_formed.

@@ -158,11 +158,23 @@ func (o Object) AtPointer(ptr string) (Value, error) {
 	if err := o.check(); err != nil {
 		return Value{}, err
 	}
-	if ptr == "" || ptr[0] != '/' {
-		return Value{}, jsonerr.ErrInvalidJSONPointer
+	v, rest, err := o.step(ptr)
+	if err != nil || rest == "" {
+		return v, err
 	}
-	ptr = ptr[1:]
-	key, rest, more := strings.Cut(ptr, "/")
+	return atPointer(v, rest)
+}
+
+// step follows the first segment of ptr (C++ object::at_pointer without its
+// recursion) and returns the child and the rest of ptr, from its '/'.
+func (o Object) step(ptr string) (Value, string, error) {
+	if ptr == "" || ptr[0] != '/' {
+		return Value{}, "", jsonerr.ErrInvalidJSONPointer
+	}
+	key, rest := ptr[1:], ""
+	if i := strings.IndexByte(key, '/'); i >= 0 {
+		key, rest = key[:i], key[i:]
+	}
 	if strings.IndexByte(key, '~') >= 0 {
 		var b strings.Builder
 		for i := 0; i < len(key); i++ {
@@ -171,7 +183,7 @@ func (o Object) AtPointer(ptr string) (Value, error) {
 				continue
 			}
 			if i+1 == len(key) {
-				return Value{}, jsonerr.ErrInvalidJSONPointer
+				return Value{}, "", jsonerr.ErrInvalidJSONPointer
 			}
 			switch key[i+1] {
 			case '0':
@@ -179,17 +191,14 @@ func (o Object) AtPointer(ptr string) (Value, error) {
 			case '1':
 				b.WriteByte('/')
 			default:
-				return Value{}, jsonerr.ErrInvalidJSONPointer
+				return Value{}, "", jsonerr.ErrInvalidJSONPointer
 			}
 			i++
 		}
 		key = b.String()
 	}
-	child, err := o.FindNext(key)
-	if err != nil || !more {
-		return child, err
-	}
-	return child.AtPointer("/" + rest)
+	v, err := o.FindNext(key)
+	return v, rest, err
 }
 
 // Field is a field of an object being iterated: its name and value.

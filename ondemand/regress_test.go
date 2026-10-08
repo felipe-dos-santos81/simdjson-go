@@ -2,6 +2,7 @@ package ondemand_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -137,4 +138,55 @@ func TestMisuseRegressions(t *testing.T) {
 			t.Errorf("stale Array: got %v", err)
 		}
 	})
+}
+
+// TestAtPointerDeep follows a 100,000-segment pointer: AtPointer must loop,
+// not recurse or copy the pointer per segment.
+func TestAtPointerDeep(t *testing.T) {
+	const depth = 100_000
+	for _, c := range []struct{ open, close, seg string }{
+		{`{"a":`, `}`, "/a"},
+		{`[`, `]`, "/0"},
+	} {
+		doc := strings.Repeat(c.open, depth) + "7" + strings.Repeat(c.close, depth)
+		ptr := strings.Repeat(c.seg, depth)
+		var p ondemand.Parser
+		d, err := p.Iterate([]byte(doc))
+		if err != nil {
+			t.Fatal(err)
+		}
+		start := time.Now()
+		v, err := d.AtPointer(ptr)
+		if err != nil {
+			t.Fatalf("%s: %v", c.seg, err)
+		}
+		if el := time.Since(start); el > time.Second {
+			t.Errorf("%s: AtPointer took %v", c.seg, el)
+		}
+		if n, err := v.Int64(); n != 7 || err != nil {
+			t.Errorf("%s: leaf = %d, %v; want 7", c.seg, n, err)
+		}
+	}
+}
+
+// TestNoAllocs: NumberType on a long integer and AtPointer without '~'
+// escapes do not allocate.
+func TestNoAllocs(t *testing.T) {
+	var p ondemand.Parser
+	d, err := p.Iterate([]byte(`{"a":[0,{"b":` + strings.Repeat("9", 100) + `}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := testing.AllocsPerRun(100, func() {
+		v, err := d.AtPointer("/a/1/b")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if nt, err := v.NumberType(); nt != ondemand.BigInt || err != nil {
+			t.Fatalf("NumberType = %v, %v", nt, err)
+		}
+	})
+	if n != 0 {
+		t.Errorf("%v allocs per run", n)
+	}
 }
