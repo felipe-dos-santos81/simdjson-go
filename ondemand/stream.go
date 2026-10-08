@@ -87,6 +87,12 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				fail(base+start, err)
 				return
 			}
+			if c := r.Buf[start]; c == ']' || c == '}' {
+				// C++'s Source walk then runs to the end of its batch, so the
+				// view must not end at the decided point.
+				for r.Load() {
+				}
+			}
 			d.view(r, pos, end, base+start, f == CommaDelimited)
 			mine, nextOff := d.gen, base+r.End(end)
 			if !yield(d, nil) {
@@ -104,6 +110,14 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			}
 			if delim != 0 && depth > 0 {
 				if i, ok := r.SkipTo(cur, delim); ok {
+					// The bytes jumped over are a region of their own for stage 1.
+					for !r.Done && r.Checked() < r.End(i) {
+						r.Load()
+					}
+					if err := r.Stage1Err(r.End(i)); err != nil {
+						fail(base+r.End(end), err)
+						return
+					}
 					pos = i
 					continue
 				}

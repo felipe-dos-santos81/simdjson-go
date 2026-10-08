@@ -129,6 +129,31 @@ func TestIterateManyReads(t *testing.T) {
 	}
 }
 
+func TestIterateManyJumpedBytes(t *testing.T) {
+	var p ondemand.Parser
+	for _, c := range []struct{ in, want string }{
+		{"1 \xff\n", "0:1 !2 utf8"},
+		{"[1] [2 \xff]\n3", "0:[1] !4 utf8"},
+	} {
+		if got := odItems(&p, []byte(c.in), ondemand.NewlineDelimited); got != c.want {
+			t.Errorf("%q unread: got %s, want %s", c.in, got, c.want)
+		}
+	}
+	// Read, the same.
+	var out []string
+	for doc, err := range p.IterateMany([]byte("1 \xff\n"), ondemand.NewlineDelimited) {
+		if err != nil {
+			out = append(out, itemErr(err))
+			continue
+		}
+		_ = must(doc.Int64())
+		out = append(out, fmt.Sprintf("%d:%s", doc.Offset(), doc.Source()))
+	}
+	if s := strings.Join(out, " "); s != "0:1 !2 utf8" {
+		t.Errorf("read: got %s", s)
+	}
+}
+
 func TestIterateManyBatchSizes(t *testing.T) {
 	var sb strings.Builder
 	for i := range 3000 {
@@ -146,6 +171,16 @@ func TestIterateManyBatchSizes(t *testing.T) {
 		p.BatchSize = bs
 		if got := odItems(&p, in, ondemand.Whitespace); got != want {
 			t.Fatalf("BatchSize %d differs", bs)
+		}
+	}
+	// A root starting with a closer: C++'s Source walk runs to the batch end.
+	probe := []byte("] ] " + strings.Repeat("1 ", 200))
+	p.BatchSize = 0
+	want = odItems(&p, probe, ondemand.Whitespace)
+	for _, bs := range []int{64, 128} {
+		p.BatchSize = bs
+		if got := odItems(&p, probe, ondemand.Whitespace); got != want {
+			t.Fatalf("closer root, BatchSize %d differs:\n got  %.60s\n want %.60s", bs, got, want)
 		}
 	}
 }

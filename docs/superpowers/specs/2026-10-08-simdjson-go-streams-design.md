@@ -149,7 +149,9 @@ A document *holds* the bytes from its first structural up to the next document's
 (or the end of the input). For the DOM, the next document starts where stage 2 stopped; if stage 2
 fails, and for On-Demand, it starts where a bracket count from the root ends (C++ `skip_child`).
 The dropped tail holds its own bytes, so a bad byte there is reported at the tail's start with the
-stage 1 error instead of `ErrTrailingContent`. Within the document that holds a bad byte, C++'s
+stage 1 error instead of `ErrTrailingContent`. Bytes that On-Demand's delimiter skip
+(`NewlineDelimited`, `JSONSequence`) passes over, from the root's bracket-count end to the next
+document, form a region of their own in the same way. Within the document that holds a bad byte, C++'s
 check order applies (`ErrUnescapedChars` before `ErrUTF8`), so a stream of one document reports
 what `Parse` reports. This and the trailing error are the two differences from C++ in one window,
 where a stage 1 error is the first and only item and a bad tail is dropped without an error.
@@ -240,7 +242,9 @@ its end, a forward scan with `bytes.IndexByte` for the delimiter (`skip_to_delim
 sentinels once the input is done. Handles keep positions, not pointers, and `pending` is compacted
 only between documents (once the consumed half is at least half of it, so copying stays linear).
 `Iterate` gets its own index buffer, so calling it inside the loop cannot overwrite `pending`. The
-fuzzer checks that no read reaches the view's end before the input's.
+fuzzer checks that no read reaches the view's end before the input's. A root starting with `]` or
+`}` makes C++'s source walk run to the end of its batch, so for such a root the whole input is
+indexed before it is yielded.
 
 ## 6. Changes to existing code
 
