@@ -237,10 +237,10 @@ func (d *Document) AtEnd() bool { return d.n > 0 && d.pos == d.n }
 
 // copyString returns b as a string and gives back the buffer space it used
 // (from mark): a copy does not keep the buffer, as in C++.
-func (d *Document) copyString(mark int, b []byte, err error) (string, error) {
+func (d *Document) copyString(mark int, b []byte) string {
 	s := string(b)
 	d.strs = d.strs[:mark]
-	return s, err
+	return s
 }
 
 // Rewind moves the cursor back to the start of the document, so it can be

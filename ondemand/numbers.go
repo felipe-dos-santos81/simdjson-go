@@ -150,7 +150,7 @@ func parseDouble(s []byte, pad byte) (float64, error) {
 		expStart := p
 		var e int64
 		for p < len(s) && number.IsDigit(s[p]) {
-			if e <= 1<<32 { // saturate: past ±400 the value is 0 or ±Inf anyway
+			if e <= 1<<32 { // saturate: past ±number.MaxExp10 the value is 0 or ±Inf anyway
 				e = 10*e + int64(s[p]-'0')
 			}
 			p++

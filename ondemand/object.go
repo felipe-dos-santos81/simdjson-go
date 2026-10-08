@@ -222,5 +222,5 @@ func (f Field) Key() (string, error) {
 	}
 	mark := len(v.it.d.strs)
 	b, err := v.it.d.unescape(int(v.it.d.idx[f.key]))
-	return v.it.d.copyString(mark, b, err)
+	return v.it.d.copyString(mark, b), err
 }

@@ -171,7 +171,7 @@ func (v Value) String() (string, error) {
 	}
 	mark := len(v.it.d.strs)
 	b, err := v.StringBytes()
-	return v.it.d.copyString(mark, b, err)
+	return v.it.d.copyString(mark, b), err
 }
 
 // Raw returns the value's JSON text. For a scalar it runs to the next

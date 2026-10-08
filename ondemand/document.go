@@ -112,7 +112,8 @@ func (d *Document) rootText() []byte {
 
 // rootLiteral is C++ get_root_bool/is_root_null's test: s is lit, or lit
 // and a terminator, comparing only lit's first four bytes (so "falsy"
-// reads as false, as in C++).
+// reads as false, as in C++). Value's parseBool and IsNull read a padded
+// copy instead; C++ has the two variants too.
 func rootLiteral(s []byte, lit string) bool {
 	n := len(lit)
 	return len(s) >= n && string(s[:4]) == lit[:4] && (len(s) == n || number.IsStructuralOrSpace[s[n]])
@@ -157,7 +158,7 @@ func (d *Document) StringBytes() ([]byte, error) {
 func (d *Document) String() (string, error) {
 	mark := len(d.strs)
 	b, err := d.StringBytes()
-	return d.copyString(mark, b, err)
+	return d.copyString(mark, b), err
 }
 
 // Type returns the root value's JSON type.
