@@ -54,8 +54,8 @@ func (b *builder) number(off int) error {
 		}
 		expStart, e := p, int64(0)
 		for p < len(buf) && number.IsDigit(buf[p]) {
-			// Saturate above maxSize+number.MaxExp10: leading fraction zeros can lower
-			// exp10 by up to maxSize, and an exponent must still cancel them.
+			// Saturate above maxSize+number.MaxExp10: the fraction's digits
+			// lower exp10 by up to maxSize, and an exponent must still cancel them.
 			if e <= maxSize+number.MaxExp10 {
 				e = 10*e + int64(buf[p]-'0')
 			}
@@ -73,8 +73,7 @@ func (b *builder) number(off int) error {
 		if !number.Terminates(buf, p) {
 			return ErrNumber
 		}
-		trunc := nDigits > 19 && number.SignificantDigits(buf[start:p]) > 19
-		f, ok := number.ToFloat64(buf[off:p], mant, exp10, neg, trunc)
+		f, ok := number.ToFloat64(buf[off:p], mant, exp10, neg, nDigits > 19 && number.SignificantDigits(buf[start:p]) > 19)
 		if !ok {
 			if !b.binding {
 				return ErrNumber

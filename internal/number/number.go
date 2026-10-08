@@ -26,11 +26,12 @@ func IsDigit(c byte) bool { return c-'0' < 10 }
 // ±0 (below -345) or overflows (above 310).
 const MaxExp10 = 400
 
-// ToFloat64 converts the float written as text, whose significand (its
-// first 19 significant digits, or all of them) is mant and whose value is
-// mant * 10**exp10, negated if neg; trunc reports that significant digits
-// were dropped from mant, and then text is parsed instead. ok is false if
-// the result rounds to ±Inf.
+// ToFloat64 converts the float written as text, whose significand digits,
+// read in order into mant, make its value mant * 10**exp10, negated if neg;
+// if trunc (more than 19 significant digits, so mant may have wrapped), text
+// is parsed instead, as C++ does. Callers test trunc as
+// nDigits > 19 && SignificantDigits(digits) > 19, inline: slicing digits
+// for every float costs canada.json 1%. ok is false if the result rounds to ±Inf.
 func ToFloat64(text []byte, mant uint64, exp10 int64, neg, trunc bool) (f float64, ok bool) {
 	if trunc {
 		f, err := strconv.ParseFloat(unsafe.String(unsafe.SliceData(text), len(text)), 64)

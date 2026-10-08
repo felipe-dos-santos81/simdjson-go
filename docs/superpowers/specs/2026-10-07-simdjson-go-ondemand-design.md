@@ -3,7 +3,8 @@
 - **Date:** 2026-10-07 (amended the same day after a verified prototype)
 - **Status:** Approved; amended with the prototype's findings (§3–§9)
 - **Builds on:** sub-project 1 (core + DOM), `docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`
-- **Followed by:** sub-project 3b, `Unmarshal` on On-Demand (its own spec, after this one ships)
+- **Followed by:** sub-project 3b, `Unmarshal` on On-Demand, was prototyped and dropped: with
+  v2's full validation it gained 1.13–1.26× (binding spec §1)
 - **Reference semantics:** C++ simdjson v5.0.2 `ondemand`, release build (`doc/basics.md`,
   `doc/ondemand_design.md`, `include/simdjson/generic/ondemand/`, `benchmark/*/simdjson_ondemand.h`)
 
@@ -11,8 +12,8 @@
 
 A public, lazy, forward-only JSON reader — a Go version of C++ `ondemand` — for hot paths that read
 some fields of large documents without building the tape. It runs stage 1 only; each value is
-parsed when it is read, as the type it is read as. It is also the base sub-project 3b will build a
-faster `Unmarshal` on.
+parsed when it is read, as the type it is read as. It was also meant as the base for a faster
+`Unmarshal` (3b, since dropped).
 
 ### Success criteria
 
@@ -43,7 +44,7 @@ All with 0 allocations per operation. `BenchmarkParse` after the refactor: −0.
 
 | Topic | Decision | Why |
 |---|---|---|
-| Scope | Public On-Demand API now; `Unmarshal` on it in 3b | The API is useful alone and 3b builds on it |
+| Scope | Public On-Demand API now; `Unmarshal` on it in 3b (later dropped, binding spec §1) | The API is useful alone and 3b builds on it |
 | Shape | Go-idiomatic names and iterators, C++ behaviour on everything exposed | Same choice as the DOM |
 | Package | `simdjson-go/ondemand` | Mirrors C++'s namespace; avoids clashing with the DOM's `Object`/`Array` |
 | Engine | A port of C++'s `json_iterator` and `value_iterator` over the stage-1 index, no tape | Same semantics by construction; tape building is about 60% of `Parse` on twitter |

@@ -56,6 +56,16 @@ of `encoding/json`. Decoding runs on the existing simdjson parser and tape; beha
 | `Marshal` | 0.064 ms (1.2× v2) | 0.61 ms (1.5×) | 5.05 ms (1.03×) |
 | v2 `Marshal` | 0.077 ms | 0.92 ms | 5.19 ms |
 
+### Measured after the number and slice changes (2026-10-08)
+
+Stage 2 reads fraction digits eight at a time, and the slice decoder allocates once:
+`Unmarshal` is 1.42× v2 on twitter, 1.22× on citm and 2.00× on canada (8 rounds, load 8;
+allocs/op 236, 2,408, 490). `Parse` of `canada.json` became 20% faster; the other files moved
+less than 1%. Sub-project 3b (`Unmarshal` on a single validating pass, no tape) was
+prototyped at 1.19×, 1.26× and 1.13× over this and dropped. Copying a string without escapes
+once instead of twice is deferred: it is at most 4–6% of `Unmarshal` and needs a second string
+form in binding-mode tapes.
+
 ## 2. Decisions
 
 | Topic | Decision | Why |

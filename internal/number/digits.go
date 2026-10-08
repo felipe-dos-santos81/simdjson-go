@@ -19,7 +19,7 @@ func Digits(s []byte, p int, mant uint64) (int, uint64) {
 			// what the digit-by-digit loop gives, wrapping included.
 			t := v ^ 0x3030303030303030
 			n := bits.TrailingZeros64(((t+0x7676767676767676)|t)&0x8080808080808080) >> 3
-			return p + n, mant*Pow10u[n] + ParseEightDigits(t<<(64-8*n)) // n == 0 shifts by 64: 0
+			return p + n, mant*Pow10Uint64[n] + ParseEightDigits(t<<(64-8*n)) // n == 0 shifts by 64: 0
 		}
 		mant = mant*100000000 + ParseEightDigits(v-0x3030303030303030)
 		p += 8
@@ -63,4 +63,5 @@ func ParseEightDigits(v uint64) uint64 {
 	return ((v&mask)*mul1 + (v>>16&mask)*mul2) >> 32
 }
 
-var Pow10u = [9]uint64{1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000}
+// Pow10Uint64[n] is 10**n.
+var Pow10Uint64 = [9]uint64{1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000}
