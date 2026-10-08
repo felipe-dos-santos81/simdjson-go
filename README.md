@@ -54,13 +54,13 @@ for tweet, err := range arr.All() {
 }
 ```
 
-Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the structural characters, and each value is parsed when read, as the type it is read as. It suits reading some fields of large documents; it is 1.65–2.01× faster than `Parse` plus the DOM on C++'s benchmark tasks and allocates nothing once warm.
+Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the structural characters, and each value is parsed when read, as the type it is read as. It suits reading some fields of large documents; it is 1.6–2× faster than `Parse` plus the DOM on C++'s benchmark tasks and allocates nothing once warm.
 
 - **`Document`** (the root): `Get`, `FindNext`, `Object`, `Array`, `Value`, typed getters for a scalar root, `AtPointer`, `Raw`, `Rewind`, `AtEnd`.
 - **`Value`**: `Type`, `NumberType`, `Int64`, `Uint64`, `Float64`, `Bool`, `IsNull`, `String`, `StringBytes`, `Raw`, `Object`, `Array`, `Get`, `FindNext`, `AtPointer`.
 - **`Object`**: `Get` (searches forward, then wraps around once), `FindNext` (forward only), `All` (`iter.Seq2[Field, error]`), `Count`, `Reset`, `Raw`, `AtPointer`. **`Field`**: `Key`, `RawKey`, `Value`. **`Array`**: `All`, `At`, `Count`, `Reset`, `Raw`, `AtPointer`.
 
-As in C++: values are validated only when read ("validate what you use"); objects and arrays are read once, in order (`Count`, `Reset`, `Rewind` and `AtPointer` go back); a scalar `Value` may be read later; field names are compared as written, without decoding escapes; and nothing checks what follows a root array or object unless you call `AtEnd`. Reading out of order, or a handle after the next `Iterate`, returns `ErrOutOfOrderIteration` (C++ leaves it undefined). Everything read is valid until the next `Iterate` (`StringBytes` and `Key` until the next `Rewind` too). Errors are the `simdjson` package's sentinels.
+As in C++: values are validated only when read ("validate what you use"); objects and arrays are read once, in order (`Count`, `Reset`, `Rewind` and `AtPointer` go back); a scalar `Value` may be read later; field names are compared as written, without decoding escapes; and nothing checks what follows a root array or object unless you call `AtEnd`. Reading out of order, or a handle after the next `Iterate`, returns `ErrOutOfOrderIteration` (C++ leaves it undefined); the `*Document` itself is reused by its `Parser`, so an old one reads the new document. Everything read is valid until the next `Iterate` (`StringBytes` until the next `Rewind` too). Errors are the `simdjson` package's sentinels.
 
 ### Data binding
 
@@ -119,7 +119,7 @@ On-Demand against `Parse` plus the DOM, on C++ simdjson's benchmark tasks (`onde
 
 | `partial_tweets` | `distinct_user_id` | `find_tweet` | `top_tweet` | `kostya` | `large_random` |
 |---|---|---|---|---|---|
-| 1.70× | 1.75× | 2.01× | 1.72× | 1.65× | 1.67× |
+| 1.69× | 1.76× | 1.96× | 1.65× | 1.63× | 1.61× |
 
 ## Development
 

@@ -163,8 +163,9 @@ func (v Value) String() (string, error) {
 }
 
 // Raw returns the value's JSON text, from its first character to the next
-// structural character (C++ raw_json), consuming the value. It is valid
-// until the next Iterate.
+// structural character. An array or object is consumed (C++ raw_json); a
+// scalar is not, and the cursor does not move (C++ raw_json_token). It is
+// valid until the next Iterate.
 func (v Value) Raw() ([]byte, error) {
 	if err := v.check(); err != nil {
 		return nil, err

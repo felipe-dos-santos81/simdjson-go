@@ -232,8 +232,9 @@ func (d *Document) rawText(start int) ([]byte, error) {
 func (d *Document) AtEnd() bool { return d.n > 0 && d.pos == d.n }
 
 // Rewind moves the cursor back to the start of the document, so it can be
-// read again (C++ document::rewind). Slices from StringBytes and Key read
-// before the Rewind may be overwritten.
+// read again (C++ document::rewind). Slices from StringBytes read before
+// the Rewind may be overwritten. As C++ json_iterator::rewind, it keeps a
+// fatal error: a document that failed keeps failing.
 func (d *Document) Rewind() {
 	if d.n == 0 {
 		return

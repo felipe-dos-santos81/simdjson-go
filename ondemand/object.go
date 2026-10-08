@@ -226,8 +226,7 @@ func (f Field) RawKey() []byte {
 	return d.buf[start : end-1]
 }
 
-// Key returns the field's name, unescaped. It is valid until the next
-// Iterate or Rewind.
+// Key returns the field's name, unescaped, as a copy.
 func (f Field) Key() (string, error) {
 	v := f.value
 	if err := v.check(); err != nil {

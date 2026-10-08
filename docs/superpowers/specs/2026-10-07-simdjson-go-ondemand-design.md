@@ -141,7 +141,9 @@ marked **Go**.
   can be read after the cursor has moved on (C++ `top_tweet` relies on this).
 - **Lookup.** `FindNext` searches from the cursor to the end of the object; `Get` then wraps to the
   first field and searches up to where it started. Names are compared as written: escapes are not
-  decoded, so `{"a":1}` has no field `"a"`. `AtPointer` uses `FindNext`. A missing field is
+  decoded, so `{"\u0061":1}` has no field `"a"`. A requested name longer than 64 bytes
+  with an unescaped quote never matches (C++ `is_equal`). `AtPointer` uses `FindNext`; an empty
+  pointer is the root on the `Document` and `ErrInvalidJSONPointer` elsewhere. A missing field is
   `ErrNoSuchField`. `Array.At` counts an element whose read failed as an element.
 - **Numbers.** `Int64`/`Uint64` reject fractions, exponents and out-of-range values with
   `ErrIncorrectType`; `Float64` accepts any number but rejects an exponent of more than 19 digits
@@ -158,10 +160,11 @@ marked **Go**.
   rules above. Everything else a full walk accepts, the DOM accepts, with the same values.
 - **Misuse (Go).** Reading a container out of order or twice, a stale `Field`, a zero handle, or
   any handle after the next `Iterate` returns `ErrOutOfOrderIteration` and never panics. These are
-  C++'s development-build checks; release C++ leaves them undefined.
+  C++'s development-build checks; release C++ leaves them undefined. The `*Document` is the
+  exception: its `Parser` reuses it, so after the next `Iterate` it reads the new document.
 - **Lifetime.** A `Document` and every handle and `Raw`/`RawKey` slice are valid until the next
-  `Iterate`; `StringBytes` and `Key` until the next `Iterate` or `Rewind` (C++ reuses its string
-  buffer). The input is not copied or modified and needs no padding.
+  `Iterate`; `StringBytes` until the next `Iterate` or `Rewind` (C++ reuses its string buffer;
+  `Key` and `String` return copies). The input is not copied or modified and needs no padding.
 
 ## 5. Internals
 
