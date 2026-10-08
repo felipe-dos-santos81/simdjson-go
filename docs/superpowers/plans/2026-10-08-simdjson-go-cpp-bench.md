@@ -975,7 +975,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 4: The full run and the docs
 
-> **Status:** Step 3 and the README's Development line are done (ea6ce7a). Steps 1, 2 (the tables) and 4 wait for a run on a quiet machine; Step 5 follows them.
+> **Status:** done. Step 3 and the README's Development line in ea6ce7a; Steps 1, 2 and 4 from a later run (spec, Results).
 
 **Files:**
 - Modify: `README.md` (Performance: the streams table and a new C++ table; Development)

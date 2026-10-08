@@ -54,7 +54,7 @@ for tweet, err := range arr.All() {
 }
 ```
 
-Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the structural characters, and each value is parsed when read, as the type it is read as. It suits reading some fields of large documents; it is 1.6–2× faster than `Parse` plus the DOM on C++'s benchmark tasks and allocates nothing once warm.
+Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the structural characters, and each value is parsed when read, as the type it is read as. It suits reading some fields of large documents; it is 1.3–2× faster than `Parse` plus the DOM on C++'s benchmark tasks and allocates nothing once warm.
 
 - **`Document`** (the root): `Get`, `FindNext`, `Object`, `Array`, `Value`, typed getters for a scalar root, `AtPointer`, `Raw`, `Rewind`, `AtEnd`.
 - **`Value`**: `Type`, `NumberType`, `Int64`, `Uint64`, `Float64`, `Bool`, `IsNull`, `String`, `StringBytes`, `Raw`, `Object`, `Array`, `Get`, `FindNext`, `AtPointer`.
@@ -140,14 +140,45 @@ On-Demand against `Parse` plus the DOM, on C++ simdjson's benchmark tasks (`onde
 
 | `partial_tweets` | `distinct_user_id` | `find_tweet` | `top_tweet` | `kostya` | `large_random` |
 |---|---|---|---|---|---|
-| 1.69× | 1.76× | 1.96× | 1.65× | 1.63× | 1.61× |
+| 1.68× | 1.71× | 2.01× | 1.68× | 1.43× | 1.31× |
 
-Streams on `large_amazon_cellphones` (`amazon_cellphones.ndjson` repeated 40 times, 11 MB), one window against the default `BatchSize`:
+Streams on `large_amazon_cellphones` (C++'s 10 MiB build of `amazon_cellphones.ndjson`), one window against the default `BatchSize`:
 
 | | One window | Default (pipelined) | Speed-up |
 |---|---|---|---|
-| `ParseMany` | 704 MiB/s | 884 MiB/s | 1.25× |
-| `IterateMany` | 873 MiB/s | 1360 MiB/s | 1.56× |
+| `ParseMany` | 769 MiB/s | 1079 MiB/s | 1.40× |
+| `IterateMany` | 931 MiB/s | 1392 MiB/s | 1.50× |
+
+Against C++ simdjson v5.0.2 on the same machine and inputs (`make bench-cpp`: C++ built with `-O3` and threads, NEON Go build, median of 6 alternating runs). Go runs at 0.20–0.49× of C++'s throughput, 0.29× on the geometric mean:
+
+| Benchmark | C++ | Go | Go / C++ |
+|---|---|---|---|
+| `Parse/twitter.json` | 4131 MiB/s | 1080 MiB/s | 0.26× |
+| `Parse/citm_catalog.json` | 4663 MiB/s | 1268 MiB/s | 0.27× |
+| `Parse/canada.json` | 1468 MiB/s | 724 MiB/s | 0.49× |
+| `Parse/github_events.json` | 4535 MiB/s | 1145 MiB/s | 0.25× |
+| `Parse/gsoc-2018.json` | 5320 MiB/s | 1445 MiB/s | 0.27× |
+| `Parse/update-center.json` | 3728 MiB/s | 755 MiB/s | 0.20× |
+| `ParseMany/amazon_cellphones/default` | 3017 MiB/s | 778 MiB/s | 0.26× |
+| `ParseMany/amazon_cellphones/single` | 3023 MiB/s | 779 MiB/s | 0.26× |
+| `ParseMany/large_amazon_cellphones/default` | 4031 MiB/s | 1079 MiB/s | 0.27× |
+| `ParseMany/large_amazon_cellphones/single` | 2968 MiB/s | 769 MiB/s | 0.26× |
+| `Tasks/partial_tweets/ondemand` | 5553 MiB/s | 1750 MiB/s | 0.32× |
+| `Tasks/partial_tweets/dom` | 3888 MiB/s | 1039 MiB/s | 0.27× |
+| `Tasks/distinct_user_id/ondemand` | 5677 MiB/s | 1814 MiB/s | 0.32× |
+| `Tasks/distinct_user_id/dom` | 3965 MiB/s | 1058 MiB/s | 0.27× |
+| `Tasks/find_tweet/ondemand` | 7557 MiB/s | 2170 MiB/s | 0.29× |
+| `Tasks/find_tweet/dom` | 4129 MiB/s | 1082 MiB/s | 0.26× |
+| `Tasks/top_tweet/ondemand` | 5681 MiB/s | 1809 MiB/s | 0.32× |
+| `Tasks/top_tweet/dom` | 4045 MiB/s | 1074 MiB/s | 0.27× |
+| `Tasks/kostya/ondemand` | 3610 MiB/s | 1319 MiB/s | 0.37× |
+| `Tasks/kostya/dom` | 2893 MiB/s | 921 MiB/s | 0.32× |
+| `Tasks/large_random/ondemand` | 1666 MiB/s | 665 MiB/s | 0.40× |
+| `Tasks/large_random/dom` | 1322 MiB/s | 508 MiB/s | 0.38× |
+| `IterateMany/amazon_cellphones/default` | 3587 MiB/s | 945 MiB/s | 0.26× |
+| `IterateMany/amazon_cellphones/single` | 3578 MiB/s | 947 MiB/s | 0.26× |
+| `IterateMany/large_amazon_cellphones/default` | 5112 MiB/s | 1392 MiB/s | 0.27× |
+| `IterateMany/large_amazon_cellphones/single` | 3532 MiB/s | 931 MiB/s | 0.26× |
 
 ## Development
 

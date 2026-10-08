@@ -1,11 +1,7 @@
 # simdjson-go — Benchmark against C++ simdjson — Design
 
 - **Date:** 2026-10-08
-- **Status:** Approved; implemented. The measured results (README tables, a Results section here)
-  wait for a `make bench-cpp` run on a quiet machine: the first full run had a load average of
-  about 19, so its numbers were not used. Until then, two README numbers are stale: the streams
-  table (measured on the old input, 40 whole copies) and the `top_tweet` ratio of the On-Demand
-  table (measured before `domTopTweet` changed to read the top tweet once, as C++ does).
+- **Status:** Approved; implemented; measured (Results).
 - **Builds on:** the DOM (`docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`),
   On-Demand (`docs/superpowers/specs/2026-10-07-simdjson-go-ondemand-design.md`) and streams
   (`docs/superpowers/specs/2026-10-08-simdjson-go-streams-design.md`), and the benchmarks
@@ -194,6 +190,19 @@ benchmark fails the run instead of shortening the table.
 Before the plan, the harness, `run.sh`, `table.py` and the Go changes ran end to end
 (`count=1`, `twitter.json`) on an Apple M3 Max: all 21 rows paired (`-14` on both sides), one
 round took about 70 s, and Go ran at 0.23–0.40× of C++ (geomean 0.29×).
+
+## Results
+
+Measured on an Apple M3 Max (14 cores), `make bench-cpp` with count=6. `uptime` at the end: load
+averages 1.33 / 15.71 / 17.02, 14 minutes after a boot, so the machine was busy before the run;
+the confidence intervals stay within ±8% (C++ task rows) and ±5% (all Go rows). Go runs at
+0.20–0.49× of C++'s throughput (geomean 0.29×): 0.20× on `update-center.json`, 0.49× on
+`canada.json`, 0.25–0.27× on the other parse and stream rows, 0.29–0.40× on the On-Demand
+tasks. The table is in README.md (Performance). The same run refreshed the README's streams
+table (new input) and its On-Demand row: `kostya` 1.43× and `large_random` 1.31× there are
+lower than the earlier 1.63× and 1.61×, which were measured with `make bench` in a separate run.
+
+An earlier full run (load about 19, another session's `make check`) was discarded.
 
 ## 9. Risks
 
