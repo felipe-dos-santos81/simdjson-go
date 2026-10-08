@@ -9,10 +9,10 @@ import (
 
 // number parses the number at buf[off] and appends it to the tape. Port of
 // parse_number (include/simdjson/generic/numberparsing.h). While checking the
-// JSON grammar it collects a float's significand (up to 19 significant digits)
-// and decimal exponent for number.DecimalToFloat64; a float whose dropped digits are
-// not all zeros falls back to strconv.ParseFloat. Both fail only on overflow to
-// ±Inf, which C++ also rejects.
+// JSON grammar it collects a float's digits (eight at a time in the
+// fraction, as C++) and decimal exponent for number.DecimalToFloat64; a float
+// with more than 19 significant digits falls back to strconv.ParseFloat. Both
+// fail only on overflow to ±Inf, which C++ also rejects.
 func (b *builder) number(off int) error {
 	buf := b.buf
 	p := off
@@ -30,32 +30,20 @@ func (b *builder) number(off int) error {
 	if digits == 0 || (buf[start] == '0' && digits > 1) {
 		return ErrNumber
 	}
-	// A float is mant * 10**exp10, where mant holds at most 19 significant
-	// digits; trunc records that more were dropped.
-	mant, sig, exp10, trunc := i, digits, int64(0), digits > 19
-	if i == 0 {
-		sig = 0 // the integer part is a single '0'
-	}
+	// A float is mant * 10**exp10, where mant holds every digit; it is exact
+	// unless there are more than 19 significant digits (checked below).
+	mant, nDigits, exp10 := i, digits, int64(0)
 	isFloat := false
 	if p < len(buf) && buf[p] == '.' {
 		isFloat = true
 		p++
 		frac := p
-		for p < len(buf) && number.IsDigit(buf[p]) {
-			if sig < 19 {
-				mant = 10*mant + uint64(buf[p]-'0')
-				exp10--
-				if mant != 0 {
-					sig++
-				}
-			} else if buf[p] != '0' {
-				trunc = true // a dropped zero does not change the value
-			}
-			p++
-		}
+		p, mant = number.Digits(buf, p, mant)
 		if p == frac {
 			return ErrNumber
 		}
+		nDigits += p - frac
+		exp10 = int64(frac - p)
 	}
 	if p < len(buf) && (buf[p] == 'e' || buf[p] == 'E') {
 		isFloat = true
@@ -85,6 +73,7 @@ func (b *builder) number(off int) error {
 		if !number.Terminates(buf, p) {
 			return ErrNumber
 		}
+		trunc := nDigits > 19 && number.SignificantDigits(buf[start:p]) > 19
 		f, ok := number.ToFloat64(buf[off:p], mant, exp10, neg, trunc)
 		if !ok {
 			if !b.binding {
