@@ -46,13 +46,16 @@ document that holds the bad byte instead of failing the whole input.
   (covered by the stage 1 tests and the fuzzers) and 4 are compared up to the DOM document that
   closes on the array's `]`.
 - **Fuzzing** (Task 6). `FuzzParseMany`: 600 s pure Go (60.3M execs) and 300 s NEON after a fix
-  (61.2M). `FuzzIterateMany`: 600 s (41.0M). `FuzzStream` (`internal/stage1`, NEON build): 120 s
-  (5.9M).
+  (61.2M). `FuzzIterateMany`: 600 s (41.0M), and again on the final code (f8b4886, reads past
+  abandoned documents compared too): 600 s (104.1M). `FuzzStream` (`internal/stage1`, NEON
+  build): 120 s (5.9M).
 - **Pipelining** (NEON, M3 Max, `large_amazon_cellphones`, default `BatchSize` vs one window):
   `ParseMany` 1.25× (704 to 884 MiB/s), `IterateMany` 1.56× (873 to 1360 MiB/s). The goroutine
   stays (§9).
-- **Regression vs `main`:** `BenchmarkParse` +1.54% and the On-Demand tasks +1.12% (geometric
-  mean), within the 2% bar.
+- **Regression vs the commit before streams (91e14c6)**, measured on the final code (f8b4886;
+  NEON, 10 alternating runs, load average 5–10): `BenchmarkParse` +1.81% and the On-Demand tasks
+  +1.24% (geometric mean), within the 2% bar. The cost comes from `Index` running on
+  `stage1.Stream` and stage 2's streaming checks; `Parse` itself takes no stream path.
 - **Added since the plan:** `CommaDelimitedArray` documents read the array's own `]` (both APIs);
   an On-Demand read that runs past the decided indices (a malformed root, or out of order) first
   indexes the whole input (§5.5); bytes On-Demand's delimiter skip passes over are checked by
