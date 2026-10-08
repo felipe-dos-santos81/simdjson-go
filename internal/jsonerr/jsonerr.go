@@ -5,6 +5,7 @@ package jsonerr
 
 import (
 	"errors"
+	"strconv"
 
 	"simdjson-go/internal/stage1"
 )
@@ -36,3 +37,17 @@ var (
 	ErrEmpty          = stage1.ErrEmpty          // EMPTY
 	ErrUTF8           = stage1.ErrUTF8           // UTF8_ERROR
 )
+
+// StreamError ends a document stream (simdjson.Parser.ParseMany,
+// ondemand.Parser.IterateMany): Err happened in the document, or the
+// dropped tail, that starts at byte Offset of the input.
+type StreamError struct {
+	Offset int
+	Err    error
+}
+
+func (e *StreamError) Error() string {
+	return e.Err.Error() + " (document at offset " + strconv.Itoa(e.Offset) + ")"
+}
+
+func (e *StreamError) Unwrap() error { return e.Err }
