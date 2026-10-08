@@ -85,7 +85,7 @@ func (p *Parser) Parse(b []byte) (*Document, error) {
 	if p.indices, err = stage1.Index(b, p.indices); err != nil {
 		return nil, err
 	}
-	if _, err = p.build(b, p.indices, len(b), false); err != nil {
+	if _, err = p.build(b, p.indices, len(b), false, 0); err != nil {
 		return nil, err
 	}
 	p.doc.off, p.doc.src = 0, nil
@@ -95,7 +95,7 @@ func (p *Parser) Parse(b []byte) (*Document, error) {
 // build runs stage 2 over idx into p.doc and returns how many indices it
 // read. size bounds the bytes the tape and strings can need (a hint). In
 // streaming mode it parses one document of a stream and stops after it.
-func (p *Parser) build(buf []byte, idx []uint32, size int, streaming bool) (int, error) {
+func (p *Parser) build(buf []byte, idx []uint32, size int, streaming bool, pad byte) (int, error) {
 	bd := builder{
 		buf:            buf,
 		idx:            idx,
@@ -106,6 +106,7 @@ func (p *Parser) build(buf []byte, idx []uint32, size int, streaming bool) (int,
 		bigIntAsString: p.BigIntAsString,
 		binding:        p.binding,
 		streaming:      streaming,
+		pad:            pad,
 	}
 	if p.binding {
 		bd.offs = slices.Grow(p.doc.offs[:0], cap(bd.tape))[:cap(bd.tape)]

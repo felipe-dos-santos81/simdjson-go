@@ -48,6 +48,12 @@ func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			fail(0, ErrCapacity)
 			return
 		}
+		// The byte after C++'s input: its padding, or, as C++ strips the
+		// brackets by moving its pointers, the array's own ']'.
+		var pad byte
+		if f == CommaDelimitedArray {
+			pad = ']'
+		}
 		buf, base, f, ok := stream.Input(b, f)
 		if !ok {
 			fail(0, ErrTape)
@@ -71,7 +77,14 @@ func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				return
 			}
 			start := int(r.Idx[pos])
-			n, err := p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true)
+			// A document still open at the end of the input reads pad there
+			// (C++'s sentinel structural_indexes[n] = len); it then ends the
+			// stream, where C++ goes on past its sentinel.
+			end := byte(0)
+			if r.Done {
+				end = pad
+			}
+			n, err := p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true, end)
 			if err != nil {
 				// A stage 1 error among the bytes the document holds (by a
 				// bracket count, as stage 2 stopped early) comes first.

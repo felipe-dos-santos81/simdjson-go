@@ -169,6 +169,11 @@ where a stage 1 error is the first and only item and a bad tail is dropped witho
   `Whitespace` rules apply. RS-only input yields nothing.
 - `NewlineDelimited`: as `Whitespace` in the DOM. In On-Demand, a document not read to its end is
   skipped to the next `\n` without validating the rest, as C++'s `skip_to_delimiter`.
+- In `CommaDelimitedArray`, a document still open at the end of the array's contents reads the
+  array's own `]` there, as C++ does (C++ strips the brackets by moving its pointers, so the byte
+  after its input is that `]`).
+- A number or literal that ends the input inside a container fails as C++'s does (`ErrNumber`,
+  `ErrTAtom`, …): C++ parses it in place, before a `\0` padding byte.
 - `BatchSize` below 64 becomes 64; at most `min(BatchSize, len(b))` is allocated.
 
 ### 4.3 C++ behaviour deliberately not ported
@@ -181,6 +186,9 @@ All of it is a consequence of C++'s windows or threads:
 - The threaded path's two divergences: settings lost after the first batch, and documents skipped
   after an empty mid-stream batch.
 - The fallback kernel's narrower UTF-8 check (Go has one checker, equal to NEON).
+- After the DOM's last document closes on that `]` (§4.2), C++ goes on parsing past its own
+  end-of-input sentinel, into indices its comma filter left behind and then stale memory; Go
+  stops there.
 - `trim_partial_utf8`: C++ drops a UTF-8 character cut at the end of every window, the final one
   included, without an error. In Go a character cut at the end of the input is invalid UTF-8
   (§4.1); a character cut at a window's end is completed by the next window.
@@ -275,7 +283,11 @@ indexed before it is yielded.
   `testdata/stream/oracle.jsonl` beside the On-Demand file. `TestStreamOracle` in both packages
   replays it, translating indices to offsets and `~n` to the final `ErrTrailingContent`. Cases
   whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
-  where C++ reports `UNESCAPED_CHARS` are skipped there and covered by the next test.
+  where C++ reports `UNESCAPED_CHARS` are skipped there and covered by the next test. DOM
+  `CommaDelimitedArray` cases where C++ goes on after a document that closed on the array's `]`
+  (§4.3) are compared only up to that document, and counted apart. C++'s next step after a read
+  that abandons a stream document dereferences a null parser, so the oracle ends such a case
+  with `x<code> dead`.
 - **Cases** (`gen.py`): the C++ tests' inputs (`issue2181`, `issue2170`, `test_naked_iterators`,
   `issue1977`, `issue2137`, `fuzzaccess`, `truncated_bytes_filtered_formats`,
   `source_scalar_before_truncated`, the comma and RS runs); corpus scalars and containers joined

@@ -97,7 +97,7 @@ func (b *builder) number(off int) error {
 		exp10 += e
 	}
 	if isFloat {
-		if !number.Terminates(buf, p) {
+		if !b.terminates(p) {
 			return ErrNumber
 		}
 		f, ok := number.ToFloat64(buf[off:p], mant, exp10, neg, nDigits > 19 && number.SignificantDigits(buf[start:p]) > 19)
@@ -124,7 +124,7 @@ func (b *builder) number(off int) error {
 		nDigits == longest && !neg && (buf[start] != '1' || mant <= math.MaxInt64) { // wrapped
 		return b.bigInt(off, p)
 	}
-	if !number.Terminates(buf, p) {
+	if !b.terminates(p) {
 		return ErrNumber
 	}
 	switch {
@@ -144,7 +144,7 @@ func (b *builder) bigInt(off, p int) error {
 	if !b.bigIntAsString {
 		return ErrBigInt
 	}
-	if !number.Terminates(b.buf, p) {
+	if !b.terminates(p) {
 		return ErrNumber
 	}
 	start := len(b.strs)

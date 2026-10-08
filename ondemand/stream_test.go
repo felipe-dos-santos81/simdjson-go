@@ -99,6 +99,31 @@ func TestIterateMany(t *testing.T) {
 	}
 }
 
+// A document still open at the end of a CommaDelimitedArray's contents reads
+// the array's own ']' there, as C++ (its sentinel structural_indexes[n] = len
+// points at the byte after its input, which is that ']').
+func TestIterateManyArrayEnd(t *testing.T) {
+	var p ondemand.Parser
+	var got []string
+	for doc, err := range p.IterateMany([]byte("[[1 2]]"), ondemand.CommaDelimitedArray) {
+		if err != nil {
+			got = append(got, itemErr(err))
+			continue
+		}
+		var b strings.Builder
+		if err := walk(doc, &b); err != nil {
+			t.Fatal(err)
+		}
+		got = append(got, fmt.Sprintf("%d:%s:%s", doc.Offset(), doc.Source(), b.String()))
+	}
+	if s := strings.Join(got, " "); s != "1:[1 2]]:[i1,] !4 trailing" {
+		t.Errorf("got %s", s)
+	}
+	if got := odItems(&p, []byte(`[{},nul,[1 2]]`), ondemand.CommaDelimitedArray); got != "1:{} 4:nul 8:[1 2]] !8 incomplete" {
+		t.Errorf("unread: %s", got)
+	}
+}
+
 func TestIterateManyReads(t *testing.T) {
 	var p ondemand.Parser
 	var got []string

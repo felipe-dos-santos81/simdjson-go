@@ -103,15 +103,18 @@ type Document struct {
 	stream bool     // a stream document (C++ _streaming): no root checks of what follows
 	comma  bool     // from a CommaDelimited stream (Source trims commas)
 	off    int      // IterateMany: where the document starts in the input
+	pad    byte     // the byte at len(buf): C++'s padding, 0, or CommaDelimitedArray's ']'
 }
 
-// peekAt returns the structural character at token position i (0 past the
-// end, as C++'s padding reads).
+// peekAt returns the structural character at token position i (pad at the
+// end of the input, 0 past it, as C++'s padding reads).
 func (d *Document) peekAt(i int) byte {
 	idx, buf := d.idx, d.buf
 	if uint(i) < uint(len(idx)) {
 		if off := uint(idx[i]); off < uint(len(buf)) {
 			return buf[off]
+		} else if off == uint(len(buf)) {
+			return d.pad
 		}
 	}
 	return 0

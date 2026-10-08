@@ -29,6 +29,7 @@ type builder struct {
 	bigIntAsString bool
 	binding        bool     // see Parser.binding
 	streaming      bool     // one document of a stream (C++ walk_document<true>): no outer-bracket or trailing check
+	pad            byte     // what the index after idx reads: 0, or CommaDelimitedArray's ']' at the end of a stream
 	offs           []uint32 // binding mode: offs[i] is the input offset behind tape word i
 	dups           []uint32 // binding mode: first repeated name per object (see checkNames)
 	keys           []uint32 // binding mode: tape indices of the names of the open objects, innermost last
@@ -52,9 +53,15 @@ func (b *builder) advance() (byte, int) {
 	if b.pos >= len(b.idx) {
 		// Every current caller fails on the 0 byte, but counting the overrun
 		// keeps it safe regardless: documentEnd requires pos == len(idx), so a
-		// walk that read past the end is never accepted.
+		// walk that read past the end is never accepted. A stream reads pad
+		// at the first overrun: CommaDelimitedArray's ']' can close an array
+		// there, as in C++; later overruns read 0.
+		c := byte(0)
+		if b.pos == len(b.idx) {
+			c = b.pad
+		}
 		b.pos++
-		return 0, len(b.buf)
+		return c, len(b.buf)
 	}
 	off := int(b.idx[b.pos])
 	b.pos++
@@ -63,6 +70,9 @@ func (b *builder) advance() (byte, int) {
 
 func (b *builder) peek() byte {
 	if b.pos >= len(b.idx) {
+		if b.pos == len(b.idx) {
+			return b.pad
+		}
 		return 0
 	}
 	return b.buf[b.idx[b.pos]]
@@ -279,7 +289,18 @@ func (b *builder) primitive(c byte, off int) error {
 // whitespace, or the end of the input.
 func (b *builder) atom(off int, lit string) bool {
 	end := off + len(lit)
-	return end <= len(b.buf) && string(b.buf[off:end]) == lit && number.Terminates(b.buf, end)
+	return end <= len(b.buf) && string(b.buf[off:end]) == lit && b.terminates(end)
+}
+
+// terminates is number.Terminates, except that in a stream a number or
+// literal inside a container that ends the input meets C++'s padding, a 0
+// byte, and is not terminated (C++ copies a root scalar to a space-padded
+// buffer). Only a JSONSequence record, kept unbalanced, can end that way.
+func (b *builder) terminates(p int) bool {
+	if p == len(b.buf) && b.streaming && len(b.stack) > 0 {
+		return false
+	}
+	return number.Terminates(b.buf, p)
 }
 
 // addKey records the name just written to the tape (binding mode).

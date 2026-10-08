@@ -10,6 +10,7 @@ import (
 var errNames = map[error]string{
 	ErrTrailingContent: "trailing", ErrTape: "tape", ErrUTF8: "utf8", ErrUnescapedChars: "ctrl",
 	ErrOutOfOrderIteration: "order", ErrCapacity: "capacity", ErrIncompleteArrayOrObject: "incomplete",
+	ErrNumber: "number", ErrTAtom: "tatom",
 }
 
 // manyItems lists a stream's items as "offset:source", and an error as
@@ -76,6 +77,30 @@ func TestParseMany(t *testing.T) {
 	// DOM only: stage 2 fails on the first document, which On-Demand yields.
 	if got := manyItems(&p, []byte("[1,23 [1,23]"), Whitespace); got != "!0 tape" {
 		t.Errorf("[1,23 [1,23]: %s", got)
+	}
+	// A JSONSequence record is kept unbalanced, so a number or literal in a
+	// container can end the input: it meets C++'s 0 padding (stage 2 visit_number).
+	for in, want := range map[string]string{
+		"\x1e[1,23": "!1 number", "\x1e[true": "!1 tatom", "\x1e{\"a\":1.5": "!1 number", "\x1e23": "1:23",
+	} {
+		if got := manyItems(&p, []byte(in), JSONSequence); got != want {
+			t.Errorf("%q: got %s, want %s", in, got, want)
+		}
+	}
+	// A document still open at the end of a CommaDelimitedArray's contents
+	// reads the array's own ']' there, as C++ (its sentinel
+	// structural_indexes[n] = len points at the byte after its input). C++
+	// then parses on past that sentinel; Go stops (spec §4.3).
+	var items []string
+	for doc, err := range p.ParseMany([]byte("[[1 2]]"), CommaDelimitedArray) {
+		if err != nil {
+			items = append(items, err.Error())
+			continue
+		}
+		items = append(items, fmt.Sprintf("%d:%s:%s", doc.Offset(), doc.Source(), doc.Root().AppendJSON(nil)))
+	}
+	if got := strings.Join(items, " "); got != "1:[1 2]]:[1] "+(&StreamError{Offset: 4, Err: ErrTrailingContent}).Error() {
+		t.Errorf("[[1 2]]: %s", got)
 	}
 	doc, err := p.Parse([]byte(`[1]`))
 	if err != nil || doc.Offset() != 0 || doc.Source() != nil {

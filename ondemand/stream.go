@@ -50,6 +50,12 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			fail(0, jsonerr.ErrCapacity)
 			return
 		}
+		// The byte after C++'s input: its padding, or, as C++ strips the
+		// brackets by moving its pointers, the array's own ']'.
+		var pad byte
+		if f == CommaDelimitedArray {
+			pad = ']'
+		}
 		buf, base, f, ok := stream.Input(b, f)
 		if !ok {
 			fail(0, jsonerr.ErrTape)
@@ -93,7 +99,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				for r.Load() {
 				}
 			}
-			d.view(r, pos, end, base+start, f == CommaDelimited)
+			d.view(r, pos, end, base+start, f == CommaDelimited, pad)
 			mine, nextOff := d.gen, base+r.End(end)
 			if !yield(d, nil) {
 				return
@@ -135,7 +141,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 // view points d at the stream document starting at r.Idx[pos], whose root
 // value ends before position end: C++'s json_iterator re-anchored at the
 // document, over indices that run past it.
-func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool) {
+func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool, pad byte) {
 	*d = Document{
 		buf:    r.Buf,
 		idx:    r.Idx[pos:],
@@ -148,6 +154,7 @@ func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool) {
 		stream: true,
 		comma:  comma,
 		off:    off,
+		pad:    pad,
 	}
 }
 
@@ -182,7 +189,12 @@ func (d *Document) Source() []byte {
 			break
 		}
 	}
-	// C++ can end one byte into its padding; Go stops at the input's end.
-	end := min(int(d.idx[min(i, len(d.idx)-1)])+1, len(d.buf))
+	// C++ can end one byte past its input: into its padding, where Go stops
+	// at the input's end, or on the array's ']', which b still holds.
+	limit := len(d.buf)
+	if d.pad != 0 {
+		limit++
+	}
+	end := min(int(d.idx[min(i, len(d.idx)-1)])+1, limit)
 	return d.buf[start:end:end]
 }
