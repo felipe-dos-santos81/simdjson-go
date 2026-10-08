@@ -23,19 +23,19 @@ func (b *builder) number(off int) error {
 	if neg {
 		p++
 	}
+	// mant collects every digit and may wrap: an integer is checked by its
+	// digit count, a float is mant * 10**exp10, exact unless it has more than
+	// 19 significant digits (checked below).
 	start := p
-	var i uint64
+	var mant uint64
 	for p < len(buf) && number.IsDigit(buf[p]) {
-		i = 10*i + uint64(buf[p]-'0') // may wrap; the digit count decides below
+		mant = 10*mant + uint64(buf[p]-'0')
 		p++
 	}
-	digits := p - start
-	if digits == 0 || (buf[start] == '0' && digits > 1) {
+	nDigits, exp10 := p-start, int64(0)
+	if nDigits == 0 || (buf[start] == '0' && nDigits > 1) {
 		return ErrNumber
 	}
-	// A float is mant * 10**exp10, where mant holds every digit; it is exact
-	// unless there are more than 19 significant digits (checked below).
-	mant, nDigits, exp10 := i, digits, int64(0)
 	isFloat := false
 	if p < len(buf) && buf[p] == '.' {
 		isFloat = true
@@ -119,9 +119,9 @@ func (b *builder) number(off int) error {
 	if neg {
 		longest = 19
 	}
-	if digits > longest ||
-		digits == longest && neg && i > math.MaxInt64+1 ||
-		digits == longest && !neg && (buf[start] != '1' || i <= math.MaxInt64) { // wrapped
+	if nDigits > longest ||
+		nDigits == longest && neg && mant > math.MaxInt64+1 ||
+		nDigits == longest && !neg && (buf[start] != '1' || mant <= math.MaxInt64) { // wrapped
 		return b.bigInt(off, p)
 	}
 	if !number.Terminates(buf, p) {
@@ -129,11 +129,11 @@ func (b *builder) number(off int) error {
 	}
 	switch {
 	case neg:
-		b.tape = append(b.tape, word(tagInt64, 0), -i) // two's complement; -2^63 included
-	case i > math.MaxInt64:
-		b.tape = append(b.tape, word(tagUint64, 0), i)
+		b.tape = append(b.tape, word(tagInt64, 0), -mant) // two's complement; -2^63 included
+	case mant > math.MaxInt64:
+		b.tape = append(b.tape, word(tagUint64, 0), mant)
 	default:
-		b.tape = append(b.tape, word(tagInt64, 0), i)
+		b.tape = append(b.tape, word(tagInt64, 0), mant)
 	}
 	return nil
 }

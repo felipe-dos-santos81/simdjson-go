@@ -595,15 +595,13 @@ func makeSliceDecoder(t reflect.Type) decodeFunc {
 			return nil
 		}
 		if v.Cap() < n {
-			// A new zeroed array, as MakeSlice, without boxing the header.
-			// Grow from nil: growing the old slice would copy its elements.
+			// A new array, as MakeSlice, without boxing the header. Grow
+			// from nil: growing the old slice would copy its elements.
 			v.SetZero()
 			v.Grow(n)
-			v.SetLen(n)
-		} else {
-			v.SetLen(n)
-			v.Clear()
 		}
+		v.SetLen(n)
+		v.Clear() // a reused array keeps old elements; a new one is cheap to clear
 		i := 0
 		for c := range e.items() {
 			if err := elem.decode(d, c, v.Index(i), 0); err != nil {
