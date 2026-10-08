@@ -232,11 +232,23 @@ func (v Value) Get(name string) (Value, error) {
 
 // FindNext is Object.FindNext on the value.
 func (v Value) FindNext(name string) (Value, error) {
-	o, err := v.object()
+	if err := v.check(); err != nil {
+		return Value{}, err
+	}
+	it := v.it
+	if it.isAtStart() { // start the object (Value.object, without the second check)
+		if _, err := it.startObject(); err != nil {
+			return Value{}, err
+		}
+	}
+	found, err := it.findFieldRaw(name)
 	if err != nil {
 		return Value{}, err
 	}
-	return o.FindNext(name)
+	if !found {
+		return Value{}, jsonerr.ErrNoSuchField
+	}
+	return newValue(it.child()), nil
 }
 
 // AtPointer returns the value at the RFC 6901 JSON Pointer ptr below v,

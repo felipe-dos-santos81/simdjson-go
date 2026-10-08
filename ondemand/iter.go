@@ -89,11 +89,11 @@ type Document struct {
 // peekAt returns the structural character at token position i (0 past the
 // end, as C++'s padding reads).
 func (d *Document) peekAt(i int) byte {
-	if i >= len(d.idx) {
-		return 0
-	}
-	if off := int(d.idx[i]); off < len(d.buf) {
-		return d.buf[off]
+	idx, buf := d.idx, d.buf
+	if uint(i) < uint(len(idx)) {
+		if off := uint(idx[i]); off < uint(len(buf)) {
+			return buf[off]
+		}
 	}
 	return 0
 }

@@ -125,6 +125,28 @@ func (it valueIter) fieldKey() (int, error) {
 	return int(it.d.idx[k]), nil
 }
 
+// fieldHead is fieldKey followed by fieldValue: it steps over a field's key
+// and ':' and returns the key's offset. The common case, two well-formed
+// tokens, is checked in one go; anything else takes the two steps, so errors
+// and the cursor after them are as before.
+func (it valueIter) fieldHead() (int, error) {
+	d := it.d
+	if k := d.pos; uint(k)+1 < uint(len(d.idx)) {
+		idx, buf := d.idx, d.buf
+		o, c := uint(idx[k]), uint(idx[k+1])
+		if o < uint(len(buf)) && c < uint(len(buf)) && buf[o] == '"' && buf[c] == ':' {
+			d.pos = k + 2
+			d.depth = it.depth + 1
+			return int(o), nil
+		}
+	}
+	off, err := it.fieldKey()
+	if err != nil {
+		return 0, err
+	}
+	return off, it.fieldValue()
+}
+
 func (it valueIter) fieldValue() error {
 	if it.d.advance() != ':' {
 		return it.d.fail(jsonerr.ErrTape)
@@ -138,7 +160,19 @@ func (it valueIter) fieldValue() error {
 func (it valueIter) keyEquals(off int, key string) bool {
 	b := it.d.buf
 	end := off + 1 + len(key)
-	return end < len(b) && b[end] == '"' && string(b[off+1:end]) == key
+	if end >= len(b) || b[end] != '"' {
+		return false
+	}
+	if len(key) > 8 {
+		return string(b[off+1:end]) == key
+	}
+	seg := b[off+1 : end] // short keys: a loop beats the memequal call
+	for i := range seg {
+		if seg[i] != key[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func (it valueIter) findFieldRaw(key string) (bool, error) {
@@ -166,12 +200,8 @@ func (it valueIter) findFieldRaw(key string) (bool, error) {
 		}
 	}
 	for hasValue {
-		off, err := it.fieldKey()
+		off, err := it.fieldHead()
 		if err != nil {
-			it.d.abandon()
-			return false, err
-		}
-		if err := it.fieldValue(); err != nil {
 			it.d.abandon()
 			return false, err
 		}
@@ -361,7 +391,9 @@ func (it valueIter) advanceScalar() {
 	if !it.isAtStart() {
 		return
 	}
-	it.d.advance()
+	if d := it.d; d.pos < len(d.idx) { // advance without reading the token
+		d.pos++
+	}
 	it.d.depth = it.depth - 1
 }
 
