@@ -23,21 +23,28 @@ func must[T any](x T, err error) T {
 	return x
 }
 
+// walkInfo records what a walk saw that C++'s On-Demand/DOM differences
+// depend on.
+type walkInfo struct {
+	badBigInt bool // an integer too long for 64 bits with a leading zero (the DOM rejects it)
+}
+
 // fullWalk reads the whole document with On-Demand into a canonical text,
 // and checks nothing follows it. Any error means the document is invalid.
-func fullWalk(p *ondemand.Parser, in []byte) (string, error) {
+func fullWalk(p *ondemand.Parser, in []byte) (string, walkInfo, error) {
 	doc, err := p.Iterate(in)
 	if err != nil {
-		return "", err
+		return "", walkInfo{}, err
 	}
 	var b strings.Builder
-	if err := odWalk(doc, &b); err != nil {
-		return "", err
+	var info walkInfo
+	if err := odWalk(doc, &b, &info); err != nil {
+		return "", walkInfo{}, err
 	}
 	if !doc.AtEnd() {
-		return "", errors.New("trailing content")
+		return "", walkInfo{}, errors.New("trailing content")
 	}
-	return b.String(), nil
+	return b.String(), info, nil
 }
 
 type odReader interface {
@@ -54,7 +61,7 @@ type odReader interface {
 	Array() (ondemand.Array, error)
 }
 
-func odWalk(v odReader, b *strings.Builder) error {
+func odWalk(v odReader, b *strings.Builder, info *walkInfo) error {
 	t, err := v.Type()
 	if err != nil {
 		return err
@@ -75,7 +82,7 @@ func odWalk(v odReader, b *strings.Builder) error {
 				return err
 			}
 			fmt.Fprintf(b, "%q:", k)
-			if err := odWalk(f.Value(), b); err != nil {
+			if err := odWalk(f.Value(), b, info); err != nil {
 				return err
 			}
 			b.WriteByte(',')
@@ -91,7 +98,7 @@ func odWalk(v odReader, b *strings.Builder) error {
 			if err != nil {
 				return err
 			}
-			if err := odWalk(e, b); err != nil {
+			if err := odWalk(e, b, info); err != nil {
 				return err
 			}
 			b.WriteByte(',')
@@ -126,7 +133,13 @@ func odWalk(v odReader, b *strings.Builder) error {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(b, "B%s", strings.TrimRight(string(r), " \t\n\r"))
+			trimmed := strings.TrimRight(string(r), " \t\n\r")
+			fmt.Fprintf(b, "B%s", trimmed)
+			// Check if this is a big integer with leading zero
+			digits := strings.TrimPrefix(trimmed, "-")
+			if len(digits) > 1 && digits[0] == '0' {
+				info.badBigInt = true
+			}
 		}
 	case ondemand.TypeString:
 		s, err := v.String()
@@ -213,37 +226,53 @@ func domWalk(p *simdjson.Parser, in []byte) (string, error) {
 	return b.String(), err
 }
 
+var bom = []byte{0xEF, 0xBB, 0xBF}
+
 // knownDifference reports C++'s known differences between On-Demand and
-// the DOM, given the input and On-Demand's walk (empty if it failed):
-// On-Demand rejects an exponent of more than 19 digits, reads a root
-// "falsX" (any fifth byte) as false, does not validate an integer too long
-// for 64 bits (read with Raw), such as one with leading zeros, and rejects
-// a root number whose text and trailing whitespace exceed the buffer C++
-// copies them to: 21 bytes for an integer, 1083 for any number.
-func knownDifference(in []byte, walk string) bool {
-	root := bytes.TrimLeft(in, " \t\n\r")
-	num := bytes.TrimRight(root, " \t\n\r")
+// the DOM when one fails and the other does not: On-Demand rejects an
+// exponent of more than 19 digits, reads a root "falsX" (any fifth byte)
+// as false, does not validate an integer too long for 64 bits (read with
+// Raw), such as one with leading zeros, and the root-buffer rule below.
+func knownDifference(in []byte, info walkInfo) bool {
+	root := bytes.TrimLeft(bytes.TrimPrefix(in, bom), " \t\n\r")
 	return exponentTooLong(in) ||
 		bytes.HasPrefix(root, []byte("fals")) && !bytes.HasPrefix(root, []byte("false")) ||
-		badBigInt.MatchString(walk) ||
-		len(root) > 21 && rootInteger.Match(num) ||
+		info.badBigInt ||
+		rootBufferDifference(in)
+}
+
+// rootBufferDifference reports C++'s root-buffer rule: C++ copies a root
+// number and its trailing whitespace into a fixed buffer (21 bytes for an
+// integer, 1083 for any number). Longer, reading it as an integer or float
+// fails, and NumberType classifies it as BigInt, read raw (the oracle
+// records "0" followed by 1083 or more spaces as ntype bigint, walk B0).
+func rootBufferDifference(in []byte) bool {
+	root := bytes.TrimLeft(bytes.TrimPrefix(in, bom), " \t\n\r")
+	num := bytes.TrimRight(root, " \t\n\r")
+	return len(root) > 21 && rootInteger.Match(num) ||
 		len(root) > 1083 && rootNumber.Match(num)
 }
 
 // rootInteger and rootNumber match a document that is a single integer or
-// number.
+// number. rootNumber also matches a bare "-": past the 1083-byte buffer,
+// C++'s check_if_integer accepts it as a big integer (oracle: "-" followed
+// by 1083 spaces walks as B-).
 var (
 	rootInteger = regexp.MustCompile(`^-?[0-9]+$`)
-	rootNumber  = regexp.MustCompile(`^-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$`)
+	rootNumber  = regexp.MustCompile(`^-?[0-9]*(\.[0-9]+)?([eE][-+]?[0-9]+)?$`)
 )
-
-// badBigInt matches, in a walk, a big integer the DOM would reject.
-var badBigInt = regexp.MustCompile(`B-?0[0-9]`)
 
 func exponentTooLong(in []byte) bool {
 	n := 0
 	for i := 0; i < len(in); i++ {
 		switch c := in[i]; {
+		case c == '"': // a string: its contents are not numbers
+			for i++; i < len(in) && in[i] != '"'; i++ {
+				if in[i] == '\\' {
+					i++
+				}
+			}
+			n = 0
 		case c >= '0' && c <= '9':
 			n++
 		case c == 'e' || c == 'E':
@@ -268,16 +297,17 @@ func exponentTooLong(in []byte) bool {
 // agree checks that a full On-Demand walk gives what the DOM gives.
 func agree(t *testing.T, od *ondemand.Parser, dom *simdjson.Parser, in []byte) {
 	t.Helper()
-	got, errOD := fullWalk(od, in)
+	got, info, errOD := fullWalk(od, in)
 	want, errDOM := domWalk(dom, in)
 	switch {
 	case (errOD == nil) != (errDOM == nil):
-		if knownDifference(in, got) {
+		if knownDifference(in, info) {
 			return
 		}
 		t.Errorf("%.80q: On-Demand err %v, DOM err %v", in, errOD, errDOM)
 	case errOD == nil && got != want:
-		if knownDifference(in, got) {
+		// both succeed: only the root-buffer rule changes a value
+		if rootBufferDifference(in) {
 			return
 		}
 		t.Errorf("%.80q:\n On-Demand %.300s\n DOM       %.300s", in, got, want)
