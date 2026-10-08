@@ -158,10 +158,14 @@ marked **Go**.
   by its first four bytes (`falsy` reads as `false`).
 - **Differences from the DOM** (all C++'s own): the exponent, `BigInt`, root-buffer and `false`
   rules above. Everything else a full walk accepts, the DOM accepts, with the same values.
-- **Misuse (Go).** Reading a container out of order or twice, a stale `Field`, a zero handle, or
-  any handle after the next `Iterate` returns `ErrOutOfOrderIteration` and never panics. These are
-  C++'s development-build checks; release C++ leaves them undefined. The `*Document` is the
-  exception: its `Parser` reuses it, so after the next `Iterate` it reads the new document.
+- **Misuse (Go).** Reading a container out of order, iterating a container whose iteration has
+  already started, a stale `Field`, a zero handle, or any handle after the next `Iterate` returns
+  `ErrOutOfOrderIteration` and never panics. These are C++'s development-build checks; release C++
+  leaves them undefined. Iterating a container again before reading any element is allowed, as in
+  C++ (`is_at_iterator_start`). Looking a field up in a value already started as an array is
+  `ErrIncorrectType` (C++ resumes it as an object without checking). The `*Document` is a Go
+  trade-off, not C++ behaviour: `Iterate` returns the same `*Document` every time so that it does
+  not allocate, so after the next `Iterate` an old `*Document` reads the new document.
 - **Lifetime.** A `Document` and every handle and `Raw`/`RawKey` slice are valid until the next
   `Iterate`; `StringBytes` until the next `Iterate` or `Rewind` (C++ reuses its string buffer;
   `Key` and `String` return copies). The input is not copied or modified and needs no padding.
@@ -209,8 +213,8 @@ marked **Go**.
   literals, strings, escapes) alone, padded and inside containers; containers including
   ill-formed and truncated ones; scripts over every corpus file (walks, keys, counts, pointers,
   lookups in and out of order); and 4,000 mutated documents. `oracle.cpp` runs each script through
-  C++ `ondemand` (release build) and `regen.sh` records the output in `oracle.jsonl` (about 30,000
-  cases, 3 MB). `TestOracle` replays every case. The script language is documented in
+  C++ `ondemand` (release build) and `regen.sh` records the output in `oracle.jsonl` (30,715
+  cases, 6 MB). `TestOracle` replays every case. The script language is documented in
   `oracle.cpp`.
 - **DOM agreement.** A full walk of every corpus file, and of every fuzz input, gives the DOM's
   values or fails with it, apart from C++'s own differences (§4).
@@ -228,7 +232,7 @@ marked **Go**.
 
 | Risk | Mitigation |
 |---|---|
-| A C++ behaviour the oracle does not cover | 30,000 cases from corpora, edge cases and mutations; fuzzing against the DOM; new cases are one line in `gen.py` |
+| A C++ behaviour the oracle does not cover | 30,715 cases from corpora, edge cases and mutations; fuzzing against the DOM; new cases are one line in `gen.py` |
 | Out-of-range reads in the port (C++ relies on padding) | Every index is bounds-checked; `FuzzOnDemand` runs arbitrary read sequences |
 | The float tasks are close to the 1.5× bar | Measured 1.54–1.58× on a loaded machine; stage 1 is the floor (a third to a half of their time) |
 | Users expect DOM strictness | The README and godoc state "validate what you use", raw name comparison and `AtEnd` |

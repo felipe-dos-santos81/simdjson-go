@@ -47,16 +47,22 @@ func (t NumberType) String() string {
 // Value is a value inside a document, read at most once: getting it as an
 // object or array moves the document's cursor through it. A Value holding a
 // scalar may also be read after the cursor has moved past it.
-type Value struct {
+type Value struct{ handle }
+
+// handle is what Value, Object and Array hold: a position in the document
+// and the document's generation when it was made.
+type handle struct {
 	it  valueIter
 	gen uint32
 }
 
-func newValue(it valueIter) Value { return Value{it, it.d.gen} }
+func newHandle(it valueIter) handle { return handle{it, it.d.gen} }
 
-// check rejects a zero Value and one from before the document's last Iterate.
-func (v Value) check() error {
-	if v.it.d == nil || v.gen != v.it.d.gen {
+func newValue(it valueIter) Value { return Value{newHandle(it)} }
+
+// check rejects a zero handle and one from before the document's last Iterate.
+func (h handle) check() error {
+	if h.it.d == nil || h.gen != h.it.d.gen {
 		return jsonerr.ErrOutOfOrderIteration
 	}
 	return nil
@@ -165,15 +171,13 @@ func (v Value) String() (string, error) {
 	}
 	mark := len(v.it.d.strs)
 	b, err := v.StringBytes()
-	s := string(b)
-	v.it.d.strs = v.it.d.strs[:mark] // a copy does not keep the buffer (as C++)
-	return s, err
+	return v.it.d.copyString(mark, b, err)
 }
 
-// Raw returns the value's JSON text, from its first character to the next
-// structural character. An array or object is consumed (C++ raw_json); a
-// scalar is not, and the cursor does not move (C++ raw_json_token). It is
-// valid until the next Iterate.
+// Raw returns the value's JSON text. For a scalar it runs to the next
+// structural character and the cursor does not move (C++ raw_json_token);
+// for an array or object it is the whole container, which Raw consumes (C++
+// raw_json). It is valid until the next Iterate.
 func (v Value) Raw() ([]byte, error) {
 	if err := v.check(); err != nil {
 		return nil, err
@@ -204,7 +208,7 @@ func (v Value) Object() (Object, error) {
 	if _, err := v.it.startObject(); err != nil {
 		return Object{}, err
 	}
-	return Object{v.it, v.gen}, nil
+	return Object{v.handle}, nil
 }
 
 // Array returns the value as an array, ready to be read.
@@ -215,19 +219,24 @@ func (v Value) Array() (Array, error) {
 	if _, err := v.it.startArray(); err != nil {
 		return Array{}, err
 	}
-	return Array{v.it, v.gen}, nil
+	return Array{v.handle}, nil
 }
 
 // object starts the object, or resumes it if it was started (C++
-// start_or_resume_object), for Get and FindNext on a Value.
+// start_or_resume_object). Resuming a value that is not an object is
+// ErrIncorrectType (Go: C++ resumes without checking and then misreads).
 func (v Value) object() (Object, error) {
 	if err := v.check(); err != nil {
 		return Object{}, err
 	}
 	if v.it.isAtStart() {
-		return v.Object()
+		if _, err := v.it.startObject(); err != nil {
+			return Object{}, err
+		}
+	} else if v.it.peekStart() != '{' {
+		return Object{}, jsonerr.ErrIncorrectType
 	}
-	return Object{v.it, v.gen}, nil
+	return Object{v.handle}, nil
 }
 
 // Get is Object.Get on the value.
@@ -236,28 +245,16 @@ func (v Value) Get(name string) (Value, error) {
 	if err != nil {
 		return Value{}, err
 	}
-	return o.Get(name)
+	return o.find(name, false)
 }
 
 // FindNext is Object.FindNext on the value.
 func (v Value) FindNext(name string) (Value, error) {
-	if err := v.check(); err != nil {
-		return Value{}, err
-	}
-	it := v.it
-	if it.isAtStart() { // start the object (Value.object, without the second check)
-		if _, err := it.startObject(); err != nil {
-			return Value{}, err
-		}
-	}
-	found, err := it.findFieldRaw(name)
+	o, err := v.object()
 	if err != nil {
 		return Value{}, err
 	}
-	if !found {
-		return Value{}, jsonerr.ErrNoSuchField
-	}
-	return newValue(it.child()), nil
+	return o.find(name, true)
 }
 
 // AtPointer returns the value at the RFC 6901 JSON Pointer ptr below v,

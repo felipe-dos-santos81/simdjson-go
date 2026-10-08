@@ -8,17 +8,7 @@ import (
 )
 
 // Object is a JSON object being read.
-type Object struct {
-	it  valueIter
-	gen uint32
-}
-
-func (o Object) check() error {
-	if o.it.d == nil || o.gen != o.it.d.gen {
-		return jsonerr.ErrOutOfOrderIteration
-	}
-	return nil
-}
+type Object struct{ handle }
 
 // Get returns the value of the field named name, searching forward from the
 // cursor and then wrapping around to the fields before it, so every field
@@ -29,14 +19,7 @@ func (o Object) Get(name string) (Value, error) {
 	if err := o.check(); err != nil {
 		return Value{}, err
 	}
-	found, err := o.it.findFieldUnorderedRaw(name)
-	if err != nil {
-		return Value{}, err
-	}
-	if !found {
-		return Value{}, jsonerr.ErrNoSuchField
-	}
-	return newValue(o.it.child()), nil
+	return o.find(name, false)
 }
 
 // FindNext returns the value of the field named name, searching only
@@ -46,7 +29,19 @@ func (o Object) FindNext(name string) (Value, error) {
 	if err := o.check(); err != nil {
 		return Value{}, err
 	}
-	found, err := o.it.findFieldRaw(name)
+	return o.find(name, true)
+}
+
+// find looks name up, forward only (C++ find_field) or wrapping around
+// (find_field_unordered), on a checked object.
+func (o Object) find(name string, forward bool) (Value, error) {
+	var found bool
+	var err error
+	if forward {
+		found, err = o.it.findFieldRaw(name)
+	} else {
+		found, err = o.it.findFieldUnorderedRaw(name)
+	}
 	if err != nil {
 		return Value{}, err
 	}
@@ -71,19 +66,16 @@ func (o Object) All() iter.Seq2[Field, error] {
 		}
 		for it.isOpen() {
 			if err := it.d.err; err != nil {
-				it.d.abandon()
-				yield(Field{}, err)
+				yield(Field{}, it.abandonWith(err))
 				return
 			}
 			key := it.d.pos
 			if _, err := it.fieldKey(); err != nil {
-				it.d.abandon()
-				yield(Field{}, err)
+				yield(Field{}, it.abandonWith(err))
 				return
 			}
 			if err := it.fieldValue(); err != nil {
-				it.d.abandon()
-				yield(Field{}, err)
+				yield(Field{}, it.abandonWith(err))
 				return
 			}
 			if !yield(Field{key: key, value: newValue(it.child())}, nil) {
@@ -234,7 +226,5 @@ func (f Field) Key() (string, error) {
 	}
 	mark := len(v.it.d.strs)
 	b, err := v.it.d.unescape(int(v.it.d.idx[f.key]))
-	s := string(b)
-	v.it.d.strs = v.it.d.strs[:mark]
-	return s, err
+	return v.it.d.copyString(mark, b, err)
 }

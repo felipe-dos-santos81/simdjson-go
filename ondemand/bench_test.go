@@ -359,10 +359,13 @@ func TestTasksAgree(t *testing.T) {
 	if n1 < 0 {
 		t.Error("top_tweet: none found")
 	}
-	small := buildKostya(1000)
-	check("kostya", must(odKostya(&od, small, nil)), must(domKostya(&dom, small, nil)))
-	small = buildLargeRandom(1000)
-	check("large_random", must(odLargeRandom(&od, small, nil)), must(domLargeRandom(&dom, small, nil)))
+	// the benchmarked inputs; -short uses small ones
+	k, lr := kostyaJSON(), largeRandomJSON()
+	if testing.Short() {
+		k, lr = buildKostya(1000), buildLargeRandom(1000)
+	}
+	check("kostya", must(odKostya(&od, k, nil)), must(domKostya(&dom, k, nil)))
+	check("large_random", must(odLargeRandom(&od, lr, nil)), must(domLargeRandom(&dom, lr, nil)))
 }
 
 // --- benchmarks ---

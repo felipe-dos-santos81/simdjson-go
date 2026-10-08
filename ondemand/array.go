@@ -9,17 +9,7 @@ import (
 )
 
 // Array is a JSON array being read.
-type Array struct {
-	it  valueIter
-	gen uint32
-}
-
-func (a Array) check() error {
-	if a.it.d == nil || a.gen != a.it.d.gen {
-		return jsonerr.ErrOutOfOrderIteration
-	}
-	return nil
-}
+type Array struct{ handle }
 
 // All iterates over the array's elements in order. Elements not read in
 // the loop body are skipped. An error ends the iteration.
@@ -36,8 +26,7 @@ func (a Array) All() iter.Seq2[Value, error] {
 		}
 		for it.isOpen() {
 			if err := it.d.err; err != nil {
-				it.d.abandon()
-				yield(Value{}, err)
+				yield(Value{}, it.abandonWith(err))
 				return
 			}
 			if !yield(newValue(it.child()), nil) {

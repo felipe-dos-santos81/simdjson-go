@@ -27,7 +27,9 @@ const maxSize = 0xFFFFFFFF - 3
 // leading UTF-8 byte-order mark is skipped.
 //
 // The Document, every handle obtained from it and every slice returned by
-// StringBytes, Raw and RawKey are valid until the next Iterate on p.
+// Raw and RawKey are valid until the next Iterate on p; slices from
+// StringBytes until the next Iterate or Rewind. The returned *Document is
+// the same for every call on p.
 func (p *Parser) Iterate(b []byte) (*Document, error) {
 	b = bytes.TrimPrefix(b, bom)
 	d := &p.doc
@@ -109,7 +111,9 @@ func (d *Document) advance() byte {
 	return c
 }
 
-func (d *Document) atEnd() bool { return d.pos == d.n }
+// exhausted reports whether the cursor is past the last structural (C++
+// json_iterator::at_end).
+func (d *Document) exhausted() bool { return d.pos == d.n }
 
 // tokenLen is C++ peek_length: the distance to the next structural index.
 func (d *Document) tokenLen(i int) int { return int(d.idx[i+1]) - int(d.idx[i]) }
@@ -163,7 +167,7 @@ func (d *Document) skipChild(parentDepth int) error {
 			return nil
 		}
 	case '"':
-		if !d.atEnd() && d.peek() == ':' {
+		if !d.exhausted() && d.peek() == ':' {
 			d.advance() // a key: eat the ':'
 			break
 		}
@@ -231,10 +235,18 @@ func (d *Document) rawText(start int) ([]byte, error) {
 // call AtEnd after reading to reject trailing content such as "[1] [2]".
 func (d *Document) AtEnd() bool { return d.n > 0 && d.pos == d.n }
 
+// copyString returns b as a string and gives back the buffer space it used
+// (from mark): a copy does not keep the buffer, as in C++.
+func (d *Document) copyString(mark int, b []byte, err error) (string, error) {
+	s := string(b)
+	d.strs = d.strs[:mark]
+	return s, err
+}
+
 // Rewind moves the cursor back to the start of the document, so it can be
 // read again (C++ document::rewind). Slices from StringBytes read before
 // the Rewind may be overwritten. As C++ json_iterator::rewind, it keeps a
-// fatal error: a document that failed keeps failing.
+// fatal error, which iteration, Count and Reset report again.
 func (d *Document) Rewind() {
 	if d.n == 0 {
 		return

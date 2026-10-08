@@ -21,9 +21,11 @@
 // *Document itself is reused by its Parser, so an old *Document reads the
 // new document after the next Iterate.
 //
-// Misuse (reading a container out of order or twice, a stale Field, a zero
-// handle, a handle after the next Iterate) returns ErrOutOfOrderIteration
-// and never panics; release C++ leaves it undefined. Errors are package
+// Misuse (reading a container out of order, iterating one again after its
+// iteration started, a stale Field, a zero handle, a handle after the next
+// Iterate) returns ErrOutOfOrderIteration and never panics; release C++
+// leaves it undefined. Looking a field up in a value already started as an
+// array is ErrIncorrectType. Errors are package
 // simdjson's sentinels, such as simdjson.ErrNoSuchField; compare them with
 // errors.Is.
 package ondemand

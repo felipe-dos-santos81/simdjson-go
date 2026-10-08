@@ -199,3 +199,31 @@ func TestNoAllocs(t *testing.T) {
 		t.Errorf("%v allocs per run", n)
 	}
 }
+
+// TestResumeWrongType: looking a field up in an array that was already
+// started is ErrIncorrectType and leaves the document readable (C++
+// resumes it as an object without checking and then misreads).
+func TestResumeWrongType(t *testing.T) {
+	var p ondemand.Parser
+	doc := must(p.Iterate([]byte(`["a",1]`)))
+	must(doc.Array())
+	if _, err := doc.Get("a"); !errors.Is(err, simdjson.ErrIncorrectType) {
+		t.Fatalf("Document.Get after Array: %v, want ErrIncorrectType", err)
+	}
+	if n, err := must(doc.Array()).Count(); err != nil || n != 2 {
+		t.Fatalf("Count after the failed Get: %d, %v", n, err)
+	}
+
+	doc = must(p.Iterate([]byte(`{"v":[1]}`)))
+	v := must(doc.Get("v"))
+	must(v.Array())
+	for _, f := range []func(string) (ondemand.Value, error){v.Get, v.FindNext} {
+		if _, err := f("a"); !errors.Is(err, simdjson.ErrIncorrectType) {
+			t.Fatalf("Value lookup after Array: %v, want ErrIncorrectType", err)
+		}
+	}
+	doc.Rewind()
+	if n, err := must(must(doc.Get("v")).Array()).Count(); err != nil || n != 1 {
+		t.Fatalf("Count after the failed lookups and Rewind: %d, %v", n, err)
+	}
+}

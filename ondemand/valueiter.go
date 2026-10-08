@@ -30,6 +30,12 @@ func (it valueIter) child() valueIter {
 }
 func (it valueIter) skipChild() error { return it.d.skipChild(it.depth) }
 
+// abandonWith stops the document after a fatal error and returns it.
+func (it valueIter) abandonWith(err error) error {
+	it.d.abandon()
+	return err
+}
+
 // startOff is the input offset where the value starts.
 func (it valueIter) startOff() int { return int(it.d.idx[it.start]) }
 

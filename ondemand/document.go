@@ -92,11 +92,9 @@ func (d *Document) Bool() (bool, error) {
 		return false, err
 	}
 	it := d.root()
-	off, l := it.scalarStart(), d.rootTokenLen(0)
-	s := d.buf[off : off+l]
-	isTrue := l >= 4 && string(s[:4]) == "true" && (l == 4 || number.IsStructuralOrSpace[s[4]])
-	// As in C++, "false" is checked on its first four bytes only.
-	isFalse := l >= 5 && string(s[:4]) == "fals" && (l == 5 || number.IsStructuralOrSpace[s[5]])
+	s := d.rootText()
+	isTrue := rootLiteral(s, "true", 4)
+	isFalse := rootLiteral(s, "fals", 5) // as in C++, only "fals" is compared
 	if !isTrue && !isFalse {
 		return false, jsonerr.ErrIncorrectType
 	}
@@ -107,15 +105,26 @@ func (d *Document) Bool() (bool, error) {
 	return isTrue, nil
 }
 
+// rootText is what C++ copies for a root scalar: from it to the next
+// structural character (C++ peek_root_length).
+func (d *Document) rootText() []byte {
+	off := int(d.idx[0])
+	return d.buf[off : off+d.rootTokenLen(0)]
+}
+
+// rootLiteral is C++ get_root_bool/is_root_null's test: s starts with the
+// four bytes of lit and has n bytes, or more after a terminator at s[n].
+func rootLiteral(s []byte, lit string, n int) bool {
+	return len(s) >= n && string(s[:4]) == lit && (len(s) == n || number.IsStructuralOrSpace[s[n]])
+}
+
 // IsNull is Value.IsNull for a scalar document.
 func (d *Document) IsNull() (bool, error) {
 	if err := d.check(); err != nil {
 		return false, err
 	}
 	it := d.root()
-	off, l := it.scalarStart(), d.rootTokenLen(0)
-	s := d.buf[off : off+l]
-	isNull := l >= 4 && string(s[:4]) == "null" && (l == 4 || number.IsStructuralOrSpace[s[4]])
+	isNull := rootLiteral(d.rootText(), "null", 4)
 	switch {
 	case isNull:
 		if it.trailing() {
@@ -148,9 +157,7 @@ func (d *Document) StringBytes() ([]byte, error) {
 func (d *Document) String() (string, error) {
 	mark := len(d.strs)
 	b, err := d.StringBytes()
-	s := string(b)
-	d.strs = d.strs[:mark]
-	return s, err
+	return d.copyString(mark, b, err)
 }
 
 // Type returns the root value's JSON type.
@@ -170,7 +177,7 @@ func (d *Document) Object() (Object, error) {
 	if _, err := it.startRootObject(); err != nil {
 		return Object{}, err
 	}
-	return Object{it, d.gen}, nil
+	return Object{newHandle(it)}, nil
 }
 
 // Array returns the root as an array, ready to be read.
@@ -182,7 +189,7 @@ func (d *Document) Array() (Array, error) {
 	if _, err := it.startRootArray(); err != nil {
 		return Array{}, err
 	}
-	return Array{it, d.gen}, nil
+	return Array{newHandle(it)}, nil
 }
 
 // Value returns the root array or object as a Value, to be read with
@@ -215,7 +222,10 @@ func (d *Document) object() (Object, error) {
 	if d.atRoot() {
 		return d.Object()
 	}
-	return Object{d.root(), d.gen}, nil
+	if d.peekAt(0) != '{' { // Go: C++ resumes without checking and then misreads
+		return Object{}, jsonerr.ErrIncorrectType
+	}
+	return Object{newHandle(d.root())}, nil
 }
 
 // Get is Object.Get on the root object.
@@ -275,18 +285,12 @@ func (d *Document) AtPointer(ptr string) (Value, error) {
 		return d.Value()
 	}
 	switch d.root().typ() {
-	case TypeArray:
-		a, err := d.Array()
+	case TypeArray, TypeObject:
+		v, err := d.Value() // checks the root container, as C++'s get_array/get_object do
 		if err != nil {
 			return Value{}, err
 		}
-		return a.AtPointer(ptr)
-	case TypeObject:
-		o, err := d.Object()
-		if err != nil {
-			return Value{}, err
-		}
-		return o.AtPointer(ptr)
+		return atPointer(v, ptr)
 	}
 	return Value{}, jsonerr.ErrInvalidJSONPointer
 }
