@@ -3,6 +3,9 @@ package simdjson
 import (
 	"bytes"
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"simdjson-go/internal/stage1"
@@ -11,9 +14,18 @@ import (
 var benchFiles = []string{"twitter.json", "citm_catalog.json", "canada.json", "github_events.json", "gsoc-2018.json", "update-center.json"}
 
 func BenchmarkParse(b *testing.B) {
-	for _, name := range benchFiles {
-		b.Run(name, func(b *testing.B) {
-			data := readTestdata(b, "jsonexamples", name)
+	paths := strings.Fields(os.Getenv("BENCH_FILES")) // set by scripts/cpp-bench/run.sh
+	if len(paths) == 0 {
+		for _, name := range benchFiles {
+			paths = append(paths, filepath.Join(testdataDir(b, "jsonexamples"), name))
+		}
+	}
+	for _, path := range paths {
+		b.Run(filepath.Base(path), func(b *testing.B) {
+			data, err := os.ReadFile(path)
+			if err != nil {
+				b.Fatal(err)
+			}
 			var p Parser
 			b.SetBytes(int64(len(data)))
 			b.ReportAllocs()
@@ -113,12 +125,23 @@ func amazonDOM(p *Parser, data []byte, out map[string]*brand) error {
 	return nil
 }
 
+// largeAmazon is C++'s large_amazon_cellphones input (build_json(10*1024*1024)
+// in benchmark/large_amazon_cellphones): the file, then copies of it without
+// its header line until it spans 10 MiB.
+func largeAmazon(small []byte) []byte {
+	out := bytes.Clone(small)
+	for rest := small[bytes.IndexByte(small, '\n')+1:]; len(out) < 10<<20; {
+		out = append(out, rest...)
+	}
+	return out
+}
+
 func BenchmarkParseMany(b *testing.B) {
 	small := readTestdata(b, "jsonexamples", "amazon_cellphones.ndjson")
 	for _, in := range []struct {
 		name string
 		data []byte
-	}{{"amazon_cellphones", small}, {"large_amazon_cellphones", bytes.Repeat(small, 40)}} {
+	}{{"amazon_cellphones", small}, {"large_amazon_cellphones", largeAmazon(small)}} {
 		for _, bs := range []struct {
 			name string
 			size int

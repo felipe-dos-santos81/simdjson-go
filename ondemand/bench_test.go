@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sync"
 	"testing"
@@ -63,6 +64,21 @@ func buildLargeRandom(n int) []byte {
 	}
 	b.WriteString("\n]\n")
 	return b.Bytes()
+}
+
+// TestWriteBenchInputs writes kostya.json and large_random.json, the
+// generated inputs of BenchmarkTasks, to $BENCH_INPUTS, for
+// scripts/cpp-bench/run.sh to give C++ the same bytes.
+func TestWriteBenchInputs(t *testing.T) {
+	dir := os.Getenv("BENCH_INPUTS")
+	if dir == "" {
+		t.Skip("set BENCH_INPUTS to a directory")
+	}
+	for name, data := range map[string][]byte{"kostya.json": kostyaJSON(), "large_random.json": largeRandomJSON()} {
+		if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 // --- results ---
@@ -472,6 +488,17 @@ func amazonOD(p *ondemand.Parser, data []byte, out map[string]*brand) error {
 	return nil
 }
 
+// largeAmazon is C++'s large_amazon_cellphones input (build_json(10*1024*1024)
+// in benchmark/large_amazon_cellphones): the file, then copies of it without
+// its header line until it spans 10 MiB.
+func largeAmazon(small []byte) []byte {
+	out := bytes.Clone(small)
+	for rest := small[bytes.IndexByte(small, '\n')+1:]; len(out) < 10<<20; {
+		out = append(out, rest...)
+	}
+	return out
+}
+
 func BenchmarkIterateMany(b *testing.B) {
 	small, err := os.ReadFile("../testdata/jsonexamples/amazon_cellphones.ndjson")
 	if err != nil {
@@ -480,7 +507,7 @@ func BenchmarkIterateMany(b *testing.B) {
 	for _, in := range []struct {
 		name string
 		data []byte
-	}{{"amazon_cellphones", small}, {"large_amazon_cellphones", bytes.Repeat(small, 40)}} {
+	}{{"amazon_cellphones", small}, {"large_amazon_cellphones", largeAmazon(small)}} {
 		for _, bs := range []struct {
 			name string
 			size int

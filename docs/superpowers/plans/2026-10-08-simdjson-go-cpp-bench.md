@@ -69,7 +69,7 @@ index d470b35..ce8b943 100644
 -		b.Run(name, func(b *testing.B) {
 -			data := readTestdata(b, "jsonexamples", name)
 +	paths := strings.Fields(os.Getenv("BENCH_FILES")) // set by scripts/cpp-bench/run.sh
-+	if paths == nil {
++	if len(paths) == 0 {
 +		for _, name := range benchFiles {
 +			paths = append(paths, filepath.Join(testdataDir(b, "jsonexamples"), name))
 +		}
