@@ -64,6 +64,41 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 - **Never skip the corpus tests.** They `t.Fatal` when `testdata/` is missing, and that's deliberate.
 - `Parse` must not read past `len(b)`, must not keep or modify `b`, and must not allocate once the `Parser` has grown its buffers. `BenchmarkParse` reports allocs/op.
 
+## Writing tests
+
+Write fewer, better tests. Someone has to read, maintain and wait in CI for every test. A test earns its place only if it can fail for a reason that no other test covers. Count the distinct behaviours you verify, not the tests or the coverage.
+
+**Before you write a test:**
+
+1. Read the existing tests for the code you change. If a test already covers the behaviour, extend or adjust it; don't add a new one beside it. The oracles (`TestOracle`, `TestStreamOracle`, `sameUnmarshal`/`sameMarshal`), the corpus tests and the fuzzers already cover much of this repo.
+2. List the distinct behaviours to verify, one line each. If the same bug would fail two items, merge them.
+3. For each item, name the bug that would get through if you deleted the test. If you can't name one, don't write the test.
+
+**Redundant tests:**
+
+- Several inputs from one equivalence class. Use one representative plus the boundaries.
+- The same logic tested at several layers. Test it once, at the lowest layer that owns it (stage 1 in `internal/stage1`, not through `Parse`). Higher layers test only their own wiring and logic.
+- Tests that differ only in input and expected value. Put them in one table-driven test.
+- A test that is a strict subset of a broader one.
+
+**Don't test:**
+
+- Code with no logic: getters, setters, plain constructors, constants, simple delegation.
+- Go, the standard library or `encoding/json/v2` themselves.
+- Implementation details: unexported helpers, internal call order. Test the behaviour a caller sees through the package's API.
+- Cases that the type system or the compiler already prevents.
+
+**Do test:**
+
+- Each distinct branch or behaviour of the public contract, once.
+- Boundaries: empty, zero, maximum, nil, off-by-one. Here that also means the edges of a 64-byte block, of a stream window and of the input.
+- Error paths that have their own handling.
+- A regression test for each bug you fix, aimed at that bug. A fuzzer's failing input goes in as its file under `testdata/fuzz/`.
+
+**When you change code,** update the tests for the changed behaviour; don't add parallel ones. Delete the tests that the change makes obsolete. Don't add tests for code you didn't change, unless asked.
+
+**When you finish,** say in a few words which behaviours you tested and which you skipped as redundant or trivial, so that a reviewer can disagree.
+
 ## Traps
 
 - **Literal `\u` escapes in tests.** Test inputs such as `` `"é"` `` must keep the backslash. Some editors and tools decode them to `é`, which silently weakens the test. Check with `grep -c 'u00e9'`.
