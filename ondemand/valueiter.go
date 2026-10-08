@@ -164,7 +164,10 @@ func (it valueIter) keyEquals(off int, key string) bool {
 		return false
 	}
 	if len(key) > 8 {
-		return string(b[off+1:end]) == key
+		// Past SIMDJSON_PADDING (64), C++ compares with is_equal, which
+		// stops at an unescaped quote in key: such a key never matches,
+		// even where the raw text runs on into the next field.
+		return string(b[off+1:end]) == key && (len(key) <= 64 || !hasUnescapedQuote(key))
 	}
 	seg := b[off+1 : end] // short keys: a loop beats the memequal call
 	for i := range seg {
@@ -173,6 +176,23 @@ func (it valueIter) keyEquals(off int, key string) bool {
 		}
 	}
 	return true
+}
+
+// hasUnescapedQuote reports whether s has a quote not escaped by a
+// backslash, with C++ raw_json_string::is_equal's escape tracking.
+func hasUnescapedQuote(s string) bool {
+	escaping := false
+	for i := 0; i < len(s); i++ {
+		switch {
+		case s[i] == '"' && !escaping:
+			return true
+		case s[i] == '\\':
+			escaping = !escaping
+		default:
+			escaping = false
+		}
+	}
+	return false
 }
 
 func (it valueIter) findFieldRaw(key string) (bool, error) {

@@ -82,8 +82,24 @@ def container_scripts(doc):
          ["find b", "walk", "find a"], ["get missing"], ["get a", "get b", "walk"], ["find a", "find b", "walk"],
          ["get \\u0061", "walk"], ["get a\\\"b", "walk"], ["get ", "walk"], ["obj", "get d", "walk", "get a", "walk"],
          ["get a", "rewind", "get b", "walk"], ["walk", "rewind", "walk"], ["get user", "find id", "int64", "pop", "find name", "string"],
-         ["get id", "int64", "get user", "walk"], ["arr", "at 0", "arr", "each"]]
+         ["get id", "int64", "get user", "walk"], ["arr", "at 0", "arr", "each"],
+         ["get a", "ptr ", "raw"], ["get a", "ptr ", "walk"], ["ptr /a/b/1/c/d"], ["ptr /a/b/1/c/~"],
+         ["ptr /a/b/01"], ["ptr /a/b/-"], ["ptr /a/b/x"], ["ptr /a/"], ["ptr /0/"], ["ptr /0/0/0/0"]]
     return s
+
+
+def long_name_cases():
+    # Names longer than SIMDJSON_PADDING (64) are compared with is_equal,
+    # which stops at an unescaped quote in the name; shorter ones are not.
+    a, b = "a" * 40, "b" * 30
+    docs = ['{"%s":1,"%s":2}' % (a, b), '{"a":1,"b":2}', '{"%s":1}' % ("k" * 70),
+            '{"%s\\"b":1}' % ("q" * 70), '{"%s\\\\":1,"x":2}' % ("w" * 70)]
+    names = ['%s":1,"%s' % (a, b), 'a":1,"b', "k" * 70, "k" * 69, "q" * 70 + '\\"b',
+             "w" * 70 + '\\\\":1,"x', "w" * 70 + "\\\\"]
+    for d in docs:
+        for n in names:
+            for op in ("get", "find"):
+                yield case(d, script=[op + " " + n, "walk"])
 
 
 def container_cases():
@@ -160,7 +176,7 @@ def mutation_cases():
 
 def main():
     seen = set()
-    for gen in (scalar_cases, container_cases, corpus_cases, mutation_cases):
+    for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

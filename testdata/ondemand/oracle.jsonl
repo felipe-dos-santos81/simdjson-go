@@ -7945,6 +7945,16 @@
 {"doc": "5b5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b5d", "out": "!19", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b5d", "out": "!19", "script": ["ptr /0/"]}
+{"doc": "5b5d", "out": "!19", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b7d", "out": "{}", "script": ["walk"]}
 {"doc": "7b7d", "out": "r{}", "script": ["raw"]}
 {"doc": "7b7d", "out": "object", "script": ["type"]}
@@ -7987,6 +7997,16 @@
 {"doc": "7b7d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b7d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b7d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b7d", "out": "!20", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b7d", "out": "!20", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b7d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b7d", "out": "!20", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b7d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b7d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b7d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b7d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b7d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b7d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b312c322c335d", "out": "[i1,i2,i3,]", "script": ["walk"]}
 {"doc": "5b312c322c335d", "out": "r[1,2,3]", "script": ["raw"]}
 {"doc": "5b312c322c335d", "out": "array", "script": ["type"]}
@@ -8029,6 +8049,16 @@
 {"doc": "5b312c322c335d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b312c322c335d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b312c322c335d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b312c322c335d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b312c322c335d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b312c322c335d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b312c322c335d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b312c322c335d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b312c322c335d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b312c322c335d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b312c322c335d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b312c322c335d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b312c322c335d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a312c2262223a327d", "out": "{a:i1,b:i2,}", "script": ["walk"]}
 {"doc": "7b2261223a312c2262223a327d", "out": "r{\"a\":1,\"b\":2}", "script": ["raw"]}
 {"doc": "7b2261223a312c2262223a327d", "out": "object", "script": ["type"]}
@@ -8071,6 +8101,16 @@
 {"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a312c2262223a327d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "{a:{b:[i1,{c:i2,},],},}", "script": ["walk"]}
 {"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "r{\"a\":{\"b\":[1,{\"c\":2}]}}", "script": ["raw"]}
 {"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "object", "script": ["type"]}
@@ -8113,6 +8153,16 @@
 {"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!22", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!19", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2261223a7b2262223a5b312c7b2263223a327d5d7d7d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b5b5b5b5d5d5d5d", "out": "[[[[],],],]", "script": ["walk"]}
 {"doc": "5b5b5b5b5d5d5d5d", "out": "r[[[[]]]]", "script": ["raw"]}
 {"doc": "5b5b5b5b5d5d5d5d", "out": "array", "script": ["type"]}
@@ -8155,6 +8205,16 @@
 {"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b5b5b5b5d5d5d5d", "out": "e1", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!22", "script": ["ptr /0/"]}
+{"doc": "5b5b5b5b5d5d5d5d", "out": "!19", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "[{a:[],},{a:{},},]", "script": ["walk"]}
 {"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "r[{\"a\":[]},{\"a\":{}}]", "script": ["raw"]}
 {"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "array", "script": ["type"]}
@@ -8197,6 +8257,16 @@
 {"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b7b2261223a5b5d7d2c7b2261223a7b7d7d5d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a312c2261223a327d", "out": "{a:i1,a:i2,}", "script": ["walk"]}
 {"doc": "7b2261223a312c2261223a327d", "out": "r{\"a\":1,\"a\":2}", "script": ["raw"]}
 {"doc": "7b2261223a312c2261223a327d", "out": "object", "script": ["type"]}
@@ -8239,6 +8309,16 @@
 {"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a312c2261223a327d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2261223a312c2261223a327d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b225c7530303631223a312c2261223a327d", "out": "{\\x5cu0061:i1,a:i2,}", "script": ["walk"]}
 {"doc": "7b225c7530303631223a312c2261223a327d", "out": "r{\"\\x5cu0061\":1,\"a\":2}", "script": ["raw"]}
 {"doc": "7b225c7530303631223a312c2261223a327d", "out": "object", "script": ["type"]}
@@ -8281,6 +8361,16 @@
 {"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b225c7530303631223a312c2261223a327d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b225c7530303631223a312c2261223a327d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b22615c2262223a317d", "out": "{a\\x5c\"b:i1,}", "script": ["walk"]}
 {"doc": "7b22615c2262223a317d", "out": "r{\"a\\x5c\"b\":1}", "script": ["raw"]}
 {"doc": "7b22615c2262223a317d", "out": "object", "script": ["type"]}
@@ -8323,6 +8413,16 @@
 {"doc": "7b22615c2262223a317d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b22615c2262223a317d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b22615c2262223a317d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b22615c2262223a317d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b22223a317d", "out": "{:i1,}", "script": ["walk"]}
 {"doc": "7b22223a317d", "out": "r{\"\":1}", "script": ["raw"]}
 {"doc": "7b22223a317d", "out": "object", "script": ["type"]}
@@ -8365,6 +8465,16 @@
 {"doc": "7b22223a317d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b22223a317d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b22223a317d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b22223a317d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "{a:i1,b:i2,c:i3,d:i4,}", "script": ["walk"]}
 {"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "r{\"a\":1,\"b\":2,\"c\":3,\"d\":4}", "script": ["raw"]}
 {"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "object", "script": ["type"]}
@@ -8407,6 +8517,16 @@
 {"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2261223a312c2262223a322c2263223a332c2264223a347d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "{x:[i1,i2,i3,],y:{z:null,},w:ss,}", "script": ["walk"]}
 {"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "r{\"x\":[1,2,3],\"y\":{\"z\":null},\"w\":\"s\"}", "script": ["raw"]}
 {"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "object", "script": ["type"]}
@@ -8449,6 +8569,16 @@
 {"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2278223a5b312c322c335d2c2279223a7b227a223a6e756c6c7d2c2277223a2273227d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "{a:[i1,i2,],b:true,}", "script": ["walk"]}
 {"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "r{\\x20\"a\"\\x20:\\x20[\\x201\\x20,\\x202\\x20]\\x20,\\x20\"b\"\\x20:\\x20true\\x20}\\x20", "script": ["raw"]}
 {"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "object", "script": ["type"]}
@@ -8491,6 +8621,16 @@
 {"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!22", "script": ["ptr /a/"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "207b20226122203a205b2031202c2032205d202c20226222203a2074727565207d20", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b312c5d", "out": "!3", "script": ["walk"]}
 {"doc": "5b312c5d", "out": "r[1,]", "script": ["raw"]}
 {"doc": "5b312c5d", "out": "array", "script": ["type"]}
@@ -8533,6 +8673,16 @@
 {"doc": "5b312c5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b312c5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b312c5d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b312c5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b312c5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b312c5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b312c5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b312c5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b312c5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b312c5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b312c5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b312c5d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b312c5d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b2c315d", "out": "!3", "script": ["walk"]}
 {"doc": "5b2c315d", "out": "r[,1]", "script": ["raw"]}
 {"doc": "5b2c315d", "out": "array", "script": ["type"]}
@@ -8575,6 +8725,16 @@
 {"doc": "5b2c315d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b2c315d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b2c315d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b2c315d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b2c315d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b2c315d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b2c315d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b2c315d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b2c315d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b2c315d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b2c315d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b2c315d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b2c315d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b3120325d", "out": "!3", "script": ["walk"]}
 {"doc": "5b3120325d", "out": "r[1\\x202]", "script": ["raw"]}
 {"doc": "5b3120325d", "out": "array", "script": ["type"]}
@@ -8617,6 +8777,16 @@
 {"doc": "5b3120325d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b3120325d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b3120325d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b3120325d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b3120325d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b3120325d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b3120325d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b3120325d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b3120325d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b3120325d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b3120325d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b3120325d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b3120325d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b22612220317d", "out": "!3", "script": ["walk"]}
 {"doc": "7b22612220317d", "out": "r{\"a\"\\x201}", "script": ["raw"]}
 {"doc": "7b22612220317d", "out": "object", "script": ["type"]}
@@ -8659,6 +8829,16 @@
 {"doc": "7b22612220317d", "out": "!3", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b22612220317d", "out": "!3", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b22612220317d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["ptr /a/b/01"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["ptr /a/b/-"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["ptr /a/b/x"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["ptr /a/"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["ptr /0/"]}
+{"doc": "7b22612220317d", "out": "!3", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a312c7d", "out": "!3", "script": ["walk"]}
 {"doc": "7b2261223a312c7d", "out": "r{\"a\":1,}", "script": ["raw"]}
 {"doc": "7b2261223a312c7d", "out": "object", "script": ["type"]}
@@ -8701,6 +8881,16 @@
 {"doc": "7b2261223a312c7d", "out": "!3", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a312c7d", "out": "!3", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a312c7d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a312c7d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a312c7d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a312c7d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a312c7d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a312c7d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a312c7d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a312c7d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a312c7d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a312c7d", "out": "!3", "script": ["ptr /0/"]}
+{"doc": "7b2261223a312c7d", "out": "!3", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2c2261223a317d", "out": "!3", "script": ["walk"]}
 {"doc": "7b2c2261223a317d", "out": "r{,\"a\":1}", "script": ["raw"]}
 {"doc": "7b2c2261223a317d", "out": "object", "script": ["type"]}
@@ -8743,6 +8933,16 @@
 {"doc": "7b2c2261223a317d", "out": "!3", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2c2261223a317d", "out": "!3", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2c2261223a317d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["ptr /a/b/01"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["ptr /a/b/-"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["ptr /a/b/x"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["ptr /a/"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["ptr /0/"]}
+{"doc": "7b2c2261223a317d", "out": "!3", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a31202262223a327d", "out": "!3", "script": ["walk"]}
 {"doc": "7b2261223a31202262223a327d", "out": "r{\"a\":1\\x20\"b\":2}", "script": ["raw"]}
 {"doc": "7b2261223a31202262223a327d", "out": "object", "script": ["type"]}
@@ -8785,6 +8985,16 @@
 {"doc": "7b2261223a31202262223a327d", "out": "!3", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a31202262223a327d", "out": "!3", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a31202262223a327d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!3", "script": ["ptr /0/"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!3", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b313a327d", "out": "!3", "script": ["walk"]}
 {"doc": "7b313a327d", "out": "r{1:2}", "script": ["raw"]}
 {"doc": "7b313a327d", "out": "object", "script": ["type"]}
@@ -8827,6 +9037,16 @@
 {"doc": "7b313a327d", "out": "!3", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b313a327d", "out": "!3", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b313a327d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["ptr /a/b/01"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["ptr /a/b/-"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["ptr /a/b/x"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["ptr /a/"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["ptr /0/"]}
+{"doc": "7b313a327d", "out": "!3", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b7d", "out": "!28", "script": ["walk"]}
 {"doc": "5b7d", "out": "r[}", "script": ["raw"]}
 {"doc": "5b7d", "out": "array", "script": ["type"]}
@@ -8869,6 +9089,16 @@
 {"doc": "5b7d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b7d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b7d", "out": "!28", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b7d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b7d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b7d", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b7d", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b7d", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "5b7d", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "5b7d", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "5b7d", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "5b7d", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "5b7d", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b5d", "out": "!28", "script": ["walk"]}
 {"doc": "7b5d", "out": "r{]", "script": ["raw"]}
 {"doc": "7b5d", "out": "object", "script": ["type"]}
@@ -8911,6 +9141,16 @@
 {"doc": "7b5d", "out": "!28", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b5d", "out": "!28", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b5d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b5d", "out": "!28", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b5d", "out": "!28", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b5d", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b5d", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b5d", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "7b5d", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "7b5d", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "7b5d", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "7b5d", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "7b5d", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b5b5d", "out": "!3", "script": ["walk"]}
 {"doc": "5b5b5d", "out": "!28", "script": ["raw"]}
 {"doc": "5b5b5d", "out": "array", "script": ["type"]}
@@ -8953,6 +9193,16 @@
 {"doc": "5b5b5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b5b5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b5b5d", "out": "e0", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b5b5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b5b5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b5b5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b5b5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b5b5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b5b5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b5b5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b5b5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b5b5d", "out": "!22", "script": ["ptr /0/"]}
+{"doc": "5b5b5d", "out": "!19", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b5d5d", "out": "[]", "script": ["walk"]}
 {"doc": "5b5d5d", "out": "r[]", "script": ["raw"]}
 {"doc": "5b5d5d", "out": "array", "script": ["type"]}
@@ -8995,6 +9245,16 @@
 {"doc": "5b5d5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b5d5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b5d5d", "out": "!19", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b5d5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b5d5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b5d5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b5d5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b5d5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b5d5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b5d5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b5d5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b5d5d", "out": "!19", "script": ["ptr /0/"]}
+{"doc": "5b5d5d", "out": "!19", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b7d7d", "out": "{}", "script": ["walk"]}
 {"doc": "7b7d7d", "out": "r{}", "script": ["raw"]}
 {"doc": "7b7d7d", "out": "object", "script": ["type"]}
@@ -9037,6 +9297,16 @@
 {"doc": "7b7d7d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b7d7d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b7d7d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b7d7d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a5b7d", "out": "!3", "script": ["walk"]}
 {"doc": "7b2261223a5b7d", "out": "!28", "script": ["raw"]}
 {"doc": "7b2261223a5b7d", "out": "object", "script": ["type"]}
@@ -9079,6 +9349,16 @@
 {"doc": "7b2261223a5b7d", "out": "!3", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a5b7d", "out": "!3", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a5b7d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a5b7d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a5b7d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a5b7d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a5b7d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a5b7d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a5b7d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a5b7d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a5b7d", "out": "!22", "script": ["ptr /a/"]}
+{"doc": "7b2261223a5b7d", "out": "!3", "script": ["ptr /0/"]}
+{"doc": "7b2261223a5b7d", "out": "!3", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b312c7b5d", "out": "!3", "script": ["walk"]}
 {"doc": "5b312c7b5d", "out": "!28", "script": ["raw"]}
 {"doc": "5b312c7b5d", "out": "array", "script": ["type"]}
@@ -9121,6 +9401,16 @@
 {"doc": "5b312c7b5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b312c7b5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b312c7b5d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b312c7b5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b312c7b5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b312c7b5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b312c7b5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b312c7b5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b312c7b5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b312c7b5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b312c7b5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b312c7b5d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b312c7b5d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a7b2262223a317d", "out": "!3", "script": ["walk"]}
 {"doc": "7b2261223a7b2262223a317d", "out": "!28", "script": ["raw"]}
 {"doc": "7b2261223a7b2262223a317d", "out": "object", "script": ["type"]}
@@ -9163,6 +9453,16 @@
 {"doc": "7b2261223a7b2262223a317d", "out": "!3", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a7b2262223a317d", "out": "!3", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a7b2262223a317d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!3", "script": ["ptr /0/"]}
+{"doc": "7b2261223a7b2262223a317d", "out": "!3", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b", "out": "!28", "script": ["walk"]}
 {"doc": "5b", "out": "!28", "script": ["raw"]}
 {"doc": "5b", "out": "array", "script": ["type"]}
@@ -9205,6 +9505,16 @@
 {"doc": "5b", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b", "out": "!28", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "5b", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "5b", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "5b", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "5b", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "5b", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b", "out": "!28", "script": ["walk"]}
 {"doc": "7b", "out": "!28", "script": ["raw"]}
 {"doc": "7b", "out": "object", "script": ["type"]}
@@ -9247,6 +9557,16 @@
 {"doc": "7b", "out": "!28", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b", "out": "!28", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b", "out": "!28", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b", "out": "!28", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "7b", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "7b", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "7b", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "7b", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "7b", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "5d", "out": "?", "script": ["walk"]}
 {"doc": "5d", "out": "r]", "script": ["raw"]}
 {"doc": "5d", "out": "unknown", "script": ["type"]}
@@ -9289,6 +9609,16 @@
 {"doc": "5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5d", "out": "!22", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5d", "out": "!22", "script": ["ptr /a/b/01"]}
+{"doc": "5d", "out": "!22", "script": ["ptr /a/b/-"]}
+{"doc": "5d", "out": "!22", "script": ["ptr /a/b/x"]}
+{"doc": "5d", "out": "!22", "script": ["ptr /a/"]}
+{"doc": "5d", "out": "!22", "script": ["ptr /0/"]}
+{"doc": "5d", "out": "!22", "script": ["ptr /0/0/0/0"]}
 {"doc": "7d", "out": "?", "script": ["walk"]}
 {"doc": "7d", "out": "r}", "script": ["raw"]}
 {"doc": "7d", "out": "unknown", "script": ["type"]}
@@ -9331,6 +9661,16 @@
 {"doc": "7d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7d", "out": "!22", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7d", "out": "!22", "script": ["ptr /a/b/01"]}
+{"doc": "7d", "out": "!22", "script": ["ptr /a/b/-"]}
+{"doc": "7d", "out": "!22", "script": ["ptr /a/b/x"]}
+{"doc": "7d", "out": "!22", "script": ["ptr /a/"]}
+{"doc": "7d", "out": "!22", "script": ["ptr /0/"]}
+{"doc": "7d", "out": "!22", "script": ["ptr /0/0/0/0"]}
 {"doc": "2c", "out": "?", "script": ["walk"]}
 {"doc": "2c", "out": "r,", "script": ["raw"]}
 {"doc": "2c", "out": "unknown", "script": ["type"]}
@@ -9373,6 +9713,16 @@
 {"doc": "2c", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "2c", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "2c", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "2c", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "2c", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "2c", "out": "!22", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "2c", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "2c", "out": "!22", "script": ["ptr /a/b/01"]}
+{"doc": "2c", "out": "!22", "script": ["ptr /a/b/-"]}
+{"doc": "2c", "out": "!22", "script": ["ptr /a/b/x"]}
+{"doc": "2c", "out": "!22", "script": ["ptr /a/"]}
+{"doc": "2c", "out": "!22", "script": ["ptr /0/"]}
+{"doc": "2c", "out": "!22", "script": ["ptr /0/0/0/0"]}
 {"doc": "3a", "out": "?", "script": ["walk"]}
 {"doc": "3a", "out": "r:", "script": ["raw"]}
 {"doc": "3a", "out": "unknown", "script": ["type"]}
@@ -9415,6 +9765,16 @@
 {"doc": "3a", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "3a", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "3a", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "3a", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "3a", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "3a", "out": "!22", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "3a", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "3a", "out": "!22", "script": ["ptr /a/b/01"]}
+{"doc": "3a", "out": "!22", "script": ["ptr /a/b/-"]}
+{"doc": "3a", "out": "!22", "script": ["ptr /a/b/x"]}
+{"doc": "3a", "out": "!22", "script": ["ptr /a/"]}
+{"doc": "3a", "out": "!22", "script": ["ptr /0/"]}
+{"doc": "3a", "out": "!22", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b226122", "out": "!28", "script": ["walk"]}
 {"doc": "7b226122", "out": "!28", "script": ["raw"]}
 {"doc": "7b226122", "out": "object", "script": ["type"]}
@@ -9457,6 +9817,16 @@
 {"doc": "7b226122", "out": "!28", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b226122", "out": "!28", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b226122", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b226122", "out": "!28", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b226122", "out": "!28", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b226122", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b226122", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b226122", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "7b226122", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "7b226122", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "7b226122", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "7b226122", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "7b226122", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a", "out": "!28", "script": ["walk"]}
 {"doc": "7b2261223a", "out": "!28", "script": ["raw"]}
 {"doc": "7b2261223a", "out": "object", "script": ["type"]}
@@ -9499,6 +9869,16 @@
 {"doc": "7b2261223a", "out": "!28", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a", "out": "!28", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "7b2261223a", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b31", "out": "!28", "script": ["walk"]}
 {"doc": "5b31", "out": "!28", "script": ["raw"]}
 {"doc": "5b31", "out": "array", "script": ["type"]}
@@ -9541,6 +9921,16 @@
 {"doc": "5b31", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b31", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b31", "out": "!28", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b31", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b31", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b31", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b31", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b31", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "5b31", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "5b31", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "5b31", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "5b31", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "5b31", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b312c", "out": "!28", "script": ["walk"]}
 {"doc": "5b312c", "out": "!28", "script": ["raw"]}
 {"doc": "5b312c", "out": "array", "script": ["type"]}
@@ -9583,6 +9973,16 @@
 {"doc": "5b312c", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b312c", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b312c", "out": "!28", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b312c", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b312c", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b312c", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b312c", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b312c", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "5b312c", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "5b312c", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "5b312c", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "5b312c", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "5b312c", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b226122", "out": "!28", "script": ["walk"]}
 {"doc": "5b226122", "out": "!28", "script": ["raw"]}
 {"doc": "5b226122", "out": "array", "script": ["type"]}
@@ -9625,6 +10025,16 @@
 {"doc": "5b226122", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b226122", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b226122", "out": "!28", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b226122", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b226122", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b226122", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b226122", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b226122", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "5b226122", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "5b226122", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "5b226122", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "5b226122", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "5b226122", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a317d78", "out": "!28", "script": ["walk"]}
 {"doc": "7b2261223a317d78", "out": "r{\"a\":1}", "script": ["raw"]}
 {"doc": "7b2261223a317d78", "out": "object", "script": ["type"]}
@@ -9667,6 +10077,16 @@
 {"doc": "7b2261223a317d78", "out": "!28", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a317d78", "out": "!28", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a317d78", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "7b2261223a317d78", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b315d78", "out": "!28", "script": ["walk"]}
 {"doc": "5b315d78", "out": "r[1]", "script": ["raw"]}
 {"doc": "5b315d78", "out": "array", "script": ["type"]}
@@ -9709,6 +10129,16 @@
 {"doc": "5b315d78", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b315d78", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b315d78", "out": "!28", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b315d78", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b315d78", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b315d78", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b315d78", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b315d78", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "5b315d78", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "5b315d78", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "5b315d78", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "5b315d78", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "5b315d78", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b5d205b5d", "out": "[]", "script": ["walk"]}
 {"doc": "5b5d205b5d", "out": "r[]\\x20", "script": ["raw"]}
 {"doc": "5b5d205b5d", "out": "array", "script": ["type"]}
@@ -9751,6 +10181,16 @@
 {"doc": "5b5d205b5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b5d205b5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b5d205b5d", "out": "!19", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b5d205b5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b5d205b5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b5d205b5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b5d205b5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b5d205b5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b5d205b5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b5d205b5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b5d205b5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b5d205b5d", "out": "!19", "script": ["ptr /0/"]}
+{"doc": "5b5d205b5d", "out": "!19", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b7d2031", "out": "!28", "script": ["walk"]}
 {"doc": "7b7d2031", "out": "r{}\\x20", "script": ["raw"]}
 {"doc": "7b7d2031", "out": "object", "script": ["type"]}
@@ -9793,6 +10233,16 @@
 {"doc": "7b7d2031", "out": "!28", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b7d2031", "out": "!28", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b7d2031", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["ptr /a/b/01"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["ptr /a/b/-"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["ptr /a/b/x"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["ptr /a/"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["ptr /0/"]}
+{"doc": "7b7d2031", "out": "!28", "script": ["ptr /0/0/0/0"]}
 {"doc": "efbbbf5b315d", "out": "[i1,]", "script": ["walk"]}
 {"doc": "efbbbf5b315d", "out": "r[1]", "script": ["raw"]}
 {"doc": "efbbbf5b315d", "out": "array", "script": ["type"]}
@@ -9835,6 +10285,16 @@
 {"doc": "efbbbf5b315d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "efbbbf5b315d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "efbbbf5b315d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "efbbbf5b315d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "efbbbf5b315d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "efbbbf5b315d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "efbbbf5b315d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "efbbbf5b315d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "efbbbf5b315d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "efbbbf5b315d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "efbbbf5b315d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "efbbbf5b315d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "efbbbf5b315d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "20205b315d2020", "out": "[i1,]", "script": ["walk"]}
 {"doc": "20205b315d2020", "out": "r[1]\\x20\\x20", "script": ["raw"]}
 {"doc": "20205b315d2020", "out": "array", "script": ["type"]}
@@ -9877,6 +10337,16 @@
 {"doc": "20205b315d2020", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "20205b315d2020", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "20205b315d2020", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "20205b315d2020", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "20205b315d2020", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "20205b315d2020", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "20205b315d2020", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "20205b315d2020", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "20205b315d2020", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "20205b315d2020", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "20205b315d2020", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "20205b315d2020", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "20205b315d2020", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b315d0a", "out": "[i1,]", "script": ["walk"]}
 {"doc": "5b315d0a", "out": "r[1]\\x0a", "script": ["raw"]}
 {"doc": "5b315d0a", "out": "array", "script": ["type"]}
@@ -9919,6 +10389,16 @@
 {"doc": "5b315d0a", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b315d0a", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b315d0a", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b315d0a", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b315d0a", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b315d0a", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b315d0a", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b315d0a", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b315d0a", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b315d0a", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b315d0a", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b315d0a", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b315d0a", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b225c7530303030225d", "out": "[s\\x00,]", "script": ["walk"]}
 {"doc": "5b225c7530303030225d", "out": "r[\"\\x5cu0000\"]", "script": ["raw"]}
 {"doc": "5b225c7530303030225d", "out": "array", "script": ["type"]}
@@ -9961,6 +10441,16 @@
 {"doc": "5b225c7530303030225d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b225c7530303030225d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b225c7530303030225d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b225c7530303030225d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b225c7530303030225d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b225c7530303030225d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b225c7530303030225d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b225c7530303030225d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b225c7530303030225d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b225c7530303030225d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b225c7530303030225d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b225c7530303030225d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b225c7530303030225d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a2262227d", "out": "{a:sb,}", "script": ["walk"]}
 {"doc": "7b2261223a2262227d", "out": "r{\"a\":\"b\"}", "script": ["raw"]}
 {"doc": "7b2261223a2262227d", "out": "object", "script": ["type"]}
@@ -10003,6 +10493,16 @@
 {"doc": "7b2261223a2262227d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a2262227d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a2262227d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a2262227d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a2262227d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a2262227d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a2262227d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a2262227d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a2262227d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a2262227d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a2262227d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a2262227d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2261223a2262227d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "[true,false,null,]", "script": ["walk"]}
 {"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "r[true,false,null]", "script": ["raw"]}
 {"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "array", "script": ["type"]}
@@ -10045,6 +10545,16 @@
 {"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b747275652c66616c73652c6e756c6c5d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b74727565785d", "out": "r[truex]", "script": ["raw"]}
 {"doc": "5b74727565785d", "out": "array", "script": ["type"]}
 {"doc": "5b74727565785d", "out": "!17", "script": ["val", "walk"]}
@@ -10085,6 +10595,16 @@
 {"doc": "5b74727565785d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b74727565785d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b74727565785d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b74727565785d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b74727565785d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b74727565785d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b74727565785d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b74727565785d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b74727565785d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b74727565785d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b74727565785d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b74727565785d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b74727565785d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b6e756c5d", "out": "r[nul]", "script": ["raw"]}
 {"doc": "5b6e756c5d", "out": "array", "script": ["type"]}
 {"doc": "5b6e756c5d", "out": "!17", "script": ["val", "walk"]}
@@ -10125,6 +10645,16 @@
 {"doc": "5b6e756c5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b6e756c5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b6e756c5d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b6e756c5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b6e756c5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b6e756c5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b6e756c5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b6e756c5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b6e756c5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b6e756c5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b6e756c5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b6e756c5d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b6e756c5d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a7472757d", "out": "r{\"a\":tru}", "script": ["raw"]}
 {"doc": "7b2261223a7472757d", "out": "object", "script": ["type"]}
 {"doc": "7b2261223a7472757d", "out": "!17", "script": ["val", "walk"]}
@@ -10165,6 +10695,16 @@
 {"doc": "7b2261223a7472757d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a7472757d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a7472757d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a7472757d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a7472757d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a7472757d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a7472757d", "out": "!22", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a7472757d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a7472757d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a7472757d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a7472757d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2261223a7472757d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2261223a7472757d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b312e35653430305d", "out": "!9", "script": ["walk"]}
 {"doc": "5b312e35653430305d", "out": "r[1.5e400]", "script": ["raw"]}
 {"doc": "5b312e35653430305d", "out": "array", "script": ["type"]}
@@ -10207,6 +10747,16 @@
 {"doc": "5b312e35653430305d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b312e35653430305d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b312e35653430305d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b312e35653430305d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b312e35653430305d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b312e35653430305d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b312e35653430305d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b312e35653430305d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b312e35653430305d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b312e35653430305d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b312e35653430305d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b312e35653430305d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b312e35653430305d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "5b2d5d", "out": "r[-]", "script": ["raw"]}
 {"doc": "5b2d5d", "out": "array", "script": ["type"]}
 {"doc": "5b2d5d", "out": "!9", "script": ["val", "walk"]}
@@ -10247,6 +10797,16 @@
 {"doc": "5b2d5d", "out": "!17", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "5b2d5d", "out": "!17", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "5b2d5d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "5b2d5d", "out": "!17", "script": ["get a", "ptr ", "raw"]}
+{"doc": "5b2d5d", "out": "!17", "script": ["get a", "ptr ", "walk"]}
+{"doc": "5b2d5d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "5b2d5d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "5b2d5d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "5b2d5d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "5b2d5d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "5b2d5d", "out": "!17", "script": ["ptr /a/"]}
+{"doc": "5b2d5d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "5b2d5d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "{a:[i1,i2,],b:{c:i3,},d:i4,}", "script": ["walk"]}
 {"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "r{\"a\":[1,2],\"b\":{\"c\":3},\"d\":4}", "script": ["raw"]}
 {"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "object", "script": ["type"]}
@@ -10289,6 +10849,16 @@
 {"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!20", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!22", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!22", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!17", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!17", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!17", "script": ["ptr /a/b/01"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!17", "script": ["ptr /a/b/-"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!17", "script": ["ptr /a/b/x"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!22", "script": ["ptr /a/"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2261223a5b312c325d2c2262223a7b2263223a337d2c2264223a347d", "out": "!20", "script": ["ptr /0/0/0/0"]}
 {"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "{user:{id:i1,name:sx,},id:i2,}", "script": ["walk"]}
 {"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "r{\"user\":{\"id\":1,\"name\":\"x\"},\"id\":2}", "script": ["raw"]}
 {"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "object", "script": ["type"]}
@@ -10331,6 +10901,86 @@
 {"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "i1 !20", "script": ["get user", "find id", "int64", "pop", "find name", "string"]}
 {"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "i2 {id:i1,name:sx,}", "script": ["get id", "int64", "get user", "walk"]}
 {"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!17", "script": ["arr", "at 0", "arr", "each"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["get a", "ptr ", "raw"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["get a", "ptr ", "walk"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["ptr /a/b/1/c/d"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["ptr /a/b/1/c/~"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["ptr /a/b/01"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["ptr /a/b/-"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["ptr /a/b/x"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["ptr /a/"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["ptr /0/"]}
+{"doc": "7b2275736572223a7b226964223a312c226e616d65223a2278227d2c226964223a327d", "out": "!20", "script": ["ptr /0/0/0/0"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["get aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["find aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["get a\":1,\"b", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["find a\":1,\"b", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["get qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["find qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b2261616161616161616161616161616161616161616161616161616161616161616161616161616161223a312c22626262626262626262626262626262626262626262626262626262626262223a327d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["get aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["find aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "i1", "script": ["get a\":1,\"b", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "i1", "script": ["find a\":1,\"b", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["get qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["find qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b2261223a312c2262223a327d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["get aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["find aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["get a\":1,\"b", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["find a\":1,\"b", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "i1", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "i1", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["get qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["find qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b223a317d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["get aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["find aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["get a\":1,\"b", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["find a\":1,\"b", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "i1", "script": ["get qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "i1", "script": ["find qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b22717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171717171715c2262223a317d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["get aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["find aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\":1,\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["get a\":1,\"b", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["find a\":1,\"b", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["get qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["find qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\\\"b", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "!20", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\\":1,\"x", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "i1", "script": ["get wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
+{"doc": "7b22777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777775c5c223a312c2278223a327d", "out": "i1", "script": ["find wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\\\\", "walk"]}
 {"file": "testdata/jsonexamples/apache_builds.json", "out": "#958b413c695b45bc:88444", "script": ["walk"]}
 {"file": "testdata/jsonexamples/apache_builds.json", "out": "object", "script": ["type"]}
 {"file": "testdata/jsonexamples/apache_builds.json", "out": "#2b9e67900c4c968d:226042", "script": ["raw"]}
