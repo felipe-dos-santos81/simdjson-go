@@ -37,6 +37,7 @@ the On-Demand tasks and the streams. It runs by hand, on a quiet machine; not in
 | C++ side | Our own harness built against the single header | C++'s own suite needs CMake and Google Benchmark, generates different `kostya`/`large_random` bytes, measures differently and names rows differently |
 | Comparison | The harness prints Go benchmark lines with the Go names; the pinned `benchstat` compares | Statistics and pairing come for free; nothing new to maintain |
 | Inputs | The six `BenchmarkParse` files by default, or `file=`; Go writes its generated inputs for C++ to read | Both sides parse identical bytes |
+| `large_amazon_cellphones` | C++'s `build_json(10*1024*1024)`: the file, then copies without its header line until it spans 10 MiB; Go's two stream benchmarks change to it | Go repeated the whole file 40 times, so a header line sat in each copy: C++'s body throws on it (`INCORRECT_TYPE`), and Go's ignored the errors |
 | Go build | NEON (`GOEXPERIMENT=simd`) | C++ uses its NEON kernel on arm64 |
 | C++ build | `-std=c++20 -O3 -DNDEBUG -DSIMDJSON_THREADS_ENABLED=1 -pthread` | C++'s CMake release flags; threads turn on its pipelined streams. No `-march=native`: NEON is the arm64 baseline, and on amd64 simdjson picks its kernel at run time |
 
@@ -52,7 +53,8 @@ Output goes to `bench-cpp/` (gitignored):
 | File | What |
 |---|---|
 | `C++`, `Go` | The raw results, in Go's benchmark format; the names are benchstat's column labels |
-| `benchstat.txt` | `uptime`, then benchstat's text tables: medians, confidence intervals, p-values |
+| `benchstat.txt` | `uptime`, then benchstat's text tables (time and throughput): medians, confidence intervals, p-values |
+| `benchstat.csv` | The throughput table as CSV, the input of `table.py` |
 | `table.md` | The Markdown table for the README (§6) |
 | `build/`, `gen/` | The C++ binary and Go test binaries; the generated inputs |
 
@@ -69,7 +71,8 @@ python3 and the corpora (`make testdata`), as `make oracle` does.
 | `scripts/cpp-bench/table.py` | benchstat CSV to the Markdown table (§6) |
 | `scripts/cpp-bench/README.md` | What it measures, the flags, the generated inputs, the outputs |
 | `ondemand/bench_test.go` | `TestWriteBenchInputs`: skipped unless `BENCH_INPUTS=dir`; writes `kostya.json` and `large_random.json` there, the bytes `BenchmarkTasks` uses (`kostyaJSON()`, `largeRandomJSON()`) |
-| `bench_test.go` | `BenchmarkParse` reads the paths in `BENCH_FILES` (separated by spaces, read with `os.ReadFile`) instead of `benchFiles` when it is set; the sub-benchmark name is the file's base name |
+| `bench_test.go` | `BenchmarkParse` reads the paths in `BENCH_FILES` (separated by spaces, read with `os.ReadFile`) instead of `benchFiles` when it is set; the sub-benchmark name is the file's base name. `largeAmazon` builds the `large_amazon_cellphones` input (§2) |
+| `ondemand/bench_test.go` (again) | The same `largeAmazon`, for `BenchmarkIterateMany` (another package, so a copy) |
 | `Makefile` | `bench-cpp: testdata ## Go vs C++ simdjson [count=6 file="a.json b.json"]` |
 
 ## 5. The C++ harness
@@ -99,7 +102,7 @@ Each row times exactly what the Go benchmark of the same name times.
 
 - Tasks: `partial_tweets`, `distinct_user_id`, `find_tweet`, `top_tweet` on `twitter.json`;
   `kostya` and `large_random` on the files in `GEN_DIR`.
-- `large_amazon_cellphones` is `amazon_cellphones.ndjson` repeated 40 times in memory, as in Go.
+- `large_amazon_cellphones` is built in memory as C++'s `build_json(10*1024*1024)` (§2), as in Go.
 - Streams: `default` is C++'s default batch (1,000,000 bytes) with `threaded = true`, against
   Go's default `BatchSize` with its stage 1 goroutine. `single` is `batch_size = len(input)`,
   against Go's one window. The brand map lives across iterations on both sides.
@@ -121,6 +124,8 @@ prints the benchmark's name and exits non-zero.
 
 `run.sh`, from the repo root:
 
+0. **Paths.** The `FILE` arguments are made absolute before the script moves to the repo root,
+   so a path relative to the caller's directory works.
 1. **Build C++.** `fetch-simdjson.sh bench-cpp/build`, then compile `bench.cpp` with the flags
    of §2.
 2. **Inputs.** `BENCH_INPUTS=bench-cpp/gen go test -run '^TestWriteBenchInputs$' ./ondemand`.
@@ -133,10 +138,11 @@ prints the benchmark's name and exits non-zero.
    `root.test -test.run '^$' -test.bench '^Benchmark(Parse|ParseMany)$'` from the repo root and
    `ondemand.test -test.run '^$' -test.bench '^Benchmark(Tasks|IterateMany)$'` from `ondemand/`
    (append to `Go`). Alternating spreads machine noise over both sides.
-5. **Compare,** from `bench-cpp/`: `benchstat -table pkg C++ Go`, after `uptime`, into
-   `benchstat.txt`; `benchstat -table pkg -format csv C++ Go | python3 -I table.py` into
-   `table.md`. `-table pkg` keeps Go's `cpu:` line, which C++ does not print, from splitting the
-   tables.
+5. **Compare,** from `bench-cpp/`: `benchstat -table pkg -filter '.unit:(sec/op OR B/s)' C++ Go`,
+   after `uptime`, into `benchstat.txt`; `benchstat -table pkg -filter .unit:B/s -format csv C++ Go`
+   into `benchstat.csv`, and `python3 -I table.py <benchstat.csv` into `table.md`. `-table pkg`
+   keeps Go's `cpu:` line, which C++ does not print, from splitting the tables; the filter drops
+   Go's B/op and allocs/op, which C++ does not report.
 
 `table.py` reads only the B/s part of the CSV and prints:
 
@@ -166,11 +172,19 @@ benchmark fails the run instead of shortening the table.
 
 ## 8. Docs
 
-- `README.md`: a "Against C++ simdjson v5.0.2" table in Performance, from a real run (machine,
+- `README.md`: the streams table's input becomes C++'s 10 MiB build (re-measured in the same
+  run); a "Against C++ simdjson v5.0.2" table in Performance, from a real run (machine,
   `count`); `make bench-cpp` under Development.
 - `AGENTS.md`: layout rows for `scripts/cpp-bench/` and `scripts/fetch-simdjson.sh`; the command;
   in the Benchmark-noise trap, that the comparison alternates its runs.
 - `.gitignore`: `bench-cpp/`.
+- The streams spec (§8, Benchmarks) names the new `large_amazon_cellphones` input.
+
+## Prototype
+
+Before the plan, the harness, `run.sh`, `table.py` and the Go changes ran end to end
+(`count=1`, `twitter.json`) on an Apple M3 Max: all 21 rows paired (`-14` on both sides), one
+round took about 70 s, and Go ran at 0.23–0.40× of C++ (geomean 0.29×).
 
 ## 9. Risks
 
