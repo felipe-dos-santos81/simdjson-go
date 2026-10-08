@@ -20,7 +20,7 @@ FUZZ_ENV = $(if $(or $(neon),$(filter $(target),$(STAGE1_FUZZ))),$(SIMD))
 
 .PHONY: help testdata clean fmt vet check \
         test test-neon test-purego test-amd64 test-race \
-        fuzz bench benchstat oracle
+        fuzz bench benchstat bench-cpp oracle
 
 # ── Setup ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +80,9 @@ bench: testdata ## Benchmarks [bench=regex count=6 neon=1 pkg=./ondemand out=fil
 
 benchstat: ## Compare two benchmark files [old=a.txt new=b.txt]
 	$(BENCHSTAT) $(old) $(new)
+
+bench-cpp: testdata ## Go vs C++ simdjson v5.0.2, as a table (needs a C++20 compiler) [count=6 file="a.json b.json"]
+	BENCHSTAT='$(BENCHSTAT)' ./scripts/cpp-bench/run.sh $(count) $(file)
 
 oracle: testdata ## Record C++ simdjson's results in testdata/{ondemand,stream}/ (needs a C++20 compiler)
 	./scripts/ondemand-oracle/regen.sh

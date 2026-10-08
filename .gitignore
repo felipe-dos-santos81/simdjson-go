@@ -8,6 +8,9 @@ testdata/jsonexamples/
 *.prof
 *.out
 
+# make bench-cpp output
+bench-cpp/
+
 # Local agent workspaces
 .superpowers/
 
