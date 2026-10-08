@@ -107,9 +107,13 @@ func (it valueIter) startedObject() (bool, error) {
 
 // checkRootContainer is C++ check_root_object/check_root_array: the last
 // structural must close the root. (C++ also checks the brackets balance,
-// but only for truncated stream documents, which Iterate never makes.)
+// but only for truncated stream documents, which Iterate never makes.) A
+// stream document is not checked, as in C++.
 func (it valueIter) checkRootContainer(end byte) error {
 	d := it.d
+	if d.stream {
+		return nil
+	}
 	if d.peekAt(d.n-1) != end {
 		d.abandon()
 		return d.fail(jsonerr.ErrIncompleteArrayOrObject)
@@ -442,8 +446,9 @@ func (it valueIter) rootScalar(n int) (s []byte, ok bool) {
 	return it.d.buf[off : off+l], true
 }
 
-// trailing reports C++ TRAILING_CONTENT: a root scalar followed by more.
-func (it valueIter) trailing() bool { return it.d.n != 1 }
+// trailing reports C++ TRAILING_CONTENT: a root scalar followed by more
+// (never in a stream, where C++ does not check).
+func (it valueIter) trailing() bool { return it.d.n != 1 && !it.d.stream }
 
 // typ is C++ value_iterator::type.
 func (it valueIter) typ() Type {

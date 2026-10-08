@@ -6,13 +6,22 @@ import (
 	"simdjson-go/internal/jsonerr"
 	"simdjson-go/internal/stage1"
 	"simdjson-go/internal/str"
+	"simdjson-go/internal/stream"
 )
 
 // Parser reads documents On-Demand. The zero value is ready to use; reuse
 // a Parser across documents so its buffers are reused. A Parser is not safe
 // for concurrent use.
 type Parser struct {
-	doc Document
+	// BatchSize is how many bytes IterateMany runs stage 1 over at a time:
+	// 0 means 1,000,000; it is rounded up to a multiple of 64. It changes
+	// speed and memory, never results.
+	BatchSize int
+
+	doc     Document
+	idx     []uint32      // Iterate's indices, apart from the stream's
+	stream  stream.Reader // IterateMany's indices and state
+	streams uint32        // counts IterateMany calls, to detect a second stream on p
 }
 
 var bom = []byte{0xEF, 0xBB, 0xBF}
@@ -34,22 +43,25 @@ func (p *Parser) Iterate(b []byte) (*Document, error) {
 	b = bytes.TrimPrefix(b, bom)
 	d := &p.doc
 	if uint64(len(b)) > maxSize {
-		d.kill(d.idx)
+		d.kill()
 		return nil, jsonerr.ErrCapacity
 	}
-	idx, err := stage1.Index(b, d.idx[:0])
+	idx, err := stage1.Index(b, p.idx[:0])
 	if err != nil {
-		d.kill(idx)
+		p.idx = idx
+		d.kill()
 		return nil, err
 	}
 	n := len(idx)
 	// As in C++: two entries pointing at the end of the input (peeking
 	// there sees 0, like C++'s padding), then a 0.
 	idx = append(idx, uint32(len(b)), uint32(len(b)), 0)
+	p.idx = idx
 	*d = Document{
 		buf:    b,
 		idx:    idx,
 		n:      n,
+		end:    n,
 		depth:  1,
 		gen:    d.gen + 1,
 		strs:   d.strs[:0],
@@ -58,11 +70,11 @@ func (p *Parser) Iterate(b []byte) (*Document, error) {
 	return d, nil
 }
 
-// kill turns d into a dead document (n == 0) after a failed Iterate, keeping
-// only the reusable buffers; gen advances so handles into the previous
-// document go stale.
-func (d *Document) kill(idx []uint32) {
-	*d = Document{idx: idx, gen: d.gen + 1, strs: d.strs[:0], starts: d.starts[:0]}
+// kill turns d into a dead document (n == 0) after a failed Iterate,
+// keeping only the reusable buffers; gen advances so handles into the
+// previous document go stale.
+func (d *Document) kill() {
+	*d = Document{gen: d.gen + 1, strs: d.strs[:0], starts: d.starts[:0]}
 }
 
 // check rejects a dead document: one that never was iterated, or whose last
@@ -86,6 +98,10 @@ type Document struct {
 	gen    uint32   // incremented by every Iterate, to detect stale handles
 	strs   []byte   // unescaped strings, until the next Iterate or Rewind
 	starts []int    // starts[depth]: start of the container open at depth (misuse checks)
+	end    int      // where the root value ends (AtEnd); n for Iterate
+	stream bool     // a stream document (C++ _streaming): no root checks of what follows
+	comma  bool     // from a CommaDelimited stream (Source trims commas)
+	off    int      // IterateMany: where the document starts in the input
 }
 
 // peekAt returns the structural character at token position i (0 past the
@@ -233,7 +249,9 @@ func (d *Document) rawText(start int) ([]byte, error) {
 // AtEnd reports whether the whole document has been read (C++ at_end). As
 // in C++, reading a root array or object does not check what follows it:
 // call AtEnd after reading to reject trailing content such as "[1] [2]".
-func (d *Document) AtEnd() bool { return d.n > 0 && d.pos == d.n }
+// For a document from IterateMany it reports whether the root value has
+// been read to its end.
+func (d *Document) AtEnd() bool { return d.n > 0 && d.pos == d.end }
 
 // copyString returns b as a string and gives back the buffer space it used
 // (from mark): a copy does not keep the buffer, as in C++.
