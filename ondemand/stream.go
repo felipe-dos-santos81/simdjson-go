@@ -64,6 +64,11 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 		p.streams++
 		gen, r, d := p.streams, &p.stream, &p.doc
 		r.Reset(buf, f, p.BatchSize)
+		defer func() {
+			if p.streams == gen { // else the stream that reset r owns it
+				r.Close()
+			}
+		}()
 		var delim byte // C++ document_delimiter
 		switch f {
 		case NewlineDelimited:

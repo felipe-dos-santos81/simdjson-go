@@ -62,6 +62,11 @@ func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error] {
 		p.streams++
 		gen, r := p.streams, &p.stream
 		r.Reset(buf, f, p.BatchSize)
+		defer func() {
+			if p.streams == gen { // else the stream that reset r owns it
+				r.Close()
+			}
+		}()
 		for pos := 0; ; {
 			pos = r.Compact(pos)
 			// Wait until the document at pos, up to the next boundary

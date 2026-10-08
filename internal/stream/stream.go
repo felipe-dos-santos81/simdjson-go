@@ -106,8 +106,12 @@ type Reader struct {
 	insert  int  // JSONSequence: a value start to add before the next index, or -1
 	skipTo  int  // JSONSequence: raw indices below it are inside an RS run
 
-	st   stage1.Stream
-	wins [2]window
+	st     stage1.Stream
+	wins   [2]window
+	work   chan *window // filled windows, from the worker
+	free   chan *window // windows to fill, to the worker
+	quit   chan struct{}
+	exited chan struct{}
 }
 
 // Reset starts reading buf in format f (not CommaDelimitedArray: see
@@ -118,6 +122,7 @@ func (r *Reader) Reset(buf []byte, f Format, batch int) {
 		batch = DefaultBatchSize
 	}
 	batch = (min(batch, 1<<30) + 63) &^ 63
+	r.Close()
 	*r = Reader{
 		Buf: buf, Idx: r.Idx[:0], Drop: -1, format: f, batch: batch,
 		badCtrl: math.MaxInt, badUTF8: math.MaxInt, cand: -1, prev: -1, insert: -1,
@@ -130,15 +135,66 @@ func (r *Reader) Reset(buf []byte, f Format, batch int) {
 	}
 }
 
-// Load indexes the next window. It reports false once there is nothing left.
+// Load indexes the next window. It reports false once there is nothing
+// left. With more than one window, stage 1 runs in a goroutine one window
+// ahead.
 func (r *Reader) Load() bool {
 	if r.Done {
 		return false
 	}
-	w := &r.wins[0]
-	r.scan(w, min(r.scanned+r.batch, len(r.Buf)))
+	if r.work == nil && r.scanned == 0 && r.batch < len(r.Buf) {
+		r.start()
+	}
+	if r.work == nil {
+		w := &r.wins[0]
+		r.scan(w, r.scanned+min(r.batch, len(r.Buf)-r.scanned))
+		r.take(w)
+		return true
+	}
+	w := <-r.work
 	r.take(w)
+	if !r.Done {
+		r.free <- w
+	}
 	return true
+}
+
+// start runs stage 1 in a goroutine over the whole input, one window ahead
+// of Load. The worker owns r.st; the two windows pass between it and Load.
+func (r *Reader) start() {
+	r.work, r.free = make(chan *window), make(chan *window, 2)
+	r.quit, r.exited = make(chan struct{}), make(chan struct{})
+	r.free <- &r.wins[0]
+	r.free <- &r.wins[1]
+	buf, batch := r.Buf, r.batch
+	go func() {
+		defer close(r.exited)
+		for end := 0; end < len(buf); {
+			var w *window
+			select {
+			case w = <-r.free:
+			case <-r.quit:
+				return
+			}
+			end += min(batch, len(buf)-end)
+			r.scan(w, end)
+			select {
+			case r.work <- w:
+			case <-r.quit:
+				return
+			}
+		}
+	}()
+}
+
+// Close stops the stage 1 goroutine, if any, and waits for it.
+func (r *Reader) Close() {
+	if r.quit == nil {
+		return
+	}
+	close(r.quit)
+	<-r.exited
+	r.work, r.free, r.quit, r.exited = nil, nil, nil, nil
 }
 
 // scan runs stage 1 up to end into w.

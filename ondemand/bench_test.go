@@ -422,3 +422,80 @@ func run(b *testing.B, data []byte, f func([]byte) error) {
 		}
 	}
 }
+
+type brand struct {
+	rating  float64
+	reviews uint64
+}
+
+// amazonOD is C++'s amazon_cellphones benchmark (simdjson_ondemand.h).
+func amazonOD(p *ondemand.Parser, data []byte, out map[string]*brand) error {
+	first := true
+	for doc, err := range p.IterateMany(data, ondemand.Whitespace) {
+		if err != nil {
+			return err
+		}
+		if first {
+			first = false
+			continue
+		}
+		arr, err := doc.Array()
+		if err != nil {
+			return err
+		}
+		var name []byte
+		var rating float64
+		var reviews uint64
+		i := 0
+		for v, err := range arr.All() {
+			if err != nil {
+				return err
+			}
+			switch i {
+			case 1:
+				name, _ = v.StringBytes()
+			case 5:
+				rating, _ = v.Float64()
+			case 7:
+				reviews, _ = v.Uint64()
+			}
+			i++
+		}
+		b := out[string(name)]
+		if b == nil {
+			b = &brand{}
+			out[string(name)] = b
+		}
+		b.rating += rating * float64(reviews)
+		b.reviews += reviews
+	}
+	return nil
+}
+
+func BenchmarkIterateMany(b *testing.B) {
+	small, err := os.ReadFile("../testdata/jsonexamples/amazon_cellphones.ndjson")
+	if err != nil {
+		b.Fatal(err)
+	}
+	for _, in := range []struct {
+		name string
+		data []byte
+	}{{"amazon_cellphones", small}, {"large_amazon_cellphones", bytes.Repeat(small, 40)}} {
+		for _, bs := range []struct {
+			name string
+			size int
+		}{{"default", 0}, {"single", len(in.data)}} {
+			b.Run(in.name+"/"+bs.name, func(b *testing.B) {
+				p := ondemand.Parser{BatchSize: bs.size}
+				brands := map[string]*brand{}
+				b.SetBytes(int64(len(in.data)))
+				b.ReportAllocs()
+				for b.Loop() {
+					if err := amazonOD(&p, in.data, brands); err != nil {
+						b.Fatal(err)
+					}
+				}
+			})
+		}
+	}
+}

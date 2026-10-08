@@ -322,3 +322,5 @@ indexed before it is yielded.
 - **Pipelining misses its bar (§1.3).** On Apple silicon stage 1 is a small share of `Parse` with
   NEON. If the gain is below 1.15×, the goroutine is removed and the stream runs stage 1 over the
   whole input first; the API and results are unchanged, and the figures go in this section.
+  Measured (NEON, M3 Max, load 5–7): `large_amazon_cellphones` default vs single window is 1.25×
+  for `ParseMany` and 1.56× for `IterateMany`, so the goroutine stays.

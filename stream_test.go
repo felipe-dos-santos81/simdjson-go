@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"testing/synctest"
 )
 
 var errNames = map[error]string{
@@ -185,5 +186,23 @@ func TestParseManyLifecycle(t *testing.T) {
 	}
 	if len(errs) != 1 || !errors.Is(errs[0], ErrOutOfOrderIteration) {
 		t.Fatalf("nested stream: %v", errs)
+	}
+}
+
+// TestStreamNoLeak breaks out of a pipelined stream at every document: the
+// stage 1 goroutine must be gone when the loop ends (synctest fails on a
+// goroutine left blocked in the bubble).
+func TestStreamNoLeak(t *testing.T) {
+	in := []byte(strings.Repeat(`{"a":[1,2,3],"b":"xyz"}`+"\n", 400))
+	for stop := range 30 {
+		synctest.Test(t, func(t *testing.T) {
+			p := Parser{BatchSize: 64}
+			n := 0
+			for range p.ParseMany(in, Whitespace) {
+				if n++; n > stop*13 {
+					break
+				}
+			}
+		})
 	}
 }

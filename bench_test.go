@@ -1,6 +1,7 @@
 package simdjson
 
 import (
+	"bytes"
 	"encoding/json"
 	"testing"
 
@@ -70,6 +71,69 @@ func BenchmarkMinify(b *testing.B) {
 	for b.Loop() {
 		if dst, err = Minify(dst[:0], data); err != nil {
 			b.Fatal(err)
+		}
+	}
+}
+
+type brand struct {
+	rating  float64
+	reviews uint64
+}
+
+// amazonDOM is C++'s amazon_cellphones benchmark (benchmark/amazon_cellphones):
+// per brand, the sum of rating*reviews and of reviews, skipping the header line.
+func amazonDOM(p *Parser, data []byte, out map[string]*brand) error {
+	first := true
+	for doc, err := range p.ParseMany(data, Whitespace) {
+		if err != nil {
+			return err
+		}
+		if first {
+			first = false
+			continue
+		}
+		arr, err := doc.Root().Array()
+		if err != nil {
+			return err
+		}
+		name, _ := arr.At(1)
+		rating, _ := arr.At(5)
+		reviews, _ := arr.At(7)
+		s, _ := name.StringBytes()
+		x, _ := rating.Float64()
+		n, _ := reviews.Uint64()
+		b := out[string(s)]
+		if b == nil {
+			b = &brand{}
+			out[string(s)] = b
+		}
+		b.rating += x * float64(n)
+		b.reviews += n
+	}
+	return nil
+}
+
+func BenchmarkParseMany(b *testing.B) {
+	small := readTestdata(b, "jsonexamples", "amazon_cellphones.ndjson")
+	for _, in := range []struct {
+		name string
+		data []byte
+	}{{"amazon_cellphones", small}, {"large_amazon_cellphones", bytes.Repeat(small, 40)}} {
+		for _, bs := range []struct {
+			name string
+			size int
+		}{{"default", 0}, {"single", len(in.data)}} {
+			b.Run(in.name+"/"+bs.name, func(b *testing.B) {
+				p := Parser{BatchSize: bs.size}
+				brands := map[string]*brand{}
+				b.SetBytes(int64(len(in.data)))
+				b.ReportAllocs()
+				for b.Loop() {
+					if err := amazonDOM(&p, in.data, brands); err != nil {
+						b.Fatal(err)
+					}
+				}
+			})
 		}
 	}
 }
