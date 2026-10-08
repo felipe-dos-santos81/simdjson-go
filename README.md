@@ -54,7 +54,7 @@ for tweet, err := range arr.All() {
 }
 ```
 
-Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the structural characters, and each value is parsed when read, as the type it is read as. It suits reading some fields of large documents; it is 1.5–2× faster than `Parse` plus the DOM on C++'s benchmark tasks and allocates nothing once warm.
+Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the structural characters, and each value is parsed when read, as the type it is read as. It suits reading some fields of large documents; it is 1.65–2.01× faster than `Parse` plus the DOM on C++'s benchmark tasks and allocates nothing once warm.
 
 - **`Document`** (the root): `Get`, `FindNext`, `Object`, `Array`, `Value`, typed getters for a scalar root, `AtPointer`, `Raw`, `Rewind`, `AtEnd`.
 - **`Value`**: `Type`, `NumberType`, `Int64`, `Uint64`, `Float64`, `Bool`, `IsNull`, `String`, `StringBytes`, `Raw`, `Object`, `Array`, `Get`, `FindNext`, `AtPointer`.
@@ -119,7 +119,7 @@ On-Demand against `Parse` plus the DOM, on C++ simdjson's benchmark tasks (`onde
 
 | `partial_tweets` | `distinct_user_id` | `find_tweet` | `top_tweet` | `kostya` | `large_random` |
 |---|---|---|---|---|---|
-| 1.72× | 1.71× | 2.06× | 1.73× | 1.58× | 1.54× |
+| 1.70× | 1.75× | 2.01× | 1.72× | 1.65× | 1.67× |
 
 ## Development
 
