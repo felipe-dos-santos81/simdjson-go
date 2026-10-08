@@ -236,7 +236,10 @@ document).
 no trailing-content check, and it returns where it stopped, which is where the next document
 starts. It never reads past a boundary candidate inside a document without failing first: inside
 a container, a value start where `,`, `]` or `}` was expected is `ErrTape`. So parsing from the
-decided prefix gives the same result as one window. The fuzzer (§8) checks this.
+decided prefix gives the same result as one window. One exception: a `CommaDelimitedArray`
+document whose walk reaches the candidate reads the array's `]` there if that candidate turns out
+to start the dropped tail (C++'s sentinel, §4.2), so a walk that fails there waits until that is
+known and, if so, runs again reading `]`. The fuzzer (§8) checks this.
 
 ### 5.5 On-Demand
 
@@ -280,8 +283,8 @@ indexed before it is yielded.
   `@current_index`, the source in hex, then the script's output: the DOM walks the whole
   document; On-Demand runs the existing script language, including partial reads and documents
   left unread. The case ends with `!code` or `~truncated_bytes`. `make oracle` regenerates
-  `testdata/stream/oracle.jsonl` beside the On-Demand file. `TestStreamOracle` in both packages
-  replays it, translating indices to offsets and `~n` to the final `ErrTrailingContent`. Cases
+  `testdata/stream/oracle.jsonl` beside the On-Demand file. `TestStreamOracle` (package `ondemand`,
+  covering both APIs) replays it, translating indices to offsets and `~n` to the final `ErrTrailingContent`. Cases
   whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
   where C++ reports `UNESCAPED_CHARS` are skipped there and covered by the next test. DOM
   `CommaDelimitedArray` cases where C++ goes on after a document that closed on the array's `]`

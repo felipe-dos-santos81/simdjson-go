@@ -42,7 +42,10 @@ func isOperator(c byte) bool {
 // and ondemand parser-inl.h): b without a leading UTF-8 BOM and, for
 // CommaDelimitedArray, without the brackets and the whitespace outside
 // them, read as CommaDelimited. base is where they start in b. ok is false
-// when CommaDelimitedArray input is not an array (C++ TAPE_ERROR).
+// when CommaDelimitedArray input is not an array (C++ TAPE_ERROR). buf
+// keeps b's capacity, so never make it a 3-index slice: a CommaDelimitedArray
+// document reads the array's ']' one byte past buf, and both APIs'
+// Document.Source can end on it.
 func Input(b []byte, f Format) (buf []byte, base int, g Format, ok bool) {
 	if bytes.HasPrefix(b, []byte{0xEF, 0xBB, 0xBF}) {
 		b, base = b[3:], 3

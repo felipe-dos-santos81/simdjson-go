@@ -11,9 +11,9 @@ time   ?= 60s
 count  ?= 6
 
 # NEON-vs-portable fuzz targets: NEON build only, in internal/stage1.
-NEON_FUZZ = FuzzClassify FuzzUTF8
+NEON_FUZZ = FuzzClassify FuzzUTF8 FuzzStream
 FUZZ_ENV  = $(if $(or $(neon),$(filter $(target),$(NEON_FUZZ))),$(SIMD))
-FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,$(if $(filter $(target),FuzzOnDemand),./ondemand/,.))
+FUZZ_PKG  = $(if $(filter $(target),$(NEON_FUZZ)),./internal/stage1/,$(if $(filter $(target),FuzzOnDemand FuzzIterateMany),./ondemand/,.))
 
 .PHONY: help testdata clean fmt vet check \
         test test-neon test-purego test-amd64 test-race \

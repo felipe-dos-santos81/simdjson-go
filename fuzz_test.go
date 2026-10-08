@@ -3,6 +3,7 @@ package simdjson
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -150,4 +151,48 @@ func validSurrogates(in []byte) bool {
 		}
 	}
 	return true
+}
+
+// manyFull lists a stream's items with each document's JSON.
+func manyFull(p *Parser, in []byte, f Format) string {
+	var out []string
+	for doc, err := range p.ParseMany(in, f) {
+		if err != nil {
+			out = append(out, "!"+err.Error())
+			continue
+		}
+		out = append(out, fmt.Sprintf("%d:%q:%s", doc.Offset(), doc.Source(), doc.Root().AppendJSON(nil)))
+	}
+	return strings.Join(out, " ")
+}
+
+// FuzzParseMany checks that no batch size changes what ParseMany yields,
+// and that every document equals Parse of its source when that succeeds.
+func FuzzParseMany(f *testing.F) {
+	for _, s := range []string{"1 2 34", `[1,23] "x" {"k":"v}`, `{"a":1},{"b":`, "\x1e1\n\x1e2",
+		`[{"a":1},2]`, "1 2 \xff 3", "[1] [2", `{"a":[1,{"b":"\u00e9"}]}` + "\n" + `{"a":2}`} {
+		f.Add([]byte(s), uint8(0), uint8(0))
+	}
+	f.Fuzz(func(t *testing.T, in []byte, format, batch uint8) {
+		fm := Format(format % 5)
+		var p Parser
+		want := manyFull(&p, in, fm) // one window for any fuzz-sized input
+		p.BatchSize = 64 * (1 + int(batch)%8)
+		if got := manyFull(&p, in, fm); got != want {
+			t.Fatalf("BatchSize %d, %q:\n got  %s\n want %s", p.BatchSize, in, got, want)
+		}
+		var q Parser
+		for doc, err := range p.ParseMany(in, fm) {
+			if err != nil {
+				break
+			}
+			d2, err := q.Parse(doc.Source())
+			if err != nil {
+				continue
+			}
+			if a, b := doc.Root().AppendJSON(nil), d2.Root().AppendJSON(nil); !bytes.Equal(a, b) {
+				t.Fatalf("%q: document %q is %s, Parse gives %s", in, doc.Source(), a, b)
+			}
+		}
+	})
 }

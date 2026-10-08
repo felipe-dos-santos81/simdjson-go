@@ -102,9 +102,22 @@ func TestParseMany(t *testing.T) {
 	if got := strings.Join(items, " "); got != "1:[1 2]]:[1] "+(&StreamError{Offset: 4, Err: ErrTrailingContent}).Error() {
 		t.Errorf("[[1 2]]: %s", got)
 	}
+	// The same when the document's last index is decided in an earlier
+	// window than the one showing that what follows is dropped.
+	long := "[[[][" + strings.Repeat("0", 100) + "]"
+	for _, bs := range []int{0, 64} {
+		p.BatchSize = bs
+		if got := manyItems(&p, []byte(long), CommaDelimitedArray); got != "1:"+long[1:]+" !4 trailing" {
+			t.Errorf("BatchSize %d, %q: %s", bs, long, got)
+		}
+	}
+	p.BatchSize = 0
 	doc, err := p.Parse([]byte(`[1]`))
-	if err != nil || doc.Offset() != 0 || doc.Source() != nil {
-		t.Errorf("Parse: %v %d %q", err, doc.Offset(), doc.Source())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if doc.Offset() != 0 || doc.Source() != nil {
+		t.Errorf("Parse: %d %q", doc.Offset(), doc.Source())
 	}
 }
 
@@ -125,5 +138,52 @@ func TestParseManyBatchSizes(t *testing.T) {
 		if got := manyItems(&p, in, Whitespace); got != want {
 			t.Fatalf("BatchSize %d differs", bs)
 		}
+	}
+}
+
+func TestParseManyLifecycle(t *testing.T) {
+	in := []byte("[1] [2] [3]")
+	var p Parser
+	seq := p.ParseMany(in, Whitespace)
+	for range seq {
+		break
+	}
+	if got := manyItems(&p, in, Whitespace); got != "0:[1] 4:[2] 8:[3]" {
+		t.Fatalf("after a break: %s", got)
+	}
+	var again []string // ranging over the same Seq2 restarts
+	for doc, err := range seq {
+		if err != nil {
+			t.Fatal(err)
+		}
+		again = append(again, string(doc.Source()))
+	}
+	if s := strings.Join(again, " "); s != "[1] [2] [3]" {
+		t.Fatalf("second range: %s", s)
+	}
+	var got []string // Parse inside the loop only invalidates the current document
+	for doc, err := range p.ParseMany(in, Whitespace) {
+		if err != nil {
+			t.Fatal(err)
+		}
+		got = append(got, string(doc.Source()))
+		if _, err := p.Parse([]byte(`{"x":1}`)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if s := strings.Join(got, " "); s != "[1] [2] [3]" {
+		t.Fatalf("with Parse inside: %s", s)
+	}
+	var errs []error // a second stream on p ends the first
+	for _, err := range p.ParseMany(in, Whitespace) {
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		for range p.ParseMany(in, Whitespace) {
+		}
+	}
+	if len(errs) != 1 || !errors.Is(errs[0], ErrOutOfOrderIteration) {
+		t.Fatalf("nested stream: %v", errs)
 	}
 }

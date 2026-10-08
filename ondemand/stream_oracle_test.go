@@ -163,10 +163,11 @@ func TestStreamOracle(t *testing.T) {
 		if c.Stream.API == "dom" && f == simdjson.CommaDelimitedArray {
 			buf, _, _, _ := stream.Input(in, f)
 			if want, ok := pastEnd(c.Out, len(buf)); ok {
-				// Compare up to the document that closed on the array's ']'.
+				// Compare up to the document that closed on the array's ']';
+				// Go then ends the stream: one ~n, or one @n !code.
 				pastEndSkipped++
 				c.Out = want
-				if strings.HasPrefix(got, want+" ") {
+				if rest, ok := strings.CutPrefix(got, want+" "); ok && streamEnd(rest) {
 					got = want
 				}
 			}
@@ -188,6 +189,12 @@ func TestStreamOracle(t *testing.T) {
 	t.Logf("%d cases, %d skipped (stage 1 errors), %d compared only up to C++ reading past its end", n, skipped, pastEndSkipped)
 }
 
+// streamEnd reports whether out is just the end of a stream: "~n" or "@n !code".
+func streamEnd(out string) bool {
+	toks := strings.Fields(out)
+	return len(toks) == 1 && toks[0][0] == '~' || len(toks) == 2 && toks[0][0] == '@' && toks[1][0] == '!'
+}
+
 // pastEnd recognizes C++ DOM output for a CommaDelimitedArray stream whose
 // document reached the end of the array's contents (n bytes), closed on the
 // array's own ']' (its source ends one byte past them), and was followed by
@@ -205,4 +212,30 @@ func pastEnd(out string, n int) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// FuzzIterateMany checks that no batch size changes what either stream
+// yields, with an arbitrary script of reads run on every On-Demand document.
+func FuzzIterateMany(f *testing.F) {
+	for _, s := range []string{"1 2 34", `[1,23] "x" {"k":"v}`, `{"a":1},{"b":`, "\x1e1\n\x1e2",
+		`[{"a":1},2]`, "[1,23 [1,23]", "{\"a\":1,\n\"b\":2}\n[3]"} {
+		f.Add([]byte(s), uint8(0), uint8(0), []byte{0, 26})
+	}
+	f.Fuzz(func(t *testing.T, in []byte, format, batch uint8, ops []byte) {
+		fm := simdjson.Format(format % 5)
+		script := make([]string, 0, 8)
+		for _, b := range ops[:min(len(ops), 8)] {
+			script = append(script, fuzzOps[int(b)%len(fuzzOps)])
+		}
+		var dp simdjson.Parser
+		var op ondemand.Parser
+		for _, api := range []string{"dom", "ondemand"} {
+			dp.BatchSize, op.BatchSize = 0, 0
+			want := streamOut(&dp, &op, api, in, fm, script)
+			dp.BatchSize, op.BatchSize = 64*(1+int(batch)%8), 64*(1+int(batch)%8)
+			if got := streamOut(&dp, &op, api, in, fm, script); got != want {
+				t.Fatalf("%s, BatchSize %d, %q %q:\n got  %s\n want %s", api, dp.BatchSize, in, script, got, want)
+			}
+		}
+	})
 }

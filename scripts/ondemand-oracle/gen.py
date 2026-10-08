@@ -186,7 +186,7 @@ PINNED = [
     ('{"a":1},{"b":', "comma"), ('1,2,"abc', "comma"), ("\x1e1\n\x1e2\n\x1e \"abc", "sequence"),
     ("\x1e\x1e1\n\x1e\x1e\x1e2\n\x1e", "sequence"), (',1,,2,,"x",,', "comma"), ("true  {  ", "whitespace"),
     ("1 2 34", "whitespace"), ("\x1e\x1e \x1e", "sequence"), ("[1,23 [1,23]", "whitespace"),
-    ("[1,23 [1,23] [1,23 [1,23]", "whitespace"), ("﻿[1] [2]", "whitespace"),
+    ("[1,23 [1,23] [1,23 [1,23]", "whitespace"), ("\ufeff[1] [2]", "whitespace"),
     ('  [ {"a":1} , 2 ]  ', "array"), ("[]", "array"), ("[ ]", "array"), ("{}", "array"), ("[", "array"),
     ('[{"a":1},2]]', "array"), ('{"id":1}\n12\n"a,\\"b"', "comma"), ("{\"a\":1}\r\n{\"a\":2}", "newline"),
     ('{"a":1,\n"b":2}\n[3]', "newline"), ("\x1e1\x1e2", "sequence"), ('\x1e"abc"\x1e[1]', "sequence"),

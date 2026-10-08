@@ -85,6 +85,16 @@ func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				end = pad
 			}
 			n, err := p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true, end)
+			if err != nil && end != pad {
+				// A walk that failed at lim read 0 there. Had lim proved the
+				// end of the documents, it would have read pad: find out.
+				for !r.Done && r.Decided() == lim {
+					r.Load()
+				}
+				if r.Done && r.N == lim {
+					n, err = p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true, pad)
+				}
+			}
 			if err != nil {
 				// A stage 1 error among the bytes the document holds (by a
 				// bracket count, as stage 2 stopped early) comes first.

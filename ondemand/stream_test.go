@@ -3,6 +3,7 @@ package ondemand_test
 import (
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"strings"
 	"testing"
 
@@ -207,5 +208,82 @@ func TestIterateManyBatchSizes(t *testing.T) {
 		if got := odItems(&p, probe, ondemand.Whitespace); got != want {
 			t.Fatalf("closer root, BatchSize %d differs:\n got  %.60s\n want %.60s", bs, got, want)
 		}
+	}
+}
+
+func TestIterateManyLifecycle(t *testing.T) {
+	in := []byte("[1] [2] [3]")
+	var p ondemand.Parser
+	for range p.IterateMany(in, ondemand.Whitespace) {
+		break
+	}
+	if got := odItems(&p, in, ondemand.Whitespace); got != "0:[1] 4:[2] 8:[3]" {
+		t.Fatalf("after a break: %s", got)
+	}
+	var got []string // Iterate inside the loop: the stream carries on from the root
+	for doc, err := range p.IterateMany(in, ondemand.Whitespace) {
+		if err != nil {
+			t.Fatal(err)
+		}
+		got = append(got, string(doc.Source()))
+		if _, err := p.Iterate([]byte(`{"x":1}`)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if s := strings.Join(got, " "); s != "[1] [2] [3]" {
+		t.Fatalf("with Iterate inside: %s", s)
+	}
+	var errs []error
+	for _, err := range p.IterateMany(in, ondemand.Whitespace) {
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		for range p.IterateMany(in, ondemand.Whitespace) {
+		}
+	}
+	if len(errs) != 1 || !errors.Is(errs[0], simdjson.ErrOutOfOrderIteration) {
+		t.Fatalf("nested stream: %v", errs)
+	}
+}
+
+// TestStreamStage1Errors: one bad byte in a valid stream ends it at the
+// document holding it, after the clean stream's earlier documents, whatever
+// the batch size (spec §4.1).
+func TestStreamStage1Errors(t *testing.T) {
+	r := rand.New(rand.NewPCG(3, 4))
+	docs := []string{`{"a":"xyz","b":[1,2]}`, `["pq","rs"]`, `"str"`, `{"k":{"m":"vw"}}`}
+	var dp simdjson.Parser
+	var op ondemand.Parser
+	for range 300 {
+		parts := make([]string, 2+r.IntN(30))
+		for i := range parts {
+			parts[i] = docs[r.IntN(len(docs))]
+		}
+		clean := []byte(strings.Join(parts, "\n"))
+		k := r.IntN(len(parts))
+		bad, name := "\xff", "utf8"
+		if r.IntN(2) == 0 {
+			bad, name = "\x01", "ctrl"
+		}
+		q := strings.IndexByte(parts[k], '"') + 1 // inside the first string
+		parts[k] = parts[k][:q] + bad + parts[k][q:]
+		in := []byte(strings.Join(parts, "\n"))
+		off := len(strings.Join(parts[:k], "\n"))
+		if k > 0 {
+			off++
+		}
+		want := strings.Fields(domItems(&dp, clean, simdjson.Whitespace))[:k]
+		want = append(want, fmt.Sprintf("!%d %s", off, name))
+		for _, bs := range []int{64, 128, 0} {
+			dp.BatchSize, op.BatchSize = bs, bs
+			if got := domItems(&dp, in, simdjson.Whitespace); got != strings.Join(want, " ") {
+				t.Fatalf("DOM, BatchSize %d, %q:\n got  %s\n want %s", bs, in, got, strings.Join(want, " "))
+			}
+			if got := odItems(&op, in, ondemand.Whitespace); got != strings.Join(want, " ") {
+				t.Fatalf("On-Demand, BatchSize %d, %q:\n got  %s\n want %s", bs, in, got, strings.Join(want, " "))
+			}
+		}
+		dp.BatchSize, op.BatchSize = 0, 0
 	}
 }
