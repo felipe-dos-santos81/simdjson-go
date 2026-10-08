@@ -23,6 +23,8 @@ make bench-cpp                                # the six BenchmarkParse files, co
 make bench-cpp file="a.json b.json" count=10  # your own parse inputs
 ```
 
+The file list is split on spaces (on both sides), so a path cannot contain one.
+
 The results go to `bench-cpp/` (ignored by git): the raw `C++` and `Go`
 files, `benchstat.txt` (with confidence intervals), `benchstat.csv` and
 `table.md`.

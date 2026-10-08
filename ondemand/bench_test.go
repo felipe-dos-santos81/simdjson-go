@@ -74,6 +74,9 @@ func TestWriteBenchInputs(t *testing.T) {
 	if dir == "" {
 		t.Skip("set BENCH_INPUTS to a directory")
 	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	for name, data := range map[string][]byte{"kostya.json": kostyaJSON(), "large_random.json": largeRandomJSON()} {
 		if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
 			t.Fatal(err)
@@ -307,17 +310,17 @@ func domTopTweet(p *simdjson.Parser, data []byte) (int64, []byte, []byte, error)
 		return 0, nil, nil, err
 	}
 	best := int64(-1)
-	var text, screenName simdjson.Element
+	var top simdjson.Element // as C++: read text and screen_name once, after the loop
 	for _, tw := range must(get(doc.Root(), "statuses").Array()).All() {
 		n := must(get(tw, "retweet_count").Int64())
 		if n <= maxRetweets && n >= best {
-			best, text, screenName = n, get(tw, "text"), get(get(tw, "user"), "screen_name")
+			best, top = n, tw
 		}
 	}
 	if best < 0 {
 		return best, nil, nil, nil
 	}
-	return best, must(text.StringBytes()), must(screenName.StringBytes()), nil
+	return best, must(get(top, "text").StringBytes()), must(get(get(top, "user"), "screen_name").StringBytes()), nil
 }
 
 func domPoints(arr simdjson.Array, out []point) []point {

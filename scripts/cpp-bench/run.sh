@@ -13,7 +13,8 @@ count=$1
 shift
 files=
 for f; do
-	files="$files $(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
+	dir=$(cd -P -- "$(dirname -- "$f")" >/dev/null && pwd) # fails here on a bad directory
+	files="$files $dir/$(basename -- "$f")"
 done
 cd "$(dirname "$0")/../.."
 root=$(pwd)
@@ -29,7 +30,7 @@ mkdir -p "$out/build" "$out/gen"
 scripts/fetch-simdjson.sh "$out/build"
 c++ -std=c++20 -O3 -DNDEBUG -DSIMDJSON_THREADS_ENABLED=1 -pthread -I"$out/build" \
 	-o "$out/build/bench" scripts/cpp-bench/bench.cpp "$out/build/simdjson.cpp"
-BENCH_INPUTS=$out/gen go test -run '^TestWriteBenchInputs$' ./ondemand >/dev/null
+BENCH_INPUTS=$out/gen go test -run '^TestWriteBenchInputs$' ./ondemand >&2
 GOEXPERIMENT=simd go test -c -o "$out/build/root.test" .
 GOEXPERIMENT=simd go test -c -o "$out/build/ondemand.test" ./ondemand
 

@@ -116,12 +116,13 @@ Each row times exactly what the Go benchmark of the same name times.
 ### 5.2 Timing
 
 The loop does what Go's `b.Loop()` does with `-benchtime 1s`: one untimed run (warms the buffers
-and catches an error), then the iteration count doubles until one timed run of `n` iterations
-takes at least 1 s. It prints `n`, the time per iteration in ns and the MB/s
+and catches an error), then the iteration count grows as Go's `predictN` grows it (aim 20% past
+a second, at most 100×; here at least 2×) until one timed run of `n` iterations takes at least
+1 s. It prints `n`, the time per iteration in ns and the MB/s
 (10⁶ bytes per second, as Go's `SetBytes`). The name's suffix `-N` is
 `std::thread::hardware_concurrency()`, which is Go's default GOMAXPROCS, so the names match
-exactly. Any error (a parse error, a `simdjson_result` error, an exception, an unreadable file)
-prints the benchmark's name and exits non-zero.
+exactly. Any error (a parse error, a `simdjson_result` error, an exception) prints the
+benchmark's name and exits non-zero; an unreadable input file prints its path.
 
 ## 6. Run flow and table
 

@@ -11,13 +11,17 @@
 // FILE is an input of BenchmarkParse.
 #include "simdjson.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using namespace simdjson;
@@ -43,7 +47,8 @@ static void bench(const std::string &name, size_t bytes, F f) {
         std::fflush(stdout);
         return;
       }
-      // Go's predictNs: aim 20% past a second, grow at most 100x, at least 2x.
+      // As Go's predictN: aim 20% past a second, grow at most 100x (Go grows
+      // by at least one iteration; this by at least 2x).
       uint64_t next = uint64_t(1.2e9 * n / (ns > 1 ? ns : 1));
       n = std::max(std::min(next, 100 * n), 2 * n);
     }
@@ -379,8 +384,8 @@ static void task(const std::string &name, padded_string &json) {
 }
 
 template <typename Impl>
-static void stream(const std::string &name, padded_string &json) {
-  for (auto [bs, size] : {std::pair<const char *, size_t>{"default", dom::DEFAULT_BATCH_SIZE}, {"single", json.size()}}) {
+static void stream(const std::string &name, padded_string &json, size_t default_batch) {
+  for (auto [bs, size] : {std::pair<const char *, size_t>{"default", default_batch}, {"single", json.size()}}) {
     Impl impl;
     std::map<std::string, brand> brands;
     bench(name + "/" + bs, json.size(), [&] { impl.run(json, size, brands); });
@@ -407,7 +412,7 @@ int main(int argc, char **argv) {
   padded_string large(large_amazon_cellphones(std::string(small.data(), small.size())));
   for (auto *in : {&small, &large}) {
     std::string name = in == &small ? "amazon_cellphones" : "large_amazon_cellphones";
-    stream<amazon_cellphones_dom>("ParseMany/" + name, *in);
+    stream<amazon_cellphones_dom>("ParseMany/" + name, *in, dom::DEFAULT_BATCH_SIZE);
   }
 
   std::printf("pkg: simdjson-go/ondemand\n");
@@ -446,7 +451,7 @@ int main(int argc, char **argv) {
   task<large_random_dom, point>("large_random/dom", large_random);
   for (auto *in : {&small, &large}) {
     std::string name = in == &small ? "amazon_cellphones" : "large_amazon_cellphones";
-    stream<amazon_cellphones_ondemand>("IterateMany/" + name, *in);
+    stream<amazon_cellphones_ondemand>("IterateMany/" + name, *in, ondemand::DEFAULT_BATCH_SIZE);
   }
   return 0;
 }
