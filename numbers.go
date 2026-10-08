@@ -5,19 +5,20 @@ import (
 	"math"
 	"strconv"
 	"unsafe"
+
+	"simdjson-go/internal/number"
 )
 
-func isDigit(c byte) bool { return c-'0' < 10 }
-
-// maxExp10 bounds the decimal exponents number passes to decimalToFloat64: past
-// ±maxExp10 every 19-digit significand underflows to ±0 (below -345) or
-// overflows (above 310), so larger exponents need not be kept exactly.
+// maxExp10 bounds the decimal exponents number passes to
+// number.DecimalToFloat64: past ±maxExp10 every 19-digit significand
+// underflows to ±0 (below -345) or overflows (above 310), so larger
+// exponents need not be kept exactly.
 const maxExp10 = 400
 
 // number parses the number at buf[off] and appends it to the tape. Port of
 // parse_number (include/simdjson/generic/numberparsing.h). While checking the
 // JSON grammar it collects a float's significand (up to 19 significant digits)
-// and decimal exponent for decimalToFloat64; a float whose dropped digits are
+// and decimal exponent for number.DecimalToFloat64; a float whose dropped digits are
 // not all zeros falls back to strconv.ParseFloat. Both fail only on overflow to
 // ±Inf, which C++ also rejects.
 func (b *builder) number(off int) error {
@@ -29,7 +30,7 @@ func (b *builder) number(off int) error {
 	}
 	start := p
 	var i uint64
-	for p < len(buf) && isDigit(buf[p]) {
+	for p < len(buf) && number.IsDigit(buf[p]) {
 		i = 10*i + uint64(buf[p]-'0') // may wrap; the digit count decides below
 		p++
 	}
@@ -48,7 +49,7 @@ func (b *builder) number(off int) error {
 		isFloat = true
 		p++
 		frac := p
-		for p < len(buf) && isDigit(buf[p]) {
+		for p < len(buf) && number.IsDigit(buf[p]) {
 			if sig < 19 {
 				mant = 10*mant + uint64(buf[p]-'0')
 				exp10--
@@ -72,7 +73,7 @@ func (b *builder) number(off int) error {
 			p++
 		}
 		expStart, e := p, int64(0)
-		for p < len(buf) && isDigit(buf[p]) {
+		for p < len(buf) && number.IsDigit(buf[p]) {
 			// Saturate above maxSize+maxExp10: leading fraction zeros can lower
 			// exp10 by up to maxSize, and an exponent must still cancel them.
 			if e <= maxSize+maxExp10 {
@@ -89,7 +90,7 @@ func (b *builder) number(off int) error {
 		exp10 += e
 	}
 	if isFloat {
-		if !terminates(buf, p) {
+		if !number.Terminates(buf, p) {
 			return ErrNumber
 		}
 		var f float64
@@ -101,7 +102,7 @@ func (b *builder) number(off int) error {
 		} else {
 			// Clamping to ±maxExp10 keeps the result (see maxExp10) and the
 			// int64 exponent within int on 32-bit builds.
-			f, ok = decimalToFloat64(mant, int(max(-maxExp10, min(maxExp10, exp10))), neg)
+			f, ok = number.DecimalToFloat64(mant, int(max(-maxExp10, min(maxExp10, exp10))), neg)
 		}
 		if !ok {
 			if !b.binding {
@@ -126,7 +127,7 @@ func (b *builder) number(off int) error {
 		digits == longest && !neg && (buf[start] != '1' || i <= math.MaxInt64) { // wrapped
 		return b.bigInt(off, p)
 	}
-	if !terminates(buf, p) {
+	if !number.Terminates(buf, p) {
 		return ErrNumber
 	}
 	switch {
@@ -146,7 +147,7 @@ func (b *builder) bigInt(off, p int) error {
 	if !b.bigIntAsString {
 		return ErrBigInt
 	}
-	if !terminates(b.buf, p) {
+	if !number.Terminates(b.buf, p) {
 		return ErrNumber
 	}
 	start := len(b.strs)

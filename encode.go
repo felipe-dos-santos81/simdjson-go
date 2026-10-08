@@ -17,6 +17,8 @@ import (
 	"strings"
 	"sync"
 	"unicode/utf8"
+
+	"simdjson-go/internal/str"
 )
 
 // Marshal returns the JSON encoding of v, with the semantics of
@@ -478,7 +480,7 @@ func unquote(q []byte) string {
 	if bytes.IndexByte(q, '\\') < 0 {
 		return string(q[1 : len(q)-1])
 	}
-	b, _ := appendUnescaped(nil, q, 1)
+	b, _ := str.AppendUnescaped(nil, q, 1)
 	return string(b)
 }
 

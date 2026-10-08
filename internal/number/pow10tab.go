@@ -6,7 +6,7 @@
 //
 //go:generate go run pow10gen.go
 
-package simdjson
+package number
 
 const (
 	pow10Min = -348

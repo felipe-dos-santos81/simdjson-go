@@ -16,6 +16,8 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+
+	"simdjson-go/internal/number"
 )
 
 // Unmarshal decodes the JSON document data into the Go value v points to,
@@ -94,7 +96,7 @@ func (d *decodeState) raw(e Element) []byte {
 		return d.buf[start : start+5]
 	}
 	n := start // a number
-	for n < len(d.buf) && !isStructuralOrSpace[d.buf[n]] {
+	for n < len(d.buf) && !number.IsStructuralOrSpace[d.buf[n]] {
 		n++
 	}
 	return d.buf[start:n]
@@ -501,7 +503,7 @@ func isNumber(b []byte) bool {
 	case i < len(b) && b[i] == '0':
 		i++
 	case i < len(b) && '1' <= b[i] && b[i] <= '9':
-		for i < len(b) && isDigit(b[i]) {
+		for i < len(b) && number.IsDigit(b[i]) {
 			i++
 		}
 	default:
@@ -509,10 +511,10 @@ func isNumber(b []byte) bool {
 	}
 	if i < len(b) && b[i] == '.' {
 		i++
-		if i == len(b) || !isDigit(b[i]) {
+		if i == len(b) || !number.IsDigit(b[i]) {
 			return false
 		}
-		for i < len(b) && isDigit(b[i]) {
+		for i < len(b) && number.IsDigit(b[i]) {
 			i++
 		}
 	}
@@ -521,10 +523,10 @@ func isNumber(b []byte) bool {
 		if i < len(b) && (b[i] == '+' || b[i] == '-') {
 			i++
 		}
-		if i == len(b) || !isDigit(b[i]) {
+		if i == len(b) || !number.IsDigit(b[i]) {
 			return false
 		}
-		for i < len(b) && isDigit(b[i]) {
+		for i < len(b) && number.IsDigit(b[i]) {
 			i++
 		}
 	}

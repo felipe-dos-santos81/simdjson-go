@@ -92,7 +92,7 @@ var top = `// Copyright 2025 The Go Authors. All rights reserved.
 //
 //go:generate go run pow10gen.go
 
-package simdjson
+package number
 
 const (
 	pow10Min = %d

@@ -3,6 +3,8 @@ package simdjson
 import (
 	"encoding/binary"
 	"hash/maphash"
+
+	"simdjson-go/internal/number"
 )
 
 // scope is an open array or object.
@@ -41,13 +43,6 @@ func (b *builder) markAt(i, off int) {
 		b.offs = append(b.offs, make([]uint32, i+1-len(b.offs)+64)...)
 	}
 	b.offs[i] = uint32(off)
-}
-
-// isStructuralOrSpace is C++ structural_or_whitespace: the bytes that may
-// follow a number or atom.
-var isStructuralOrSpace = [256]bool{
-	' ': true, '\t': true, '\n': true, '\r': true,
-	',': true, ':': true, '[': true, ']': true, '{': true, '}': true,
 }
 
 // advance returns the byte at the next structural index and its offset.
@@ -254,7 +249,7 @@ func (b *builder) primitive(c byte, off int) error {
 	switch {
 	case c == '"':
 		return b.str(off)
-	case c == '-' || isDigit(c), !root && c < '0':
+	case c == '-' || number.IsDigit(c), !root && c < '0':
 		return b.number(off)
 	case c == 't':
 		if !b.atom(off, "true") {
@@ -281,10 +276,8 @@ func (b *builder) primitive(c byte, off int) error {
 // whitespace, or the end of the input.
 func (b *builder) atom(off int, lit string) bool {
 	end := off + len(lit)
-	return end <= len(b.buf) && string(b.buf[off:end]) == lit && terminates(b.buf, end)
+	return end <= len(b.buf) && string(b.buf[off:end]) == lit && number.Terminates(b.buf, end)
 }
-
-func terminates(buf []byte, p int) bool { return p == len(buf) || isStructuralOrSpace[buf[p]] }
 
 // addKey records the name just written to the tape (binding mode).
 func (b *builder) addKey() { b.keys = append(b.keys, uint32(len(b.tape)-1)) }

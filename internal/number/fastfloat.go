@@ -4,7 +4,7 @@
 
 // Decimal to float64 conversion by fast unrounded scaling, adapted from the Go
 // standard library (src/internal/strconv/uscale.go: parseFloat64 and the
-// helpers it uses); see https://research.swtch.com/fp. Stage 2 has already
+// helpers it uses); see https://research.swtch.com/fp. Callers have already
 // scanned the digits, so it calls this instead of strconv.ParseFloat, which
 // would scan them again.
 //
@@ -12,16 +12,16 @@
 // unmin → minUnrounded. Everything else keeps its upstream name and shape so
 // the code can be diffed against uscale.go.
 
-package simdjson
+package number
 
 import (
 	"math"
 	"math/bits"
 )
 
-// decimalToFloat64 rounds d * 10**p to the nearest float64, negated if neg.
+// DecimalToFloat64 rounds d * 10**p to the nearest float64, negated if neg.
 // d can have at most 19 digits. ok is false if the result rounds to ±Inf.
-func decimalToFloat64(d uint64, p int, neg bool) (f float64, ok bool) {
+func DecimalToFloat64(d uint64, p int, neg bool) (f float64, ok bool) {
 	sign := btoi[uint64](neg) << 63
 	switch {
 	case d == 0, p < -345: // zero, or d < 1e19 underflows to ±0

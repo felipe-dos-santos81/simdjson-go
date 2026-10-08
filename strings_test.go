@@ -44,17 +44,3 @@ func TestStringsAcrossBlocks(t *testing.T) {
 		}
 	}
 }
-
-func TestIndexQuoteOrBackslash(t *testing.T) {
-	for n := range 40 {
-		for _, c := range []byte{'"', '\\'} {
-			s := []byte(strings.Repeat("x", n) + string(c) + "yy")
-			if got := indexQuoteOrBackslash(s); got != n {
-				t.Fatalf("indexQuoteOrBackslash(%q) = %d, want %d", s, got, n)
-			}
-		}
-		if got := indexQuoteOrBackslash([]byte(strings.Repeat("x", n))); got != -1 {
-			t.Fatalf("no match, len %d: got %d", n, got)
-		}
-	}
-}
