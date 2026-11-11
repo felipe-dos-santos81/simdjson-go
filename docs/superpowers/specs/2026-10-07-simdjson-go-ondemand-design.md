@@ -144,7 +144,8 @@ marked **Go**.
   first field and searches up to where it started. Names are compared as written: escapes are not
   decoded, so `{"\u0061":1}` has no field `"a"`. A requested name longer than 64 bytes
   with an unescaped quote never matches (C++ `is_equal`). `AtPointer` uses `FindNext`; an empty
-  pointer is the root on the `Document` and `ErrInvalidJSONPointer` elsewhere. A missing field is
+  pointer is the root on the `Document`, the value itself, unread, on a `Value`, and
+  `ErrInvalidJSONPointer` on an `Object` or an `Array`. A missing field is
   `ErrNoSuchField`. `Array.At` counts an element whose read failed as an element.
 - **Numbers.** `Int64`/`Uint64` reject fractions, exponents and out-of-range values with
   `ErrIncorrectType`; `Float64` accepts any number, whatever the length of its exponent, but

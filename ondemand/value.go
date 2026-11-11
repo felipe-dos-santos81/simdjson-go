@@ -253,10 +253,14 @@ func (v Value) FindNext(name string) (Value, error) {
 
 // AtPointer returns the value at the RFC 6901 JSON Pointer ptr below v,
 // looking fields up in order (Object.FindNext). As in C++, an empty pointer
-// is ErrInvalidJSONPointer (Document.AtPointer("") is the root).
+// is v itself, unread, whatever its type (Object.AtPointer("") and
+// Array.AtPointer("") are ErrInvalidJSONPointer).
 func (v Value) AtPointer(ptr string) (Value, error) {
 	if err := v.check(); err != nil {
 		return Value{}, err
+	}
+	if ptr == "" {
+		return v, nil
 	}
 	return atPointer(v, ptr)
 }
