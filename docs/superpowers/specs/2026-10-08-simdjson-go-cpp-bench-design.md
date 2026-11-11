@@ -199,7 +199,7 @@ bench-cpp` with count=6. `uptime` before the run: load averages 3.74 / 9.37 / 12
 1.71 / 3.98 / 8.17. Earlier work on the machine had just ended, so it was quiet during the run
 but not idle before it. All 26 rows are paired. The confidence intervals stay within ±3% on
 every row except `Tasks/top_tweet/dom` (C++ ±8%). Go runs at 0.20–0.49× of C++'s throughput
-(geomean 0.29×): 0.20× on `update-center.json`, 0.49× on `canada.json`, 0.26–0.28× on the other
+(geomean 0.29×): 0.20× on `update-center.json`, 0.49× on `canada.json`, 0.25–0.28× on the other
 parse and stream rows, 0.26–0.31× on the DOM and On-Demand `partial_tweets`, `distinct_user_id`,
 `find_tweet` and `top_tweet` rows, 0.33–0.39× on `kostya` and `large_random`. The table is in
 README.md (Performance). The benchmark bodies in `bench.cpp` are v5.1.1's

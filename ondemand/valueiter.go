@@ -219,6 +219,9 @@ func escapesQuote(key string) bool {
 	return len(key) > 0 && key[len(key)-1] == '\\' && oddBackslashes(key)
 }
 
+// oddBackslashes is not inlined, so that its loop stays off keyEquals'
+// common path (upstream 50f0739c).
+//
 //go:noinline
 func oddBackslashes(key string) bool {
 	n := 0

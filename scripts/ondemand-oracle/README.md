@@ -18,3 +18,24 @@ return for about 3,000 streams read in one batch;
 
 Regenerate after changing `gen.py` or `oracle.cpp`; never edit `oracle.jsonl`
 by hand.
+
+## The development-build reference
+
+C++ checks nesting depth in On-Demand only in its development build
+(`SIMDJSON_DEVELOPMENT_CHECKS`), and `oracle.cpp` is built in release mode, so
+the recorded oracle cannot hold those results. `TestMaxDepth`
+(`ondemand/regress_test.go`) holds them instead. To measure them again:
+
+1. Copy `oracle.cpp` to a scratch directory outside the repository. Before
+   `parser.iterate(json)`, call
+   `parser.allocate(std::max<size_t>(input.size(), 64), depth)`; before
+   `iterate_many`, call `od_stream_parser.allocate(batch, depth)`. The second
+   argument of `allocate` is the limit, Go's `Parser.MaxDepth`; read it from
+   an environment variable, defaulting to `DEFAULT_MAX_DEPTH` (1024).
+2. Get the v5.1.1 single header with `scripts/fetch-simdjson.sh DIR` (it
+   copies from `$SIMDJSON_SINGLEHEADER` when that is set) and build without
+   `-DNDEBUG`, so the asserts stay on:
+   `c++ -std=c++20 -O1 -DSIMDJSON_DEVELOPMENT_CHECKS=1 -IDIR -o oracle-dev oracle.cpp DIR/simdjson.cpp`
+3. Feed it case lines as `gen.py` writes them, one process per case: a
+   development check can abort, and a crash is a result. Compare the output
+   with `TestMaxDepth`'s `want`.
