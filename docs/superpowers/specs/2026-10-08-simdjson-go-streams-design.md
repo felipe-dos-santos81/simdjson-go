@@ -259,7 +259,10 @@ document).
 - **End of input.** C++'s final trim runs once, ported exactly, on the region after the last
   candidate: drop a trailing unclosed-string quote, keep the region if its brackets balance,
   otherwise drop it. With no candidate at all, the whole input is the region. A dropped region
-  becomes the final `ErrTrailingContent`.
+  becomes the final `ErrTrailingContent`. In `JSONSequence` the last index may not be the quote:
+  stage 1 does not index a quote that follows a scalar byte, and it reads RS as one, so in
+  `RS"…` the last index is the RS. Then that index is kept and the dropped tail starts at the
+  quote (C++ v5.1.1 `drop_json_sequence_unclosed_string`).
 
 ### 5.4 DOM
 

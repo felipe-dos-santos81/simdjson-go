@@ -309,10 +309,21 @@ def stream_end_cases():
     yield scase("\x1e}\x1e{\"\":\"", fmt="sequence", api="ondemand", script=["obj", "get ", "raw"])
 
 
+def rs_quote_cases():
+    # v5.1.1: a sequence ending in an unclosed string whose quote stage 1 did not
+    # index (it follows a scalar byte: an RS, or the 2) keeps the last index; the
+    # drop starts at the quote. White space before the quote: the quote is indexed.
+    for doc in ("\x1e1\n\x1e2\n\x1e  \"abc", "\x1e1\n\x1e 2\"abc"):
+        yield scase(doc, fmt="sequence")
+        for script in ([], ["walk"]):
+            yield scase(doc, fmt="sequence", api="ondemand", script=script)
+
+
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
-                false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases, stream_end_cases):
+                false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases, stream_end_cases,
+                rs_quote_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

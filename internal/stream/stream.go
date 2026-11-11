@@ -309,8 +309,14 @@ func (r *Reader) finish(unclosed bool) {
 	scanLen := len(r.Buf)
 	if r.hasHeld {
 		r.hasHeld = false
-		if unclosed {
+		if unclosed && (r.format != JSONSequence || r.Buf[r.held] == '"') {
 			scanLen = int(r.held)
+		} else if unclosed {
+			// C++ drop_json_sequence_unclosed_string: the quote follows a
+			// scalar byte such as an RS, so it is not indexed. Keep the last
+			// index; the dropped tail starts at the quote.
+			r.push(r.held)
+			scanLen = int(r.held) + bytes.IndexByte(r.Buf[r.held:], '"')
 		} else {
 			r.push(r.held)
 		}
