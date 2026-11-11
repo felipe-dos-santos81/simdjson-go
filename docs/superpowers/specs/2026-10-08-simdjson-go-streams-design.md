@@ -45,7 +45,7 @@ never ends an On-Demand stream (§4.3).
 
 - **Oracle.** `testdata/stream/oracle.jsonl` has 2,944 cases. 106 are skipped for a stage 1 error
   (covered by the stage 1 tests and the fuzzers) and 4 were compared up to the DOM document that
-  closed on the array's `]` (none since v5.1.1, §4.2). 115 are compared up to the On-Demand
+  closed on the array's `]` (none since v5.1.1, §4.2). 102 are compared up to the On-Demand
   document after whose fatal read error C++ ends the stream (§4.3).
 - **Fuzzing** (Task 6). `FuzzParseMany`: 600 s pure Go (60.3M execs) and 300 s NEON after a fix
   (61.2M). `FuzzIterateMany`: 600 s (41.0M), and again on the final code (f8b4886, reads past
@@ -181,8 +181,9 @@ stage 1 error instead of `ErrTrailingContent`. Bytes that On-Demand's delimiter 
 (`NewlineDelimited`, `JSONSequence`) passes over, from the root's bracket-count end to the next
 document, form a region of their own in the same way. Within the document that holds a bad byte, C++'s
 check order applies (`ErrUnescapedChars` before `ErrUTF8`), so a stream of one document reports
-what `Parse` reports. This and the trailing error are the two differences from C++ in one window,
-where a stage 1 error is the first and only item and a bad tail is dropped without an error.
+what `Parse` reports. This and the trailing error are two of the three differences from C++ in one window,
+where a stage 1 error is the first and only item and a bad tail is dropped without an error; the
+third, a read error that does not end an On-Demand stream, is in §4.3.
 
 ### 4.2 Input rules
 
@@ -286,7 +287,7 @@ Before a document is yielded, the segmenter extends the decided prefix to the do
 bracket-count end plus four structurals (`reachAhead`: `rootTokenLen` peeks two ahead and, in C++,
 sees the next document's start). Moving to the next document (C++ `next_document`) runs in the segmenter, not
 in the `Document`, so it can load windows: a bracket count from the reader's cursor and depth
-(`skip_child`), or, for `NewlineDelimited` and `JSONSequence` when the document was not read to
+(`skip_child`), from the document's root once a read recorded an error (§4.3), or, for `NewlineDelimited` and `JSONSequence` when the document was not read to
 its end, a forward scan with `bytes.IndexByte` for the delimiter (`skip_to_delimiter`). The
 `Document` reads a view of `pending` that runs past the decided point, followed by C++'s
 sentinels once the input is done. Handles keep positions, not pointers, and `pending` is compacted

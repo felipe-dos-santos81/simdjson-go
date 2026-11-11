@@ -159,7 +159,7 @@ func TestStreamOracle(t *testing.T) {
 			continue
 		}
 		got := streamOut(&dp, &op, c.Stream.API, in, f, c.Script)
-		if want, ok := cutFatalEnd(c.Out); ok {
+		if want, ok := cutFatalEnd(c.Out); ok && c.Stream.API == "ondemand" && got != c.Out {
 			fatalCut++
 			c.Out = want
 			if strings.HasPrefix(got, want+" ") {
@@ -188,7 +188,14 @@ func TestStreamOracle(t *testing.T) {
 // the error did not abandon the document (skip_child's), "@n h… … xcode @n
 // !code". Go yields the documents after it instead (streams spec §4.3, a
 // documented difference). It returns the output up to that document's last
-// token, "dead" included.
+// token, "dead" included. TestStreamOracle cuts only where the full output
+// differs, so a stream end Go shares with C++ is still compared.
+//
+// Past a cut point no C++ output exists to compare Go's with. What checks
+// it: the skip from the root is the path every unread document takes,
+// which the uncut cases cover; TestIterateManyAbandoned and TestMaxDepth's
+// stream row hold two inputs; FuzzIterateMany checks that every batch size
+// gives the same result.
 func cutFatalEnd(out string) (string, bool) {
 	toks := strings.Fields(out)
 	k := len(toks)
@@ -196,7 +203,7 @@ func cutFatalEnd(out string) (string, bool) {
 		return "", false
 	}
 	if last := toks[k-3]; last != "dead" {
-		if last[0] != 'x' && last[0] != '!' || last[1:] != toks[k-1][1:] {
+		if last[0] != 'x' || last[1:] != toks[k-1][1:] {
 			return "", false
 		}
 		i := k - 3
