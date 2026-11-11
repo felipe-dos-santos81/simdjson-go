@@ -181,6 +181,8 @@ func (it valueIter) fieldValue() error {
 
 // keyEquals is C++ raw_json_string::unsafe_is_equal: the raw key (as
 // written, escapes included) at buf[off+1:] equals key, followed by a quote.
+// A key that ends in an odd number of backslashes never matches: the last
+// one escapes that quote, so it does not end the raw key (C++ v5.1.1).
 func (it valueIter) keyEquals(off int, key string) bool {
 	b := it.d.buf
 	end := off + 1 + len(key)
@@ -191,7 +193,13 @@ func (it valueIter) keyEquals(off int, key string) bool {
 		// Past SIMDJSON_PADDING (64), C++ compares with is_equal, which
 		// stops at an unescaped quote in key: such a key never matches,
 		// even where the raw text runs on into the next field.
-		return string(b[off+1:end]) == key && (len(key) <= 64 || !hasUnescapedQuote(key))
+		if string(b[off+1:end]) != key {
+			return false
+		}
+		if len(key) > 64 {
+			return !hasUnescapedQuote(key)
+		}
+		return !escapesQuote(key)
 	}
 	seg := b[off+1 : end] // short keys: a loop beats the memequal call
 	for i := range seg {
@@ -199,11 +207,27 @@ func (it valueIter) keyEquals(off int, key string) bool {
 			return false
 		}
 	}
-	return true
+	return !escapesQuote(key)
+}
+
+// escapesQuote reports whether key ends in an odd number of backslashes. The
+// last-byte test comes first so that the count stays off the common path.
+func escapesQuote(key string) bool {
+	return len(key) > 0 && key[len(key)-1] == '\\' && oddBackslashes(key)
+}
+
+//go:noinline
+func oddBackslashes(key string) bool {
+	n := 0
+	for n < len(key) && key[len(key)-1-n] == '\\' {
+		n++
+	}
+	return n%2 == 1
 }
 
 // hasUnescapedQuote reports whether s has a quote not escaped by a
-// backslash, with C++ raw_json_string::is_equal's escape tracking.
+// backslash, or ends escaping one, with C++ raw_json_string::is_equal's
+// escape tracking: such a name never matches.
 func hasUnescapedQuote(s string) bool {
 	escaping := false
 	for i := 0; i < len(s); i++ {
@@ -216,7 +240,7 @@ func hasUnescapedQuote(s string) bool {
 			escaping = false
 		}
 	}
-	return false
+	return escaping
 }
 
 func (it valueIter) findFieldRaw(key string) (bool, error) {

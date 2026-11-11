@@ -102,6 +102,19 @@ def long_name_cases():
                 yield case(d, script=[op + " " + n, "walk"])
 
 
+def backslash_cases():
+    # v5.1.1: a name ending in an odd number of backslashes matches no key (its
+    # last backslash would escape the quote that ends the raw key).
+    d = '{"\\"admin":true,"\\\\":1}'
+    for script in (["find \\", "walk"], ["get \\", "walk"], ["ptr /\\", "walk"], ["get \\\\", "walk"],
+                   ["find \\\\\\", "walk"]):
+        yield case(d, script=script)
+    for n in (20, 70):  # names of 9 to 64 bytes and of more than 64 take their own paths
+        d = '{"%s\\"admin":true}' % ("k" * (n - 1))
+        for op in ("get", "find"):
+            yield case(d, script=[op + " " + "k" * (n - 1) + "\\", "walk"])
+
+
 def container_cases():
     for d in CONTAINERS:
         for script in container_scripts(d):
@@ -275,7 +288,7 @@ def stream_cases():
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
-                false_cases, exponent_cases, stream_cases):
+                false_cases, exponent_cases, backslash_cases, stream_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

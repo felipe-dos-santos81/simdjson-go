@@ -30756,3 +30756,12 @@
 {"doc": "31653939393939393939393939393939393939393939", "out": "!9", "script": ["double"]}
 {"doc": "31653939393939393939393939393939393939393939", "out": "!9", "script": ["walk"]}
 {"doc": "5b316539393939393939393939393939393939393939395d", "out": "!9", "script": ["arr", "at 0", "double"]}
+{"doc": "7b225c2261646d696e223a747275652c225c5c223a317d", "out": "!20", "script": ["find \\", "walk"]}
+{"doc": "7b225c2261646d696e223a747275652c225c5c223a317d", "out": "!20", "script": ["get \\", "walk"]}
+{"doc": "7b225c2261646d696e223a747275652c225c5c223a317d", "out": "!20", "script": ["ptr /\\", "walk"]}
+{"doc": "7b225c2261646d696e223a747275652c225c5c223a317d", "out": "i1", "script": ["get \\\\", "walk"]}
+{"doc": "7b225c2261646d696e223a747275652c225c5c223a317d", "out": "!20", "script": ["find \\\\\\", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b5c2261646d696e223a747275657d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkk\\", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b5c2261646d696e223a747275657d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkk\\", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b5c2261646d696e223a747275657d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\\", "walk"]}
+{"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b5c2261646d696e223a747275657d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\\", "walk"]}

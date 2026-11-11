@@ -143,7 +143,9 @@ marked **Go**.
 - **Lookup.** `FindNext` searches from the cursor to the end of the object; `Get` then wraps to the
   first field and searches up to where it started. Names are compared as written: escapes are not
   decoded, so `{"\u0061":1}` has no field `"a"`. A requested name longer than 64 bytes
-  with an unescaped quote never matches (C++ `is_equal`). `AtPointer` uses `FindNext`; an empty
+  with an unescaped quote never matches (C++ `is_equal`). A requested name that ends in an odd
+  number of backslashes never matches, at any length: the last one would escape the quote that ends
+  the raw key, so the name `\` does not match the key `\"admin` (C++ v5.1.1). `AtPointer` uses `FindNext`; an empty
   pointer is the root on the `Document`, the value itself, unread, on a `Value`, and
   `ErrInvalidJSONPointer` on an `Object` or an `Array`. A missing field is
   `ErrNoSuchField`. `Array.At` counts an element whose read failed as an element.
