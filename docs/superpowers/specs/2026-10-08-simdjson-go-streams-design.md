@@ -60,8 +60,8 @@ document that holds the bad byte instead of failing the whole input.
   an On-Demand read that runs past the decided indices (a malformed root, or out of order) first
   indexes the whole input (§5.5); bytes On-Demand's delimiter skip passes over are checked by
   stage 1; `ParseMany` waits after a failed walk in `CommaDelimitedArray` (§5.4); after a read
-  that abandons a document, the next step skips from its root (§3); the stage 1 worker's state
-  sits on its own cache lines (§5.2).
+  that meets a fatal error, the next step ends the stream at that document (§3, C++ v5.1.1);
+  the stage 1 worker's state sits on its own cache lines (§5.2).
 
 ## 2. Decisions
 
@@ -151,8 +151,8 @@ for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
 - On-Demand: `Document.AtEnd` says whether this document has been read to its end (C++ compares
   with the end of the batch). Read errors (wrong type, bad number, missing field) belong to the
   read and do not end the stream; the next step skips the rest of the document, as in C++.
-  After a read that abandons a document (a fatal error), the next step skips from the document's
-  root, as for an unread document; C++ leaves this undefined.
+  After a fatal error (`ErrTape`, `ErrIncompleteArrayOrObject`), which may abandon the document,
+  the next step ends the stream with that error at the document's start (C++ v5.1.1).
   Handles from an earlier document return `ErrOutOfOrderIteration`.
 
 ## 4. Behaviour
@@ -167,6 +167,7 @@ Every error ends the stream, as in C++. `Offset` is C++'s `current_index` transl
 | Invalid UTF-8, or a control character in a string | `ErrUTF8` / `ErrUnescapedChars` | start of the document holding the first bad byte |
 | DOM stage 2 failure | what `Parse` reports for that document | document start |
 | On-Demand skip whose brackets never balance | `ErrIncompleteArrayOrObject` | as C++ |
+| On-Demand document that met a fatal error in a read | that error | document start |
 | Tail dropped by C++'s final trim (§5.3) | `ErrTrailingContent` | start of the dropped region: `len − truncated_bytes` in C++ terms |
 | `CommaDelimitedArray` input not `[`…`]` after trimming whitespace | `ErrTape`, as the only item | 0 |
 
@@ -340,9 +341,8 @@ past the entry after it.
   `ErrTrailingContent`. Cases whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
   where C++ reports `UNESCAPED_CHARS` are skipped there and covered by `TestStreamStage1Errors` and `TestStreamStage1Formats`. DOM
   `CommaDelimitedArray` cases where C++ goes on after a document that closed on the array's `]`
-  (§4.3) are compared only up to that document, and counted apart. C++'s next step after a read
-  that abandons a stream document dereferences a null parser, so the oracle ends such a case
-  with `x<code> dead`.
+  (§4.3) are compared only up to that document, and counted apart. A read that abandons a stream
+  document prints `x<code> dead`; the stream then ends with `@<current_index> !<code>`.
 - **Cases** (`gen.py`): the C++ tests' inputs (`issue2181`, `issue2170`, `test_naked_iterators`,
   `issue1977`, `issue2137`, `fuzzaccess`, `truncated_bytes_filtered_formats`,
   `source_scalar_before_truncated`, the comma and RS runs); corpus scalars and containers joined
@@ -353,8 +353,8 @@ past the entry after it.
   holding p, then a `StreamError` at that document's start.
 - **Fuzzing.** `FuzzParseMany` and `FuzzIterateMany` take bytes, a format and a batch size from 64
   to a few KB. Items (offsets, sources, errors, the DOM's `AppendJSON` or a full On-Demand walk)
-  must equal those of a single window, also past a document a read abandoned (where the oracle
-  stops). Each DOM document must equal `Parse(doc.Source())`
+  must equal those of a single window, and the stream must end at the same document after a
+  fatal error. Each DOM document must equal `Parse(doc.Source())`
   whenever that `Parse` succeeds.
 - **Lifecycle.** `testing/synctest` tests break out of the loop at many positions, including
   while the worker is blocked, and check no goroutine is left; with `iter.Pull2`, a second stream

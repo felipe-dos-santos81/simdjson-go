@@ -408,6 +408,17 @@ func runOps(doc *ondemand.Document, script []string, toks *[]string) error {
 				return err
 			}
 			st = append(st, slot{k: kValue, v: v})
+		case "pint":
+			v, err := doc.AtPointer(arg)
+			var x int64
+			if err == nil {
+				x, err = v.Int64()
+			}
+			if err != nil {
+				*toks = append(*toks, errToken(err))
+			} else {
+				*toks = append(*toks, "i"+strconv.FormatInt(x, 10))
+			}
 		case "pop":
 			if len(st) > 1 {
 				st = st[:len(st)-1]

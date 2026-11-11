@@ -37,7 +37,9 @@ type StreamError = jsonerr.StreamError
 // everything read from it are valid until the loop's next step or the next
 // Iterate or IterateMany on p, and b must not change until the loop ends.
 // Read errors belong to the read and do not end the stream: the next step
-// skips the rest of the document, as C++ does. An error ending the stream
+// skips the rest of the document, as C++ does. A fatal one (ErrTape,
+// ErrIncompleteArrayOrObject) does: the next step ends the stream with
+// that error at the document's offset. An error ending the stream
 // is always the last item: a *StreamError with the failing document's
 // offset (ErrTrailingContent when b ends with an incomplete document,
 // which C++ drops silently). Empty input yields nothing. Stage 1 runs
@@ -110,17 +112,21 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				return
 			}
 			// C++ next_document, from the reader's cursor, or from the root
-			// if an Iterate on p replaced the document or a read abandoned
-			// it (C++ is undefined there; a root read to its end also has
-			// depth 0, but no error).
+			// if an Iterate on p replaced the document.
 			cur, depth := pos, 1
-			if d.gen == mine && (d.depth > 0 || d.err == nil) {
-				cur, depth = pos+d.pos, d.depth
-			}
 			if d.gen == mine {
+				// The stream stops at a document that met a fatal error
+				// (C++ v5.1.1). A read that abandons the document always
+				// records its error, so d.err also covers C++'s !is_alive().
+				err := d.err
+				cur, depth = pos+d.pos, d.depth
 				// The document's step is over; Compact may move the indices
 				// it views, so later reads report ErrOutOfOrderIteration.
 				d.kill()
+				if err != nil {
+					fail(base+start, err)
+					return
+				}
 			}
 			if delim != 0 && depth > 0 {
 				if i, ok := r.SkipTo(cur, delim); ok {

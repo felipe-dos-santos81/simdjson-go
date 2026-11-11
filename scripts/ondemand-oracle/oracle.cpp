@@ -13,6 +13,8 @@
 //   obj / arr / val  replace the top with it as an object / array / value
 //   at I             push element I of the top array
 //   ptr P            push the value at JSON Pointer P below the top
+//   pint P           print the document's at_pointer(P) read as int64, or
+//                    !<code> if that fails, and go on (the stack is unchanged)
 //   pop              drop the top
 //   int64 uint64 double bool null string type ntype raw
 //                    read the top (document or value) that way, print, pop
@@ -24,15 +26,15 @@
 //                    after the value's own token; pop
 //   each             iterate the top array without reading elements, print the count; pop
 //   walk             read the top (document or value) completely, print it; pop
-// An error prints !<code> and ends the script. Output tokens are joined by
+// Any other error prints !<code> and ends the script. Output tokens are joined by
 // spaces; output over 2000 bytes is replaced by #<fnv1a64>:<length>.
 //
 // A stream case adds "stream":{"api":"dom"|"ondemand","format":F}, F one of
 // whitespace newline sequence comma array, and runs the input through
 // parse_many or iterate_many in one batch. Its output, per document:
 //   @<current_index> h<hex source>, then w<walk_dom> (dom) or the script's
-//   tokens on the document, plus x<code> if a read failed, then "dead" and
-//   nothing more if that read abandoned the document (ondemand)
+//   tokens on the document, plus x<code> if a read failed, then "dead" if
+//   that read abandoned the document (ondemand)
 // and at the end !<code> if the stream failed or ~<truncated_bytes> if not.
 // An up-front comma_delimited_array failure prints only !3.
 #include "simdjson.h"
@@ -275,6 +277,10 @@ template <typename D> static error_code run(D &doc, const std::vector<std::strin
         case K_ARRAY: TRY(top.a.at_pointer(arg).get(v)); break;
       }
       st.push_back(slot{K_VALUE, v, {}, {}});
+    } else if (op == "pint") {
+      int64_t x;
+      error_code e = doc.at_pointer(arg).get_int64().get(x);
+      out.add(e ? "!" + std::to_string(int(e)) : "i" + std::to_string(x));
     } else if (op == "pop") {
       if (st.size() > 1) { st.pop_back(); }
     } else if (op == "count") {
@@ -450,9 +456,8 @@ static void run_stream(const std::string &input, std::string_view api, std::stri
     if ((err = (*it).get(d))) { out.add("!" + std::to_string(int(err))); return; }
     out.add("h" + tohex(it.source()));
     if ((err = run(d, script, out))) { out.add("x" + std::to_string(int(err))); }
-    // A read that abandoned the document leaves C++ with a null parser,
-    // which the next step can dereference: nothing past it is defined.
-    if (!static_cast<ondemand::document &>(d).is_alive()) { out.add("dead"); return; }
+    // A read that abandoned the document: the next step ends the stream.
+    if (!static_cast<ondemand::document &>(d).is_alive()) { out.add("dead"); }
   }
   out.add("~" + std::to_string(s.truncated_bytes()));
 }

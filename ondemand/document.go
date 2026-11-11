@@ -314,9 +314,14 @@ func (d *Document) scalarText(start int) []byte {
 
 // AtPointer rewinds the document and returns the value at the RFC 6901 JSON
 // Pointer ptr, looking fields up in order. An empty pointer is the root.
+// A document that a fatal error abandoned cannot be rewound: every later
+// call returns that error (C++ v5.1.1).
 func (d *Document) AtPointer(ptr string) (Value, error) {
 	if err := d.check(); err != nil {
 		return Value{}, err
+	}
+	if d.abandoned() {
+		return Value{}, d.err
 	}
 	d.Rewind()
 	if ptr == "" {

@@ -265,39 +265,6 @@ func TestStreamStage1Errors(t *testing.T) {
 	}
 }
 
-// TestIterateManyAbandoned: after a read that abandons a document (a fatal
-// error), the next step skips from the document's root, as for an unread
-// document, and the stream goes on to the next record.
-func TestIterateManyAbandoned(t *testing.T) {
-	cases := []struct{ in, want string }{
-		{"{\"a\":1}\n{\"a\":}\n{\"a\":3}", `0:{"a":1} 8:{"a":}:dead 15:{"a":3}`},
-		{"[{\"a\":}, 1, [2, 3], {\"x\":1}]\n7", `0:[{"a":}, 1, [2, 3], {"x":1}]:dead 29:7`},
-	}
-	var p ondemand.Parser
-	for _, c := range cases {
-		for _, f := range []ondemand.Format{ondemand.NewlineDelimited, ondemand.Whitespace} {
-			for _, bs := range []int{0, 64} {
-				p.BatchSize = bs
-				var got []string
-				for doc, err := range p.IterateMany([]byte(c.in), f) {
-					if err != nil {
-						got = append(got, itemErr(err))
-						continue
-					}
-					item := fmt.Sprintf("%d:%s", doc.Offset(), doc.Source())
-					if walk(doc, new(strings.Builder)) != nil && ondemand.Abandoned(doc) {
-						item += ":dead"
-					}
-					got = append(got, item)
-				}
-				if s := strings.Join(got, " "); s != c.want {
-					t.Errorf("%q, format %d, BatchSize %d:\n got  %s\n want %s", c.in, f, bs, s, c.want)
-				}
-			}
-		}
-	}
-}
-
 // TestIterateManyNoLeak is the root package's TestStreamNoLeak for IterateMany.
 func TestIterateManyNoLeak(t *testing.T) {
 	in := []byte(strings.Repeat(`{"a":[1,2,3],"b":"xyz"}`+"\n", 400))

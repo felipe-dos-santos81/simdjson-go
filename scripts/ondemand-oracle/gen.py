@@ -319,11 +319,24 @@ def rs_quote_cases():
             yield scase(doc, fmt="sequence", api="ondemand", script=script)
 
 
+def dead_cases():
+    # v5.1.1: a document that met a fatal error stays dead. at_pointer returns
+    # the error again, and a stream ends at the document with it.
+    for doc, ptrs in (('{"a";1,"b":2}', ("/a", "/b", "")), ('{"a":1 "b":2}', ("/a", "/b", "/a")),
+                      ('{"a":1,"b":2', ("/a", "/b"))):
+        yield case(doc, script=["pint " + p for p in ptrs])
+    for doc, fmt in (('{"a" 1}\n{"b":2}\n{"b":2}\n{"b":2}\n', "whitespace"),
+                     ('{"a" 1}\n{"b":2}\n{"b":2}\n{"b":2}\n', "newline"),
+                     ('\x1e{"a" 1}\n\x1e{"b":2}\n\x1e{"b":2}\n\x1e{"b":2}\n', "sequence"),
+                     ('{"a" 1},{"b":2},{"b":2},{"b":2},', "comma")):
+        yield scase(doc, fmt=fmt, api="ondemand", script=["obj", "keys"])
+
+
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
                 false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases, stream_end_cases,
-                rs_quote_cases):
+                rs_quote_cases, dead_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

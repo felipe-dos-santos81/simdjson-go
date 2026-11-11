@@ -85,10 +85,8 @@ func walkDOM(e simdjson.Element, out *strings.Builder) {
 
 // streamOut runs a stream through the DOM or On-Demand and prints it as
 // oracle.cpp does, translating Go's offsets and final ErrTrailingContent
-// to C++'s current_index and truncated_bytes. With stopDead, like
-// oracle.cpp, it stops after a read that abandoned its document: C++
-// cannot go on from there (Go skips from the document's root).
-func streamOut(dp *simdjson.Parser, op *ondemand.Parser, api string, in []byte, f simdjson.Format, script []string, stopDead bool) string {
+// to C++'s current_index and truncated_bytes.
+func streamOut(dp *simdjson.Parser, op *ondemand.Parser, api string, in []byte, f simdjson.Format, script []string) string {
 	buf, base, _, ok := stream.Input(in, f)
 	var toks []string
 	end := func(err error) string {
@@ -124,9 +122,6 @@ func streamOut(dp *simdjson.Parser, op *ondemand.Parser, api string, in []byte, 
 				toks = append(toks, "x"+errToken(err)[1:])
 				if ondemand.Abandoned(doc) {
 					toks = append(toks, "dead")
-					if stopDead {
-						return joinOut(toks)
-					}
 				}
 			}
 		}
@@ -163,7 +158,7 @@ func TestStreamOracle(t *testing.T) {
 			skipped++
 			continue
 		}
-		got := streamOut(&dp, &op, c.Stream.API, in, f, c.Script, true)
+		got := streamOut(&dp, &op, c.Stream.API, in, f, c.Script)
 		if c.Stream.API == "dom" && f == simdjson.CommaDelimitedArray {
 			buf, _, _, _ := stream.Input(in, f)
 			if want, ok := pastEnd(c.Out, len(buf)); ok {
@@ -220,7 +215,7 @@ func pastEnd(out string, n int) (string, bool) {
 
 // FuzzIterateMany checks that no batch size changes what either stream
 // yields, with an arbitrary script of reads run on every On-Demand document,
-// also past a document a read abandoned.
+// and that the stream ends at the same document after a fatal error.
 func FuzzIterateMany(f *testing.F) {
 	for _, s := range []string{"1 2 34", `[1,23] "x" {"k":"v}`, `{"a":1},{"b":`, "\x1e1\n\x1e2",
 		`[{"a":1},2]`, "[1,23 [1,23]", "{\"a\":1,\n\"b\":2}\n[3]", "{\"a\":1}\n{\"a\":}\n{\"a\":3}"} {
@@ -236,9 +231,9 @@ func FuzzIterateMany(f *testing.F) {
 		var op ondemand.Parser
 		for _, api := range []string{"dom", "ondemand"} {
 			dp.BatchSize, op.BatchSize = 0, 0
-			want := streamOut(&dp, &op, api, in, fm, script, false)
+			want := streamOut(&dp, &op, api, in, fm, script)
 			dp.BatchSize, op.BatchSize = 64*(1+int(batch)%8), 64*(1+int(batch)%8)
-			if got := streamOut(&dp, &op, api, in, fm, script, false); got != want {
+			if got := streamOut(&dp, &op, api, in, fm, script); got != want {
 				t.Fatalf("%s, BatchSize %d, %q %q:\n got  %s\n want %s", api, dp.BatchSize, in, script, got, want)
 			}
 		}

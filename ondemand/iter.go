@@ -164,6 +164,10 @@ func (d *Document) abandon() {
 	d.depth = 0
 }
 
+// abandoned reports whether a fatal error abandoned d (C++ is_alive is
+// false): Rewind cannot bring it back.
+func (d *Document) abandoned() bool { return d.depth == 0 && d.err != nil }
+
 func (d *Document) setStart(depth, pos int) {
 	for len(d.starts) <= depth {
 		d.starts = append(d.starts, -1)
@@ -294,9 +298,10 @@ func (d *Document) copyString(mark int, b []byte) string {
 // Rewind moves the cursor back to the start of the document, so it can be
 // read again (C++ document::rewind). Slices from StringBytes read before
 // the Rewind may be overwritten. As C++ json_iterator::rewind, it keeps a
-// fatal error, which iteration, Count and Reset report again.
+// fatal error, which iteration, Count and Reset report again. A document
+// that a fatal error abandoned is left as it is (C++ v5.1.1).
 func (d *Document) Rewind() {
-	if d.n == 0 {
+	if d.n == 0 || d.abandoned() {
 		return
 	}
 	d.pos = 0
