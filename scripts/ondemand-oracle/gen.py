@@ -338,11 +338,23 @@ def open_last_cases():
     yield scase('[[2[["]', fmt="array")
 
 
+def dead_raw_cases():
+    # v5.1.1: raw on a document that at_pointer abandoned. get_object and
+    # get_array step past the bracket before check_root_* fails, so raw ends
+    # on it; with the cursor further on, raw ends on the token before it. A
+    # rewind does not revive the document. pint can abandon a stream document
+    # without ending the script; the stream ends there.
+    for doc in ('{"a":1,"b":2', '[1,2', '{"a";1,"b":2}'):
+        yield case(doc, script=["pint /a", "raw"])
+    yield case('{"a":1 "b":2}', script=["pint /b", "rewind", "get a", "int64"])
+    yield scase('{"a" 1}\n{"b":2}\n', api="ondemand", script=["pint /a"])
+
+
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
                 false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases, stream_end_cases,
-                rs_quote_cases, dead_cases, open_last_cases):
+                rs_quote_cases, dead_cases, open_last_cases, dead_raw_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

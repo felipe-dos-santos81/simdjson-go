@@ -78,8 +78,8 @@ func (d *Document) NumberType() (NumberType, error)
 func (d *Document) Int64() (int64, error)                // and Uint64, Float64, Bool, IsNull,
 func (d *Document) String() (string, error)              // StringBytes: a scalar root
 func (d *Document) Raw() ([]byte, error)
-func (d *Document) AtPointer(ptr string) (Value, error)  // rewinds first, as C++ does
-func (d *Document) Rewind()
+func (d *Document) AtPointer(ptr string) (Value, error)  // rewinds first, as C++ does, unless abandoned (§4)
+func (d *Document) Rewind()                              // leaves an abandoned document as it is (§4)
 func (d *Document) AtEnd() bool                          // C++ at_end: the whole document was read
 
 type Type byte       // TypeUnknown, TypeArray, TypeObject, TypeNumber, TypeString, TypeBool, TypeNull
@@ -141,7 +141,8 @@ marked **Go**.
   structural it reads its padding (0), so a truncated document fails with `ErrTape` at the next
   comma or bracket check.
 - **Forward only.** Objects and arrays are traversed once, unless rewound by `Count`, `Reset`,
-  `Rewind` or `AtPointer`; fields and elements not read in a loop body are skipped.
+  `Rewind` or `AtPointer` (not once a fatal error abandoned the document: see Abandoned
+  documents); fields and elements not read in a loop body are skipped.
 - **Scalars may be read later.** A `Value` holding a scalar is parsed from its own position, so it
   can be read after the cursor has moved on (C++ `top_tweet` relies on this).
 - **Lookup.** `FindNext` searches from the cursor to the end of the object; `Get` then wraps to the
@@ -174,11 +175,30 @@ marked **Go**.
   (C++ v5.1.1). `Value.Raw` on a scalar is C++ `raw_json_token`: the token up to the next
   structural character, white space included. `Document.Raw` is not order-checked: wherever the
   cursor is, it reads the rest of the root (nothing if it was read to its end) and returns the
-  root's text; after it, a stream's next step yields the very next document.
+  root's text; after it, a stream's next step yields the very next document. On an abandoned
+  document it reads nothing more and returns the root's text up to the token before the cursor:
+  `AtPointer` on `{"a":1,"b":2` fails its root check after stepping past the `{`, as C++'s
+  `get_object` and `get_array` do, so `Raw` then returns `{`; after `{"a";1,"b":2}` failed at the
+  `;`, it returns `{"a";`. **Go:** `Raw` returns `ErrOutOfOrderIteration` where C++'s end point
+  is not in the input: past the last structural (`[{]` after `AtPointer("/9")`, for one), C++
+  returns the text and one padding byte (`[{]\x00`), which Go does not have; with the
+  cursor still on the root's first token (a root check that failed in `Document.Value` or
+  `AtPointer("")`, which do not step past the bracket), C++ reads the index before the first,
+  outside its index array, and its result differs from run to run.
+- **Abandoned documents (C++ v5.1.1).** `ErrTape` and `ErrIncompleteArrayOrObject` are fatal:
+  the read that meets one (a root check, a lookup, an iteration, `Raw`) records it and abandons
+  the document. `ErrDepth` is recorded too, but abandons the document only once an iteration
+  reports it (Depth below). An abandoned document is not rewound: `Rewind` leaves it as it is,
+  so reads go on from where the error left the cursor, and `AtPointer` returns the recorded
+  error again (`ErrTape` if none was recorded; C++ has `UNINITIALIZED`). `Raw` returns the text
+  up to the token before the cursor (Raw above). In `IterateMany`, the next step ends the stream at such a document with its
+  error at the document's start (streams spec §3).
 - **Differences from the DOM** (all C++'s own): the `BigInt` and root-buffer rules above. Of the root-buffer rule, only `Float64`'s limit shows in a full walk: a root number
   of 1083 bytes, or a longer one that is not an integer, fails, where the DOM reads it; a root
-  number followed by RS is read, where the DOM rejects it. Everything else a full walk accepts,
-  the DOM accepts, with the same values.
+  number followed by RS is read, where the DOM rejects it. Depth counts differently: with default
+  parsers, `[`×1023 + `[]` + `]`×1023 parses in the DOM (empty containers do not count there),
+  while On-Demand's read of the innermost array is `ErrDepth` (Depth below). Everything else a
+  full walk accepts, the DOM accepts, with the same values.
 - **Misuse (Go).** Reading a container out of order, iterating a container whose iteration has
   already started, a stale `Field`, a zero handle, or any handle after the next `Iterate` returns
   `ErrOutOfOrderIteration` and never panics. These are C++'s development-build checks; release C++
@@ -192,8 +212,8 @@ marked **Go**.
   `ErrDepth`, an empty one included: C++ checks before it looks for the closing bracket. A scalar
   at that depth reads, and values skipped without being started do not count (`Raw`, lookups and
   loops step over deeper ones). The error is recorded, as a fatal one is, but does not abandon the
-  document: `Rewind` and `AtPointer` still work, and lookups go on from the cursor, which stays
-  just after the refused container's opening bracket. Iterating an array or object (`All`,
+  document (Abandoned documents above): `Rewind` and `AtPointer` still work, and lookups go on
+  from the cursor, which stays just after the refused container's opening bracket. Iterating an array or object (`All`,
   `At`, `Count`) then reports `ErrDepth` and abandons the document, and `Reset` reports it, as
   for any recorded error. In a stream, the next step ends the stream with `ErrDepth` at the document's start.
   **This changes a default:** `ondemand` had no limit before (C++'s release build still has
@@ -246,7 +266,7 @@ marked **Go**.
   literals, strings, escapes) alone, padded and inside containers; containers including
   ill-formed and truncated ones; scripts over every corpus file (walks, keys, counts, pointers,
   lookups in and out of order); and 4,000 mutated documents. `oracle.cpp` runs each script through
-  C++ `ondemand` (release build) and `regen.sh` records the output in `oracle.jsonl` (30,715
+  C++ `ondemand` (release build) and `regen.sh` records the output in `oracle.jsonl` (30,779
   cases, 6 MB). `TestOracle` replays every case. The script language is documented in
   `oracle.cpp`.
 - **DOM agreement.** A full walk of every corpus file, and of every fuzz input, gives the DOM's
@@ -270,7 +290,7 @@ marked **Go**.
 
 | Risk | Mitigation |
 |---|---|
-| A C++ behaviour the oracle does not cover | 30,715 cases from corpora, edge cases and mutations; fuzzing against the DOM; new cases are one line in `gen.py` |
+| A C++ behaviour the oracle does not cover | 30,779 cases from corpora, edge cases and mutations; fuzzing against the DOM; new cases are one line in `gen.py` |
 | Out-of-range reads in the port (C++ relies on padding) | Every index is bounds-checked; `FuzzOnDemand` runs arbitrary read sequences |
 | The float tasks are close to the 1.5× bar | Measured 1.54–1.58× on a loaded machine; stage 1 is the floor (a third to a half of their time) |
 | Users expect DOM strictness | The README and godoc state "validate what you use", raw name comparison and `AtEnd` |

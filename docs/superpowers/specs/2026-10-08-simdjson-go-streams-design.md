@@ -42,7 +42,7 @@ document that holds the bad byte instead of failing the whole input.
 
 ### Results
 
-- **Oracle.** `testdata/stream/oracle.jsonl` has 2,911 cases. 106 are skipped for a stage 1 error
+- **Oracle.** `testdata/stream/oracle.jsonl` has 2,944 cases. 106 are skipped for a stage 1 error
   (covered by the stage 1 tests and the fuzzers) and 4 were compared up to the DOM document that
   closed on the array's `]` (none since v5.1.1, §4.2).
 - **Fuzzing** (Task 6). `FuzzParseMany`: 600 s pure Go (60.3M execs) and 300 s NEON after a fix
@@ -336,8 +336,8 @@ past the entry after it.
   covering both APIs) replays it, translating indices to offsets and `~n` to the final
   `ErrTrailingContent`. Cases whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
   where C++ reports `UNESCAPED_CHARS` are skipped there and covered by `TestStreamStage1Errors` and `TestStreamStage1Formats`.
-  A read that abandons a stream document prints `x<code> dead`; the stream then ends with
-  `@<current_index> !<code>`.
+  A document a read abandoned prints `dead`, after `x<code>` if the script ended on the error
+  (`pint` goes on); the stream then ends with `@<current_index> !<code>`.
 - **Cases** (`gen.py`): the C++ tests' inputs (`issue2181`, `issue2170`, `test_naked_iterators`,
   `issue1977`, `issue2137`, `fuzzaccess`, `truncated_bytes_filtered_formats`,
   `source_scalar_before_truncated`, the comma and RS runs); corpus scalars and containers joined

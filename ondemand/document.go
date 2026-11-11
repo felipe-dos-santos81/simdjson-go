@@ -1,6 +1,8 @@
 package ondemand
 
 import (
+	"cmp"
+
 	"simdjson-go/internal/jsonerr"
 	"simdjson-go/internal/number"
 	"simdjson-go/internal/stream"
@@ -262,6 +264,14 @@ func (d *Document) FindNext(name string) (Value, error) {
 // closing bracket, a scalar at the end of its token. As in C++ it is not
 // order-checked: wherever the cursor is, it reads the rest of the root, or
 // nothing if the root was read to its end, and returns the root's text.
+// On a document a fatal error abandoned it reads nothing more and returns
+// the text up to the token before the cursor: "{" for {"a":1,"b":2 after
+// AtPointer("/a"), whose root check, as C++'s, fails past the bracket.
+// Unlike C++ it returns ErrOutOfOrderIteration where C++'s end point is not
+// in the input: with the cursor past the last structural, C++ adds a
+// padding byte that Go does not have; with the cursor still on the root's
+// first token (a root check failed in Value or AtPointer("")), C++ reads
+// before its index array.
 func (d *Document) Raw() ([]byte, error) {
 	if err := d.check(); err != nil {
 		return nil, err
@@ -320,8 +330,8 @@ func (d *Document) AtPointer(ptr string) (Value, error) {
 	if err := d.check(); err != nil {
 		return Value{}, err
 	}
-	if d.abandoned() {
-		return Value{}, d.err
+	if d.abandoned() { // ErrTape if no error was recorded (C++: UNINITIALIZED)
+		return Value{}, cmp.Or(d.err, jsonerr.ErrTape)
 	}
 	d.Rewind()
 	if ptr == "" {
@@ -331,6 +341,9 @@ func (d *Document) AtPointer(ptr string) (Value, error) {
 	case TypeArray, TypeObject:
 		v, err := d.Value() // checks the root container, as C++'s get_array/get_object do
 		if err != nil {
+			if d.abandoned() { // they step past the bracket first: Raw then ends on it
+				d.advance()
+			}
 			return Value{}, err
 		}
 		return atPointer(v, ptr)

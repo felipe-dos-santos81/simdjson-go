@@ -116,9 +116,12 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			cur, depth := pos, 1
 			if d.gen == mine {
 				// The stream stops at a document that met a fatal error
-				// (C++ v5.1.1). A read that abandons the document always
-				// records its error, so d.err also covers C++'s !is_alive().
+				// (C++ v5.1.1): one that recorded an error, or that a read
+				// abandoned (ErrTape if it recorded none, as in C++).
 				err := d.err
+				if d.abandoned() {
+					err = cmp.Or(err, jsonerr.ErrTape)
+				}
 				cur, depth = pos+d.pos, d.depth
 				// The document's step is over; Compact may move the indices
 				// it views, so later reads report ErrOutOfOrderIteration.

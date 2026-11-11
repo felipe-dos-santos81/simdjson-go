@@ -120,9 +120,9 @@ func streamOut(dp *simdjson.Parser, op *ondemand.Parser, api string, in []byte, 
 			toks = append(toks, "@"+strconv.Itoa(doc.Offset()-base), "h"+hex.EncodeToString(doc.Source()))
 			if err := runOps(doc, script, &toks); err != nil {
 				toks = append(toks, "x"+errToken(err)[1:])
-				if ondemand.Abandoned(doc) {
-					toks = append(toks, "dead")
-				}
+			}
+			if ondemand.Abandoned(doc) {
+				toks = append(toks, "dead")
 			}
 		}
 	}
