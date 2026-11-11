@@ -204,9 +204,8 @@ parse and stream rows, 0.26–0.31× on the DOM and On-Demand `partial_tweets`, 
 `find_tweet` and `top_tweet` rows, 0.33–0.39× on `kostya` and `large_random`. The table is in
 README.md (Performance). The benchmark bodies in `bench.cpp` are v5.1.1's
 `benchmark/<task>/simdjson_{dom,ondemand}.h`; the previous tag has the same ones, so the
-ratios moved only through C++'s own speed-ups (skipping, small documents) and Go's. This run
-did not re-measure the README's streams and On-Demand-over-DOM tables, which come from `make
-bench`.
+ratios moved only through C++'s own speed-ups (skipping, small documents) and Go's. The
+README's streams and On-Demand-over-DOM tables are computed from this run's Go column.
 
 ## 9. Risks
 

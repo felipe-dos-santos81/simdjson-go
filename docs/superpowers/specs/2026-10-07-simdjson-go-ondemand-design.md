@@ -266,7 +266,7 @@ marked **Go**.
   literals, strings, escapes) alone, padded and inside containers; containers including
   ill-formed and truncated ones; scripts over every corpus file (walks, keys, counts, pointers,
   lookups in and out of order); and 4,000 mutated documents. `oracle.cpp` runs each script through
-  C++ `ondemand` (release build) and `regen.sh` records the output in `oracle.jsonl` (30,779
+  C++ `ondemand` (release build) and `regen.sh` records the output in `oracle.jsonl` (30,780
   cases, 6 MB). `TestOracle` replays every case. The script language is documented in
   `oracle.cpp`.
 - **DOM agreement.** A full walk of every corpus file, and of every fuzz input, gives the DOM's
@@ -290,7 +290,7 @@ marked **Go**.
 
 | Risk | Mitigation |
 |---|---|
-| A C++ behaviour the oracle does not cover | 30,779 cases from corpora, edge cases and mutations; fuzzing against the DOM; new cases are one line in `gen.py` |
+| A C++ behaviour the oracle does not cover | 30,780 cases from corpora, edge cases and mutations; fuzzing against the DOM; new cases are one line in `gen.py` |
 | Out-of-range reads in the port (C++ relies on padding) | Every index is bounds-checked; `FuzzOnDemand` runs arbitrary read sequences |
 | The float tasks are close to the 1.5× bar | Measured 1.54–1.58× on a loaded machine; stage 1 is the floor (a third to a half of their time) |
 | Users expect DOM strictness | The README and godoc state "validate what you use", raw name comparison and `AtEnd` |

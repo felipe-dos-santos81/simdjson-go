@@ -34,7 +34,7 @@
 // parse_many or iterate_many in one batch. Its output, per document:
 //   @<current_index> h<hex source>, then w<walk_dom> (dom) or the script's
 //   tokens on the document, plus x<code> if a read failed, then "dead" if
-//   that read abandoned the document (ondemand)
+//   the document is no longer alive (ondemand)
 // and at the end !<code> if the stream failed or ~<truncated_bytes> if not.
 // An up-front comma_delimited_array failure prints only !3.
 #include "simdjson.h"

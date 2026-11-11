@@ -348,6 +348,8 @@ def dead_raw_cases():
         yield case(doc, script=["pint /a", "raw"])
     yield case('{"a":1 "b":2}', script=["pint /b", "rewind", "get a", "int64"])
     yield scase('{"a" 1}\n{"b":2}\n', api="ondemand", script=["pint /a"])
+    # The cursor is past the bracket then, so a later read resumes the object.
+    yield case('{"a":1,"b":2', script=["pint /a", "get a", "int64"])
 
 
 def main():
