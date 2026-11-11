@@ -30770,3 +30770,6 @@
 {"doc": "7b2261223a312c2262223a327d20", "out": "i1 r{\"a\":1,\"b\":2}", "script": ["get a", "int64", "raw"]}
 {"doc": "5b312c325d20", "out": "r[1,2] r[1,2]", "script": ["raw", "raw"]}
 {"doc": "7b226e616d65223a22416c696365222c2274616773223a5b2278222c2279225d2c2261676522203a34322c226f626a223a7b2261223a317d7d", "out": "sAlice r[\"x\",\"y\"] i42 r{\"a\":1} kname,tags,age,obj,", "script": ["obj", "keyread string raw int64 raw"]}
+{"doc": "7b2261223b312c2262223a327d", "out": "!3 !3 !3", "script": ["pint /a", "pint /b", "pint "]}
+{"doc": "7b2261223a31202262223a327d", "out": "i1 !3 !3", "script": ["pint /a", "pint /b", "pint /a"]}
+{"doc": "7b2261223a312c2262223a32", "out": "!28 !28", "script": ["pint /a", "pint /b"]}

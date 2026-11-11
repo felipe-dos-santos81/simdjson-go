@@ -30,10 +30,10 @@
 {"doc": "1e1e201e", "out": "~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b312c3233205b312c32335d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "5b312c3233205b312c32335d", "out": "@0 h5b312c3233205b312c32335d @0 !28", "script": [], "stream": {"api": "ondemand", "format": "whitespace"}}
-{"doc": "5b312c3233205b312c32335d", "out": "@0 h5b312c3233205b312c32335d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "5b312c3233205b312c32335d", "out": "@0 h5b312c3233205b312c32335d x3 dead @0 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b312c3233205b312c32335d205b312c3233205b312c32335d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "5b312c3233205b312c32335d205b312c3233205b312c32335d", "out": "@0 h5b312c3233205b312c32335d205b312c3233205b312c32335d @0 !28", "script": [], "stream": {"api": "ondemand", "format": "whitespace"}}
-{"doc": "5b312c3233205b312c32335d205b312c3233205b312c32335d", "out": "@0 h5b312c3233205b312c32335d205b312c3233205b312c32335d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "5b312c3233205b312c32335d205b312c3233205b312c32335d", "out": "@0 h5b312c3233205b312c32335d205b312c3233205b312c32335d x3 dead @0 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "efbbbf5b315d205b325d", "out": "@0 h5b315d w[i1,] @4 h5b325d w[i2,] ~0", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "efbbbf5b315d205b325d", "out": "@0 h5b315d @4 h5b325d ~0", "script": [], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "efbbbf5b315d205b325d", "out": "@0 h5b315d [i1,] @4 h5b325d [i2,] ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
@@ -84,7 +84,7 @@
 {"doc": "1e6e756c201e7b7d20", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c201e7b7d20", "out": "@1 h6e756c x17 @6 h7b7d x20 ~0", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b3120325d2c7b2261223a", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
-{"doc": "5b3120325d2c7b2261223a", "out": "@0 h5b3120325d x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "comma"}}
+{"doc": "5b3120325d2c7b2261223a", "out": "@0 h5b3120325d x3 dead @0 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "1e6e756c6c1e7b7d1e7b2261223a201e2d322e350a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c1e7b7d1e7b2261223a201e2d322e350a", "out": "@1 h6e756c6c x17 @6 h7b7d x17 @9 h7b2261223a201e2d322e350a x17 @16 h2d322e35 x17 ~0", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "7b2261223a2c0a2d322e352c0a312c0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c0a31653430302c0a5d2c0a31653430302c0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -96,7 +96,7 @@
 {"doc": "5b5d0a31", "out": "@0 h5b5d w[] @3 h31 wi1 ~0", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "5b5d0a31", "out": "@0 h5b5d [] @3 h31 i1 ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "310a3165343030207d3165343030205b312c22615c2262220a2d322e350a", "out": "@0 h31 wi1 @2 !9", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "310a3165343030207d3165343030205b312c22615c2262220a2d322e350a", "out": "@0 h31 i1 @2 h3165343030 x9 @8 h7d31 ? @9 h3165343030 x9 @15 h5b312c22615c2262220a2d322e350a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "310a3165343030207d3165343030205b312c22615c2262220a2d322e350a", "out": "@0 h31 i1 @2 h3165343030 x9 @8 h7d31 ? @9 h3165343030 x9 @15 h5b312c22615c2262220a2d322e350a x3 dead @15 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d1e22615c226222201e5b3120325d201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d1e2d322e350a", "out": "@1 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @27 h22615c226222 wsa\"b @35 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d1e22615c226222201e5b3120325d201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d1e2d322e350a", "out": "@1 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d object @27 h22615c226222 string @35 h5b3120325d array @42 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d object @68 h2d322e35 number ~0", "script": ["type"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e31201e6e756c6c1e7b2261223a312c2261223a327d0a", "out": "@1 h31 wi1 @4 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -128,7 +128,7 @@
 {"doc": "747275650d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d0d0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 h74727565 wtrue @6 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @31 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] ~0", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "747275650d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d0d0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 h74727565 x17 @6 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d i1 @31 h5b312c5b322c7b2261223a337d5d5d x17 ~0", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "7b2261223a3165343030206e756c5b5d206e756c", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "7b2261223a3165343030206e756c5b5d206e756c", "out": "@0 h7b2261223a3165343030206e756c5b5d206e756c x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "7b2261223a3165343030206e756c5b5d206e756c", "out": "@0 h7b2261223a3165343030206e756c5b5d206e756c x28 dead @0 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b5d202c206e756c202c205b312c202c2074727565202c205b5d", "out": "@0 h5b5d w[] @5 !8", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "5b5d202c206e756c202c205b312c202c2074727565202c205b5d", "out": "@0 h5b5d @5 h6e756c ~15", "script": [], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d5b312c7b2261223a", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} ~8", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
@@ -172,7 +172,7 @@
 {"doc": "5b22c3a9222c7b2261223a312c2261223a327d2c31383434363734343037333730393535313631362c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c5b312c32332c226f70656e2c315d", "out": "@0 h22c3a922 ws\\xc3\\xa9 @5 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @19 !10", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b22c3a9222c7b2261223a312c2261223a327d2c31383434363734343037333730393535313631362c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c5b312c32332c226f70656e2c315d", "out": "@0 h22c3a922 @5 h7b2261223a312c2261223a327d @19 h3138343436373434303733373039353531363136 @40 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d ~13", "script": [], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "5b312c32330a31383434363734343037333730393535313631360a7b2261223a0a22c3a9220a5b5d0a5b3120325d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "5b312c32330a31383434363734343037333730393535313631360a7b2261223a0a22c3a9220a5b5d0a5b3120325d", "out": "@0 h5b312c32330a31383434363734343037333730393535313631360a7b2261223a0a22c3a9220a5b5d0a5b3120325d x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "5b312c32330a31383434363734343037333730393535313631360a7b2261223a0a22c3a9220a5b5d0a5b3120325d", "out": "@0 h5b312c32330a31383434363734343037333730393535313631360a7b2261223a0a22c3a9220a5b5d0a5b3120325d x3 dead @0 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e7d1e7b2261223a312c2261223a327d20", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7d1e7b2261223a312c2261223a327d20", "out": "@1 h7d1e7b2261223a312c2261223a327d @3 h7b2261223a312c2261223a327d ~0", "script": [], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b3120325d2c0a5b312c5b322c7b2261223a337d5d5d2c0a7b2261223a2c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a5b312c32332c0a7d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -188,7 +188,7 @@
 {"doc": "7b2261223a202c203138343436373434303733373039353531363136202c2022c3a922202c2022c3a922202c207b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "~68", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "7b2261223a202c203138343436373434303733373039353531363136202c2022c3a922202c2022c3a922202c207b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "~68", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "22c3a9220d0a31653430300d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a5b3120325d0d0a5b5d0d0a5b312c32330d0a5b312c0d0a5b5d", "out": "@0 h22c3a922 ws\\xc3\\xa9 @6 !9", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "22c3a9220d0a31653430300d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a5b3120325d0d0a5b5d0d0a5b312c32330d0a5b312c0d0a5b5d", "out": "@0 h22c3a922 s\\xc3\\xa9 @6 h3165343030 x9 @13 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d {a:{b:[i1,i2,],},c:sx,} @40 h5b3120325d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "22c3a9220d0a31653430300d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a5b3120325d0d0a5b5d0d0a5b312c32330d0a5b312c0d0a5b5d", "out": "@0 h22c3a922 s\\xc3\\xa9 @6 h3165343030 x9 @13 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d {a:{b:[i1,i2,],},c:sx,} @40 h5b3120325d x3 dead @40 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "226f70656e31383434363734343037333730393535313631365b312c0a", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "226f70656e31383434363734343037333730393535313631365b312c0a", "out": "@0 !14", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "7b2261223a312c2261223a327d0d0a7b2261223a312c2261223a327d0d0a6e756c6c0d0a31", "out": "@0 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @15 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @30 h6e756c6c wnull @36 h31 wi1 ~0", "script": [], "stream": {"api": "dom", "format": "newline"}}
@@ -204,7 +204,7 @@
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} ~0", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d i1 ~0", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b312c2022615c2262220a22c3a9225b312c5b312c32330a", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "5b312c2022615c2262220a22c3a9225b312c5b312c32330a", "out": "@0 h5b312c2022615c2262220a22c3a9225b312c5b312c32330a x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "5b312c2022615c2262220a22c3a9225b312c5b312c32330a", "out": "@0 h5b312c2022615c2262220a22c3a9225b312c5b312c32330a x28 dead @0 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b31653430302c7b7d2c31383434363734343037333730393535313631362c2d322e352c5b312c32335d", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b31653430302c7b7d2c31383434363734343037333730393535313631362c2d322e352c5b312c32335d", "out": "@0 h3165343030 x22 @6 h7b7d x20 @9 h3138343436373434303733373039353531363136 x22 @30 h2d322e35 x22 ~5", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "5b5d2c0a31653430302c0a6e756c6c2c0a747275652c0a5b312c3233", "out": "@0 h5b5d w[] @4 !9", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -218,7 +218,7 @@
 {"doc": "5b312c5b322c7b2261223a337d5d5d2c0a6e756c6c", "out": "@0 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @17 h6e756c6c wnull ~0", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "5b312c5b322c7b2261223a337d5d5d2c0a6e756c6c", "out": "@0 h5b312c5b322c7b2261223a337d5d5d [i1,[i2,{a:i3,},],] @17 h6e756c6c null ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5b312c3233226f70656e20226f70656e0a2d322e3522615c2262220a", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "5b312c3233226f70656e20226f70656e0a2d322e3522615c2262220a", "out": "@0 h5b312c3233226f70656e20226f70656e0a2d322e3522615c2262220a x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "5b312c3233226f70656e20226f70656e0a2d322e3522615c2262220a", "out": "@0 h5b312c3233226f70656e20226f70656e0a2d322e3522615c2262220a x3 dead @0 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "22615c2262220a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d202d322e35206e756c6c0a22c3a922207b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a22c3a92220", "out": "@0 h22615c226222 wsa\"b @7 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @33 h2d322e35 wdc004000000000000 @38 h6e756c6c wnull @43 h22c3a922 ws\\xc3\\xa9 @48 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @74 h22c3a922 ws\\xc3\\xa9 ~0", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "22615c2262220a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d202d322e35206e756c6c0a22c3a922207b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a22c3a92220", "out": "@0 h22615c226222 x22 @7 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d i2 @33 h2d322e35 x22 @38 h6e756c6c x22 @43 h22c3a922 x22 @48 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d i2 @74 h22c3a922 x22 ~0", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "1e5b5d201e7d0a", "out": "@1 h5b5d w[] @5 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -236,7 +236,7 @@
 {"doc": "5b312c2022615c2262220a7b2261223a202d322e350a", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "5b312c2022615c2262220a7b2261223a202d322e350a", "out": "@0 h5b312c2022615c2262220a7b2261223a202d322e350a x17 @0 !28", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b312c32330a6e756c6c0a5b312c", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "5b312c32330a6e756c6c0a5b312c", "out": "@0 h5b312c32330a6e756c6c0a5b312c x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "5b312c32330a6e756c6c0a5b312c", "out": "@0 h5b312c32330a6e756c6c0a5b312c x28 dead @0 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "5b6e756c6c2c31653430302c226f70656e2c7b2261223a5d", "out": "@0 h6e756c6c wnull @5 !9", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b6e756c6c2c31653430302c226f70656e2c7b2261223a5d", "out": "@0 h6e756c6c x22 @5 h3165343030 x22 @11 h226f70656e2c7b22 x22 ~3", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "226f70656e0a22615c2262220a5d0a7b2261223a0a5b5d0a5b312c32330a7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "newline"}}
@@ -258,7 +258,7 @@
 {"doc": "5b6e756c2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c5b3120325d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c226f70656e2c31383434363734343037333730393535313631362c5b5d5d", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b6e756c2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c5b3120325d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c226f70656e2c31383434363734343037333730393535313631362c5b5d5d", "out": "@0 h6e756c x17 @4 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d [true,null,] @28 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x20 @54 h5b3120325d x17 @60 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x20 ~29", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "5b312c32330a5b312c0a5b5d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "5b312c32330a5b312c0a5b5d", "out": "@0 h5b312c32330a5b312c0a5b5d x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "5b312c32330a5b312c0a5b5d", "out": "@0 h5b312c32330a5b312c0a5b5d x28 dead @0 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e5d1e22615c2262220a1e22615c2262221e7b7d0a1e5b312c32330a1e2d322e350a1e5b312c32330a", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e5d1e22615c2262220a1e22615c2262221e7b7d0a1e5b312c32330a1e2d322e350a1e5b312c32330a", "out": "@1 h5d1e22 unknown @3 h22615c226222 string @11 h22615c226222 string @18 h7b7d object @22 h5b312c32330a1e2d322e350a1e5b312c32330a array @29 h2d322e35 number @35 h5b312c32330a array @35 !28", "script": ["type"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "6e756c6c", "out": "@0 h6e756c6c wnull ~0", "script": [], "stream": {"api": "dom", "format": "newline"}}
@@ -266,7 +266,7 @@
 {"doc": "5b6e756c2c7b7d2c22c3a9222c5b5d2c5b312c32332c5b312c5b322c7b2261223a337d5d5d2c7b2261223a312c2261223a327d2c7b2261223a312c2261223a327d5d", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b6e756c2c7b7d2c22c3a9222c5b5d2c5b312c32332c5b312c5b322c7b2261223a337d5d5d2c7b2261223a312c2261223a327d2c7b2261223a312c2261223a327d5d", "out": "@0 h6e756c x17 @4 h7b7d x17 @7 h22c3a922 x17 @12 h5b5d e0 ~49", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e5b312c201e5b312c1e5b312c5b322c7b2261223a337d5d5d20", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e5b312c201e5b312c1e5b312c5b322c7b2261223a337d5d5d20", "out": "@1 h5b312c201e5b312c1e5b312c5b322c7b2261223a337d5d5d20 x28 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e5b312c201e5b312c1e5b312c5b322c7b2261223a337d5d5d20", "out": "@1 h5b312c201e5b312c1e5b312c5b322c7b2261223a337d5d5d20 x28 dead @1 !28", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b5d0a5b312c5b322c7b2261223a337d5d5d0a5b312c0a5d0a2d322e353165343030207b2261223a312c2262223a5b747275652c6e756c6c5d7d20", "out": "@0 h5b5d w[] @3 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @19 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "5b5d0a5b312c5b322c7b2261223a337d5d5d0a5b312c0a5d0a2d322e353165343030207b2261223a312c2262223a5b747275652c6e756c6c5d7d20", "out": "@0 h5b5d x17 @3 h5b312c5b322c7b2261223a337d5d5d x17 @19 h5b312c0a5d x17 @25 h2d322e353165343030 x22 @35 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x20 ~0", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "22615c2262222c0a6e756c6c2c0a5d2c0a6e756c6c2c0a5b3120325d2c0a3138343436373434303733373039353531363136", "out": "@0 h22615c226222 wsa\"b @8 h6e756c6c wnull @14 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -274,7 +274,7 @@
 {"doc": "5b312c5b322c7b2261223a337d5d5d0d0a22c3a9220d0a5b5d0d0a6e756c0d0a2d322e350d0a5b312c5b322c7b2261223a337d5d5d0d0a7b7d0d0a3138343436373434303733373039353531363136", "out": "@0 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @17 h22c3a922 ws\\xc3\\xa9 @23 h5b5d w[] @27 !8", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "5b312c5b322c7b2261223a337d5d5d0d0a22c3a9220d0a5b5d0d0a6e756c0d0a2d322e350d0a5b312c5b322c7b2261223a337d5d5d0d0a7b7d0d0a3138343436373434303733373039353531363136", "out": "@0 h5b312c5b322c7b2261223a337d5d5d x17 @17 h22c3a922 x17 @23 h5b5d x17 @27 h6e756c x17 @32 h2d322e35 x17 @38 h5b312c5b322c7b2261223a337d5d5d x17 @55 h7b7d x20 @59 h3138343436373434303733373039353531363136 x17 ~0", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e311e5b312c32331e31653430300a1e74727565201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d201e7b7d0a1e5b3120325d0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@1 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e311e5b312c32331e31653430300a1e74727565201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d201e7b7d0a1e5b3120325d0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@1 h31 x17 @3 h5b312c32331e31653430300a1e74727565201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d201e7b7d0a1e5b3120325d0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e311e5b312c32331e31653430300a1e74727565201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d201e7b7d0a1e5b3120325d0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@1 h31 x17 @3 h5b312c32331e31653430300a1e74727565201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d201e7b7d0a1e5b3120325d0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x3 dead @3 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e22c3a9221e7b7d1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d201e5b312c", "out": "@1 h22c3a922 ws\\xc3\\xa9 @6 h7b7d w{} @9 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @33 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @60 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e22c3a9221e7b7d1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d201e5b312c", "out": "@1 h22c3a922 @6 h7b7d @9 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d @33 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d @60 h5b312c @60 !28", "script": [], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "2d322e352c0a7b2261223a312c2261223a327d", "out": "@0 h2d322e35 wdc004000000000000 @6 h7b2261223a312c2261223a327d w{a:i1,a:i2,} ~0", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -320,7 +320,7 @@
 {"doc": "312c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a7b2261223a312c2261223a327d2c0a5b312c32332c0a31653430302c0a226f70656e", "out": "@0 h31 wi1 @3 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @28 h7b2261223a312c2261223a327d w{a:i1,a:i2,} ~19", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "312c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a7b2261223a312c2261223a327d2c0a5b312c32332c0a31653430302c0a226f70656e", "out": "@0 h31 i1 @3 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @28 h7b2261223a312c2261223a327d x17 ~19", "script": ["int64"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "1e7b7d201e3138343436373434303733373039353531363136201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e5b3120325d1e6e756c201e5b312c20", "out": "@1 h7b7d w{} @5 !10", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7b7d201e3138343436373434303733373039353531363136201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e5b3120325d1e6e756c201e5b312c20", "out": "@1 h7b7d r{} @5 h3138343436373434303733373039353531363136 r18446744073709551616 @27 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d r{\"a\":1,\"b\":[true,null]} @52 h5b3120325d r[1\\x202] @58 h6e756c rnul @63 h5b312c20 x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7b7d201e3138343436373434303733373039353531363136201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e5b3120325d1e6e756c201e5b312c20", "out": "@1 h7b7d r{} @5 h3138343436373434303733373039353531363136 r18446744073709551616 @27 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d r{\"a\":1,\"b\":[true,null]} @52 h5b3120325d r[1\\x202] @58 h6e756c rnul @63 h5b312c20 x28 dead @63 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "31653430300d0a2d322e350d0a7b2261223a312c2261223a327d", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "31653430300d0a2d322e350d0a7b2261223a312c2261223a327d", "out": "@0 h3165343030 number @7 h2d322e35 number @13 h7b2261223a312c2261223a327d object ~0", "script": ["type"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "3138343436373434303733373039353531363136207b2261223a7b2262223a5b312c325d7d2c2263223a2278227d205b312c3233207b7d205b312c5b322c7b2261223a337d5d5d5b312c", "out": "@0 !10", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
@@ -340,7 +340,7 @@
 {"doc": "7d", "out": "~1", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "7d", "out": "~1", "script": [], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e5b312c1e5b312c3233201e5b312c3233201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e22615c22622220", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e5b312c1e5b312c3233201e5b312c3233201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e22615c22622220", "out": "@1 h5b312c1e5b312c3233201e5b312c3233201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e22615c22622220 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e5b312c1e5b312c3233201e5b312c3233201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e22615c22622220", "out": "@1 h5b312c1e5b312c3233201e5b312c3233201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e22615c22622220 x3 dead @1 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b5d", "out": "@0 h5b5d w[] ~0", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "5b5d", "out": "@0 h5b5d r[] ~0", "script": ["raw"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5b312c32332c0a747275652c0a2d322e352c0a2d322e352c0a3138343436373434303733373039353531363136", "out": "~45", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -350,7 +350,7 @@
 {"doc": "5b7b7d2c226f70656e2c22615c2262222c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d5d", "out": "@0 h7b7d w{} @3 h226f70656e2c22 wsopen, @10 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b7b7d2c226f70656e2c22615c2262222c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d5d", "out": "@0 h7b7d x17 @3 h226f70656e2c22 x17 @10 h615c226222 x17 @18 h61223a x17 @23 h62223a x17 @34 h63223a2278227d x17 ~3", "script": ["int64"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "7b2261223a31207b2261223a312c2261223a327d205b312c5b322c7b2261223a337d5d5d313834343637343430373337303935353136313620", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "7b2261223a31207b2261223a312c2261223a327d205b312c5b322c7b2261223a337d5d5d313834343637343430373337303935353136313620", "out": "@0 h7b2261223a31207b2261223a312c2261223a327d205b312c5b322c7b2261223a337d5d5d313834343637343430373337303935353136313620 x3 dead", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "7b2261223a31207b2261223a312c2261223a327d205b312c5b322c7b2261223a337d5d5d313834343637343430373337303935353136313620", "out": "@0 h7b2261223a31207b2261223a312c2261223a327d205b312c5b322c7b2261223a337d5d5d313834343637343430373337303935353136313620 x3 dead @0 !3", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b5d0a5b312c3233", "out": "@0 h5b5d w[] ~5", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "5b5d0a5b312c3233", "out": "@0 h5b5d x17 ~5", "script": ["int64"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "3165343030202c207b2261223a312c2262223a5b747275652c6e756c6c5d7d202c207b2261223a312c2261223a327d202c203138343436373434303733373039353531363136202c207b2261223a202c207b2261223a312c2261223a327d", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -380,7 +380,7 @@
 {"doc": "7b7d0d0a22615c2262220d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a22c3a922", "out": "@0 h7b7d w{} @4 h22615c226222 wsa\"b @12 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @39 h22c3a922 ws\\xc3\\xa9 ~0", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "7b7d0d0a22615c2262220d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a22c3a922", "out": "@0 h7b7d x20 @4 h22615c226222 x17 @12 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x20 @39 h22c3a922 x17 ~0", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "6e756c6c206e756c0a22c3a9220a747275650a5b312c2031383434363734343037333730393535313631365b5d", "out": "@0 h6e756c6c wnull @5 !8", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "6e756c6c206e756c0a22c3a9220a747275650a5b312c2031383434363734343037333730393535313631365b5d", "out": "@0 h6e756c6c null @5 h6e756c x17 @9 h22c3a922 s\\xc3\\xa9 @14 h74727565 true @19 h5b312c2031383434363734343037333730393535313631365b5d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "6e756c6c206e756c0a22c3a9220a747275650a5b312c2031383434363734343037333730393535313631365b5d", "out": "@0 h6e756c6c null @5 h6e756c x17 @9 h22c3a922 s\\xc3\\xa9 @14 h74727565 true @19 h5b312c2031383434363734343037333730393535313631365b5d x3 dead @19 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "7b2261223a312c2261223a327d2022c3a9220a22615c226222207b2261223a312c2261223a327d7b2261223a312c2261223a327d7b2261223a312c2262223a5b747275652c6e756c6c5d7d20747275650a", "out": "@0 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @14 h22c3a922 ws\\xc3\\xa9 @19 h22615c226222 wsa\"b @26 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @39 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @52 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @76 h74727565 wtrue ~0", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "7b2261223a312c2261223a327d2022c3a9220a22615c226222207b2261223a312c2261223a327d7b2261223a312c2261223a327d7b2261223a312c2262223a5b747275652c6e756c6c5d7d20747275650a", "out": "@0 h7b2261223a312c2261223a327d r{\"a\":1,\"a\":2} @14 h22c3a922 r\"\\xc3\\xa9\" @19 h22615c226222 r\"a\\x5c\"b\" @26 h7b2261223a312c2261223a327d r{\"a\":1,\"a\":2} @39 h7b2261223a312c2261223a327d r{\"a\":1,\"a\":2} @52 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d r{\"a\":1,\"b\":[true,null]} @76 h74727565 rtrue ~0", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "226f70656e2c7b7d2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c226f70656e2c5b312c", "out": "@0 h226f70656e2c7b7d2c7b22 wsopen,{},{ @11 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -394,7 +394,7 @@
 {"doc": "1e6e756c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c", "out": "@1 h6e756c x17 ~0", "script": ["int64"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b2d322e352c7d2c22615c2262222c2d322e352c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c7b2261223a312c2261223a327d2c5b312c2c7b2261223a5d", "out": "@0 h2d322e35 wdc004000000000000 @5 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
-{"doc": "5b2d322e352c7d2c22615c2262222c2d322e352c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c7b2261223a312c2261223a327d2c5b312c2c7b2261223a5d", "out": "@0 h2d322e35 r-2.5 @5 h7d2c r} @6 h2c r, @7 h22615c226222 r\"a\\x5c\"b\" @13 h2c r, @14 h2d322e35 r-2.5 @18 h2c r, @19 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d r{\"a\":1,\"b\":[true,null]} @42 h2c r, @43 h7b2261223a312c2261223a327d r{\"a\":1,\"a\":2} @56 h2c r, @57 h5b312c2c7b2261223a x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "array"}}
+{"doc": "5b2d322e352c7d2c22615c2262222c2d322e352c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c7b2261223a312c2261223a327d2c5b312c2c7b2261223a5d", "out": "@0 h2d322e35 r-2.5 @5 h7d2c r} @6 h2c r, @7 h22615c226222 r\"a\\x5c\"b\" @13 h2c r, @14 h2d322e35 r-2.5 @18 h2c r, @19 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d r{\"a\":1,\"b\":[true,null]} @42 h2c r, @43 h7b2261223a312c2261223a327d r{\"a\":1,\"a\":2} @56 h2c r, @57 h5b312c2c7b2261223a x28 dead @57 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "5b5b3120325d2c6e756c5d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b5b3120325d2c6e756c5d", "out": "@0 h5b3120325d r[1\\x202] @6 h6e756c rnul ~0", "script": ["raw"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "6e756c2c0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -414,7 +414,7 @@
 {"doc": "74727565", "out": "@0 h74727565 wtrue ~0", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "74727565", "out": "@0 h74727565 bool ~0", "script": ["type"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a22c3a9220d0a2d322e350d0a5b312c5b322c7b2261223a337d5d5d0d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a5b312c32330d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @27 h22c3a922 ws\\xc3\\xa9 @33 h2d322e35 wdc004000000000000 @39 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @56 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @83 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a22c3a9220d0a2d322e350d0a5b312c5b322c7b2261223a337d5d5d0d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a5b312c32330d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d r{\"a\":{\"b\":[1,2]},\"c\":\"x\"} @27 h22c3a922 r\"\\xc3\\xa9\" @33 h2d322e35 r-2.5 @39 h5b312c5b322c7b2261223a337d5d5d r[1,[2,{\"a\":3}]] @56 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d r{\"a\":{\"b\":[1,2]},\"c\":\"x\"} @83 h5b312c32330d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a22c3a9220d0a2d322e350d0a5b312c5b322c7b2261223a337d5d5d0d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a5b312c32330d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d r{\"a\":{\"b\":[1,2]},\"c\":\"x\"} @27 h22c3a922 r\"\\xc3\\xa9\" @33 h2d322e35 r-2.5 @39 h5b312c5b322c7b2261223a337d5d5d r[1,[2,{\"a\":3}]] @56 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d r{\"a\":{\"b\":[1,2]},\"c\":\"x\"} @83 h5b312c32330d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d x28 dead @83 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e7b7d0a1e5b5d201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e6e756c6c", "out": "@1 h7b7d w{} @5 h5b5d w[] @9 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @36 h6e756c6c wnull ~0", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7b7d0a1e5b5d201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e6e756c6c", "out": "@1 h7b7d @5 h5b5d @9 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d @36 h6e756c6c ~0", "script": [], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5d0a310a5b312c5b322c7b2261223a337d5d5d0a5b312c32330a6e756c6c0a7b2261223a0a2d322e35", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
@@ -454,9 +454,9 @@
 {"doc": "5b7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c5b5d2c22c3a9222c7b7d2c7b2261223a5d", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @24 h5b5d w[] @27 h22c3a922 ws\\xc3\\xa9 @32 h7b7d w{} ~5", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c5b5d2c22c3a9222c7b7d2c7b2261223a5d", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d object @24 h5b5d array @27 h22c3a922 string @32 h7b7d object ~5", "script": ["type"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e747275651e5b3120325d1e7b2261223a201e31201e22c3a922", "out": "@1 !6", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e747275651e5b3120325d1e7b2261223a201e31201e22c3a922", "out": "@1 h74727565 rtrue @6 h5b3120325d r[1\\x202] @12 h7b2261223a201e31201e22c3a922 x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e747275651e5b3120325d1e7b2261223a201e31201e22c3a922", "out": "@1 h74727565 rtrue @6 h5b3120325d r[1\\x202] @12 h7b2261223a201e31201e22c3a922 x28 dead @12 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "6e756c6c0a7b7d0a5b3120325d0a31", "out": "@0 h6e756c6c wnull @5 h7b7d w{} @8 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "6e756c6c0a7b7d0a5b3120325d0a31", "out": "@0 h6e756c6c null @5 h7b7d {} @8 h5b3120325d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "6e756c6c0a7b7d0a5b3120325d0a31", "out": "@0 h6e756c6c null @5 h7b7d {} @8 h5b3120325d x3 dead @8 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e22615c226222201e5b312c201e5b3120325d20", "out": "@1 h22615c226222 wsa\"b @9 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e22615c226222201e5b312c201e5b3120325d20", "out": "@1 h22615c226222 @9 h5b312c201e5b3120325d20 @14 h5b3120325d ~0", "script": [], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c7b7d", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @24 h7b7d w{} ~0", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -496,7 +496,7 @@
 {"doc": "6e756c", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "6e756c", "out": "@0 h6e756c rnul ~0", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "22615c2262220a6e756c6c7b2261223a312c2261223a327d2022615c2262220a7b7d0a5b3120325d202d322e35", "out": "@0 h22615c226222 wsa\"b @7 h6e756c6c wnull @11 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @25 h22615c226222 wsa\"b @32 h7b7d w{} @35 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "22615c2262220a6e756c6c7b2261223a312c2261223a327d2022615c2262220a7b7d0a5b3120325d202d322e35", "out": "@0 h22615c226222 x17 @7 h6e756c6c x17 @11 h7b2261223a312c2261223a327d x17 @25 h22615c226222 x17 @32 h7b7d x17 @35 h5b3120325d x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "22615c2262220a6e756c6c7b2261223a312c2261223a327d2022615c2262220a7b7d0a5b3120325d202d322e35", "out": "@0 h22615c226222 x17 @7 h6e756c6c x17 @11 h7b2261223a312c2261223a327d x17 @25 h22615c226222 x17 @32 h7b7d x17 @35 h5b3120325d x3 dead @35 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "31383434363734343037333730393535313631360a7b2261223a312c2261223a327d0a5b3120325d0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 !10", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "31383434363734343037333730393535313631360a7b2261223a312c2261223a327d0a5b3120325d0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 h3138343436373434303733373039353531363136 x22 @21 h7b2261223a312c2261223a327d x20 @35 h5b3120325d x17 @41 h5b312c5b322c7b2261223a337d5d5d x17 ~0", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "3165343030207b2261223a207b2261223a312c2261223a327d6e756c6c207d0a", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
@@ -551,7 +551,7 @@
 {"doc": "74727565202c2031202c207b2261223a312c2261223a327d202c205d202c203165343030", "out": "@0 h74727565 wtrue @7 h31 wi1 ~25", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "74727565202c2031202c207b2261223a312c2261223a327d202c205d202c203165343030", "out": "@0 h74727565 x17 @7 h31 x17 ~25", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "1e7b2261223a0a", "out": "@1 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7b2261223a0a", "out": "@1 h7b2261223a0a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7b2261223a0a", "out": "@1 h7b2261223a0a x3 dead @1 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "31207b2261223a7b2261223a312c2261223a327d6e756c6c7b7d205b5d205b312c323320", "out": "@0 h31 wi1 @2 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "31207b2261223a7b2261223a312c2261223a327d6e756c6c7b7d205b5d205b312c323320", "out": "@0 h31 x17 @2 h7b2261223a7b2261223a312c2261223a327d6e756c6c7b7d205b5d205b312c323320 {a:i1,a:i2,} @24 h7b7d x20 @27 h5b5d x17 ~6", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b22615c2262222c5b312c32332c5b312c5b322c7b2261223a337d5d5d5d", "out": "@0 h22615c226222 wsa\"b ~21", "script": [], "stream": {"api": "dom", "format": "array"}}
@@ -561,7 +561,7 @@
 {"doc": "1e5b5d0a", "out": "@1 h5b5d w[] ~0", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e5b5d0a", "out": "@1 h5b5d ~0", "script": [], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e7b2261223a1e5b312c32331e313834343637343430373337303935353136313620", "out": "@1 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7b2261223a1e5b312c32331e313834343637343430373337303935353136313620", "out": "@1 h7b2261223a1e5b312c32331e313834343637343430373337303935353136313620 x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7b2261223a1e5b312c32331e313834343637343430373337303935353136313620", "out": "@1 h7b2261223a1e5b312c32331e313834343637343430373337303935353136313620 x28 dead @1 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b2d322e355d", "out": "@0 h2d322e35 x22 ~0", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d201e7b7d1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e5b312c1e5b312c5b322c7b2261223a337d5d5d1e3138343436373434303733373039353531363136", "out": "@1 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @28 h7b7d w{} @31 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @55 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d201e7b7d1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e5b312c1e5b312c5b322c7b2261223a337d5d5d1e3138343436373434303733373039353531363136", "out": "@1 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d object @28 h7b7d object @31 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d object @55 h5b312c1e5b312c5b322c7b2261223a337d5d5d1e3138343436373434303733373039353531363136 array @59 h5b312c5b322c7b2261223a337d5d5d array @75 h3138343436373434303733373039353531363136 number ~0", "script": ["type"], "stream": {"api": "ondemand", "format": "sequence"}}
@@ -606,7 +606,7 @@
 {"doc": "1e31383434363734343037333730393535313631360a1e226f70656e1e5b312c5b322c7b2261223a337d5d5d1e5b312c201e7d0a1e6e756c20", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e31383434363734343037333730393535313631360a1e226f70656e1e5b312c5b322c7b2261223a337d5d5d1e5b312c201e7d0a1e6e756c20", "out": "@0 !14", "script": ["int64"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e5b312c3233201e5b5d", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e5b312c3233201e5b5d", "out": "@1 h5b312c3233201e5b5d x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e5b312c3233201e5b5d", "out": "@1 h5b312c3233201e5b5d x28 dead @1 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "31653430300a22c3a9220a31", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "31653430300a22c3a9220a31", "out": "@0 h3165343030 r1e400 @6 h22c3a922 r\"\\xc3\\xa9\" @11 h31 r1 ~0", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "7b7d0d0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 h7b7d w{} @4 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] ~0", "script": [], "stream": {"api": "dom", "format": "newline"}}
@@ -646,11 +646,11 @@
 {"doc": "747275650a5b312c0a22c3a9220a226f70656e0a226f70656e0a7d0a7b2261223a", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "747275650a5b312c0a22c3a9220a226f70656e0a226f70656e0a7d0a7b2261223a", "out": "@0 !14", "script": ["walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e310a1e6e756c1e31383434363734343037333730393535313631360a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e5b312c5b322c7b2261223a337d5d5d201e6e756c1e5b312c0a", "out": "@1 h31 wi1 @4 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e310a1e6e756c1e31383434363734343037333730393535313631360a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e5b312c5b322c7b2261223a337d5d5d201e6e756c1e5b312c0a", "out": "@1 h31 i1 @4 h6e756c x17 @30 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d {a:i1,b:[true,null,],} @54 h5b312c5b322c7b2261223a337d5d5d [i1,[i2,{a:i3,},],] @71 h6e756c x17 @75 h5b312c0a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e310a1e6e756c1e31383434363734343037333730393535313631360a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e5b312c5b322c7b2261223a337d5d5d201e6e756c1e5b312c0a", "out": "@1 h31 i1 @4 h6e756c x17 @30 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d {a:i1,b:[true,null,],} @54 h5b312c5b322c7b2261223a337d5d5d [i1,[i2,{a:i3,},],] @71 h6e756c x17 @75 h5b312c0a x3 dead @75 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5d20", "out": "~2", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "5d20", "out": "~2", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "7d2c5b312c2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
-{"doc": "7d2c5b312c2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@0 h7d2c r} @1 h2c r, @2 h5b312c2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "comma"}}
+{"doc": "7d2c5b312c2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@0 h7d2c r} @1 h2c r, @2 h5b312c2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x28 dead @2 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5b7b7d2c6e756c2c5b3120325d5d", "out": "@0 h7b7d w{} @3 !8", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b7b7d2c6e756c2c5b3120325d5d", "out": "@0 h7b7d @3 h6e756c @7 h5b3120325d @7 !28", "script": [], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} ~0", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
@@ -692,11 +692,11 @@
 {"doc": "31207b2261223a312c2261223a327d5b5d207b2261223a312c2262223a5b747275652c6e756c6c5d7d0a7d5b312c3233", "out": "@0 h31 wi1 @2 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @15 h5b5d w[] @18 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @42 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "31207b2261223a312c2261223a327d5b5d207b2261223a312c2262223a5b747275652c6e756c6c5d7d0a7d5b312c3233", "out": "@0 h31 i1 @2 h7b2261223a312c2261223a327d {a:i1,a:i2,} @15 h5b5d [] @18 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d {a:i1,b:[true,null,],} @42 h7d5b312c3233 ? ~5", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "6e756c0a6e756c0a31653430300a2d322e350a5b312c0a747275650a22c3a9220a7b7d", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "6e756c0a6e756c0a31653430300a2d322e350a5b312c0a747275650a22c3a9220a7b7d", "out": "@0 h6e756c x17 @4 h6e756c x17 @8 h3165343030 x9 @14 h2d322e35 dc004000000000000 @19 h5b312c0a747275650a22c3a9220a7b7d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "6e756c0a6e756c0a31653430300a2d322e350a5b312c0a747275650a22c3a9220a7b7d", "out": "@0 h6e756c x17 @4 h6e756c x17 @8 h3165343030 x9 @14 h2d322e35 dc004000000000000 @19 h5b312c0a747275650a22c3a9220a7b7d x3 dead @19 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d201e3138343436373434303733373039353531363136201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e7b2261223a312c2261223a327d0a1e5b312c3233201e31653430300a", "out": "@1 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @28 !10", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d201e3138343436373434303733373039353531363136201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e7b2261223a312c2261223a327d0a1e5b312c3233201e31653430300a", "out": "@1 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d object @28 h3138343436373434303733373039353531363136 number @50 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d object @77 h7b2261223a312c2261223a327d object @92 h5b312c3233201e31653430300a array @99 h3165343030 number ~0", "script": ["type"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b3120325d202c2022c3a922202c205b312c5b322c7b2261223a337d5d5d202c207b2261223a312c2261223a327d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
-{"doc": "5b3120325d202c2022c3a922202c205b312c5b322c7b2261223a337d5d5d202c207b2261223a312c2261223a327d", "out": "@0 h5b3120325d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "comma"}}
+{"doc": "5b3120325d202c2022c3a922202c205b312c5b322c7b2261223a337d5d5d202c207b2261223a312c2261223a327d", "out": "@0 h5b3120325d x3 dead @0 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5d0d0a7b2261223a312c2261223a327d0d0a6e756c6c0d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a5b312c5b322c7b2261223a337d5d5d0d0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "5d0d0a7b2261223a312c2261223a327d0d0a6e756c6c0d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a5b312c5b322c7b2261223a337d5d5d0d0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 h5d0d0a7b2261223a312c2261223a327d x17 @3 h7b2261223a312c2261223a327d x17 @18 h6e756c6c x17 @24 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x17 @51 h5b312c5b322c7b2261223a337d5d5d x17 @68 h5b312c5b322c7b2261223a337d5d5d x17 ~0", "script": ["int64"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "5b312c2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c7b7d", "out": "~32", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -712,7 +712,7 @@
 {"doc": "31383434363734343037333730393535313631360a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a5b5d", "out": "@0 !10", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "31383434363734343037333730393535313631360a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a5b5d", "out": "@0 h3138343436373434303733373039353531363136 number @21 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d object @47 h5b5d array ~0", "script": ["type"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "1e7b2261223a312c2261223a327d0a1e31383434363734343037333730393535313631360a1e6e756c6c1e5b312c3233201e5b3120325d0a1e74727565", "out": "@1 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @16 !10", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7b2261223a312c2261223a327d0a1e31383434363734343037333730393535313631360a1e6e756c6c1e5b312c3233201e5b3120325d0a1e74727565", "out": "@1 h7b2261223a312c2261223a327d x17 @16 h3138343436373434303733373039353531363136 x17 @38 h6e756c6c x17 @43 h5b312c3233201e5b3120325d0a1e74727565 x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7b2261223a312c2261223a327d0a1e31383434363734343037333730393535313631360a1e6e756c6c1e5b312c3233201e5b3120325d0a1e74727565", "out": "@1 h7b2261223a312c2261223a327d x17 @16 h3138343436373434303733373039353531363136 x17 @38 h6e756c6c x17 @43 h5b312c3233201e5b3120325d0a1e74727565 x3 dead @43 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e226f70656e0a1e22c3a922201e2d322e350a1e226f70656e", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e226f70656e0a1e22c3a922201e2d322e350a1e226f70656e", "out": "@0 !14", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a5b312c5b322c7b2261223a337d5d5d0a2d322e350a5b312c0a7b2261223a312c2261223a327d", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @26 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @42 h2d322e35 wdc004000000000000 ~17", "script": [], "stream": {"api": "dom", "format": "newline"}}
@@ -728,7 +728,7 @@
 {"doc": "5b7d2c5d2c31383434363734343037333730393535313631362c31653430302c312c7d2c22615c2262222c7b7d5d", "out": "~44", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b7d2c5d2c31383434363734343037333730393535313631362c31653430302c312c7d2c22615c2262222c7b7d5d", "out": "~44", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e7d1e5d0a1e5b312c3233201e6e756c", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7d1e5d0a1e5b312c3233201e6e756c", "out": "@1 h7d1e5d0a1e5b x17 @3 h5d0a1e5b312c3233201e6e756c x17 @6 h5b312c3233201e6e756c x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7d1e5d0a1e5b312c3233201e6e756c", "out": "@1 h7d1e5d0a1e5b x17 @3 h5d0a1e5b312c3233201e6e756c x17 @6 h5b312c3233201e6e756c x3 dead @6 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b5d2c31653430305d", "out": "~7", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b5d2c31653430305d", "out": "~7", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "7d202c206e756c202c205b5d202c203165343030202c207b2261223a312c2262223a5b747275652c6e756c6c5d7d202c203138343436373434303733373039353531363136202c205b312c3233202c2022615c226222", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -746,7 +746,7 @@
 {"doc": "22615c2262220a6e756c0a747275650a5b5d", "out": "@0 h22615c226222 wsa\"b @7 !8", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "22615c2262220a6e756c0a747275650a5b5d", "out": "@0 h22615c226222 string @7 h6e756c null @11 h74727565 bool @16 h5b5d array ~0", "script": ["type"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "7b2261223a0d0a6e756c0d0a7b7d0d0a22615c2262220d0a5b5d0d0a74727565", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "7b2261223a0d0a6e756c0d0a7b7d0d0a22615c2262220d0a5b5d0d0a74727565", "out": "@0 h7b2261223a0d0a6e756c0d0a7b7d0d0a22615c2262220d0a5b5d0d0a74727565 x3 dead", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "7b2261223a0d0a6e756c0d0a7b7d0d0a22615c2262220d0a5b5d0d0a74727565", "out": "@0 h7b2261223a0d0a6e756c0d0a7b7d0d0a22615c2262220d0a5b5d0d0a74727565 x3 dead @0 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "7b7d205b312c7d", "out": "@0 h7b7d w{} ~4", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "7b7d205b312c7d", "out": "@0 h7b7d x20 ~4", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b5d0a6e756c", "out": "@0 h5b5d w[] @3 !8", "script": [], "stream": {"api": "dom", "format": "newline"}}
@@ -776,9 +776,9 @@
 {"doc": "7d202c2022c3a922", "out": "~8", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "7d202c2022c3a922", "out": "~8", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "7b2261223a2c7d2c22c3a9222c226f70656e2c31383434363734343037333730393535313631362c5b312c3233", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "comma"}}
-{"doc": "7b2261223a2c7d2c22c3a9222c226f70656e2c31383434363734343037333730393535313631362c5b312c3233", "out": "@0 h7b2261223a2c7d x3 dead", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "comma"}}
+{"doc": "7b2261223a2c7d2c22c3a9222c226f70656e2c31383434363734343037333730393535313631362c5b312c3233", "out": "@0 h7b2261223a2c7d x3 dead @0 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5b5b312c2c22615c2262222c22615c2262222c6e756c6c2c5b3120325d5d", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "array"}}
-{"doc": "5b5b312c2c22615c2262222c22615c2262222c6e756c6c2c5b3120325d5d", "out": "@0 h5b312c2c22615c2262222c22615c2262222c6e756c6c2c5b3120325d x28 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "array"}}
+{"doc": "5b5b312c2c22615c2262222c22615c2262222c6e756c6c2c5b3120325d5d", "out": "@0 h5b312c2c22615c2262222c22615c2262222c6e756c6c2c5b3120325d x28 dead @0 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e226f70656e0a1e7b2261223a312c2261223a327d1e7b2261223a", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e226f70656e0a1e7b2261223a312c2261223a327d1e7b2261223a", "out": "@0 !14", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b7b2261223a312c2261223a327d2c312c6e756c6c5d", "out": "@0 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @14 h31 wi1 @16 h6e756c6c wnull ~0", "script": [], "stream": {"api": "dom", "format": "array"}}
@@ -798,7 +798,7 @@
 {"doc": "7b2261223a0a226f70656e0a31653430300a5b312c3233", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "7b2261223a0a226f70656e0a31653430300a5b312c3233", "out": "@0 !14", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "5b31383434363734343037333730393535313631362c7b2261223a2c5d2c5b312c2c31383434363734343037333730393535313631362c7d2c5b5d2c22615c2262225d", "out": "@0 !10", "script": [], "stream": {"api": "dom", "format": "array"}}
-{"doc": "5b31383434363734343037333730393535313631362c7b2261223a2c5d2c5b312c2c31383434363734343037333730393535313631362c7d2c5b5d2c22615c2262225d", "out": "@0 h3138343436373434303733373039353531363136 x17 @21 h7b2261223a2c5d x3 dead", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "array"}}
+{"doc": "5b31383434363734343037333730393535313631362c7b2261223a2c5d2c5b312c2c31383434363734343037333730393535313631362c7d2c5b5d2c22615c2262225d", "out": "@0 h3138343436373434303733373039353531363136 x17 @21 h7b2261223a2c5d x3 dead @21 !3", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "5b31383434363734343037333730393535313631362c747275652c5b5d2c22615c2262222c6e756c6c2c7d2c312c22615c2262225d", "out": "@0 !10", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b31383434363734343037333730393535313631362c747275652c5b5d2c22615c2262222c6e756c6c2c7d2c312c22615c2262225d", "out": "@0 h3138343436373434303733373039353531363136 @21 h74727565 @26 h5b5d @29 h22615c226222 ~15", "script": [], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "5b747275652c5b5d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d5d", "out": "@0 h74727565 wtrue @5 h5b5d w[] @8 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} ~0", "script": [], "stream": {"api": "dom", "format": "array"}}
@@ -813,7 +813,7 @@
 {"doc": "5b22c3a9222c7b2261223a312c2261223a327d2c22615c2262222c7d5d", "out": "@0 h22c3a922 ws\\xc3\\xa9 @5 h7b2261223a312c2261223a327d w{a:i1,a:i2,} ~8", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b22c3a9222c7b2261223a312c2261223a327d2c22615c2262222c7d5d", "out": "@0 h22c3a922 x17 @5 h7b2261223a312c2261223a327d x17 ~8", "script": ["int64"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "7b2261223a0d0a7b2261223a312c2261223a327d0d0a5d0d0a31653430300d0a22615c2262220d0a22c3a922", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "7b2261223a0d0a7b2261223a312c2261223a327d0d0a5d0d0a31653430300d0a22615c2262220d0a22c3a922", "out": "@0 h7b2261223a0d0a7b2261223a312c2261223a327d0d0a5d x3 dead", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "7b2261223a0d0a7b2261223a312c2261223a327d0d0a5d0d0a31653430300d0a22615c2262220d0a22c3a922", "out": "@0 h7b2261223a0d0a7b2261223a312c2261223a327d0d0a5d x3 dead @0 !3", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e5b3120325d0a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d201e7b2261223a312c2261223a327d", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e5b3120325d0a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d201e7b2261223a312c2261223a327d", "out": "@1 h5b3120325d x17 @8 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @33 h7b2261223a312c2261223a327d x17 ~0", "script": ["int64"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e5b5d1e5b312c32330a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d201e3138343436373434303733373039353531363136201e5b3120325d201e5b5d0a1e3120", "out": "@1 h5b5d w[] @4 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -831,7 +831,7 @@
 {"doc": "5b22615c2262222c5b312c5b322c7b2261223a337d5d5d2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c5b312c2c2d322e352c22c3a9225d", "out": "@0 h22615c226222 wsa\"b @7 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @23 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} ~13", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b22615c2262222c5b312c5b322c7b2261223a337d5d5d2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c5b312c2c2d322e352c22c3a9225d", "out": "@0 h22615c226222 x17 @7 h5b312c5b322c7b2261223a337d5d5d e2 @23 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 ~13", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "5b312c5d2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c312c7d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d5d", "out": "@0 h31 wi1 @2 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
-{"doc": "5b312c5d2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c312c7d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d5d", "out": "@0 h31 r1 @2 h5d2c r] @3 h2c r, @4 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c312c7d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "array"}}
+{"doc": "5b312c5d2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c312c7d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d5d", "out": "@0 h31 r1 @2 h5d2c r] @3 h2c r, @4 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c312c7d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x28 dead @4 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "5b747275652c5b312c32332c31383434363734343037333730393535313631362c747275652c31653430305d", "out": "@0 h74727565 wtrue ~37", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b747275652c5b312c32332c31383434363734343037333730393535313631362c747275652c31653430305d", "out": "@0 h74727565 ~37", "script": [], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c3165343030", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @26 !9", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -847,7 +847,7 @@
 {"doc": "1e7b2261223a312c2261223a327d201e6e756c", "out": "@1 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @16 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7b2261223a312c2261223a327d201e6e756c", "out": "@1 h7b2261223a312c2261223a327d r{\"a\":1,\"a\":2} @16 h6e756c rnul ~0", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e7b2261223a201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e5b312c5b322c7b2261223a337d5d5d201e311e31653430300a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e7b7d201e6e756c6c", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7b2261223a201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e5b312c5b322c7b2261223a337d5d5d201e311e31653430300a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e7b7d201e6e756c6c", "out": "@1 h7b2261223a201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e5b312c5b322c7b2261223a337d5d5d201e311e31653430300a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e7b7d201e6e756c6c x3 dead", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7b2261223a201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e5b312c5b322c7b2261223a337d5d5d201e311e31653430300a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e7b7d201e6e756c6c", "out": "@1 h7b2261223a201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e5b312c5b322c7b2261223a337d5d5d201e311e31653430300a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e7b7d201e6e756c6c x3 dead @1 !3", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b312c0d0a5d0d0a6e756c", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "5b312c0d0a5d0d0a6e756c", "out": "@0 h5b312c0d0a5d x17 @5 h5d0d0a6e x17 @8 h6e756c x17 ~0", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "7b7d5b5d207b2261223a312c2261223a327d0a7b2261223a312c2261223a327d20", "out": "@0 h7b7d w{} @2 h5b5d w[] @5 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @19 h7b2261223a312c2261223a327d w{a:i1,a:i2,} ~0", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
@@ -885,7 +885,7 @@
 {"doc": "5b312c5b5d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c7d2c31383434363734343037333730393535313631362c22c3a9222c747275652c7b2261223a5d", "out": "@0 h31 wi1 @2 h5b5d w[] @5 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @31 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b312c5b5d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c7d2c31383434363734343037333730393535313631362c22c3a9222c747275652c7b2261223a5d", "out": "@0 h31 x17 @2 h5b5d x17 @5 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d ka,c, @31 h7d2c x17 @32 h2c x17 @32 !28", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e6e756c0a1e5b312c201e7b2261223a312c2261223a327d201e22615c226222201e5b3120325d1e5b312c32330a1e5b5d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c201e7b2261223a312c2261223a327d201e22615c226222201e5b3120325d1e5b312c32330a1e5b5d", "out": "@1 h6e756c rnul @6 h5b312c201e7b2261223a312c2261223a327d201e22615c226222201e5b3120325d1e5b312c32330a1e5b5d x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c201e7b2261223a312c2261223a327d201e22615c226222201e5b3120325d1e5b312c32330a1e5b5d", "out": "@1 h6e756c rnul @6 h5b312c201e7b2261223a312c2261223a327d201e22615c226222201e5b3120325d1e5b312c32330a1e5b5d x28 dead @6 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e31201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e6e756c", "out": "@1 h31 wi1 @4 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @31 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e31201e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a1e6e756c", "out": "@1 h31 x17 @4 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x20 @31 h6e756c x17 ~0", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e311e6e756c0a1e22c3a922201e226f70656e0a1e7d201e6e756c6c20", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -897,15 +897,15 @@
 {"doc": "1e5b312c1e3120", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e5b312c1e3120", "out": "@1 h5b312c1e3120 x17 @5 h31 x17 ~0", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b5b3120325d2c5d2c6e756c5d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
-{"doc": "5b5b3120325d2c5d2c6e756c5d", "out": "@0 h5b3120325d2c5d2c6e756c x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "array"}}
+{"doc": "5b5b3120325d2c5d2c6e756c5d", "out": "@0 h5b3120325d2c5d2c6e756c x28 dead @0 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e7d201e311e7b7d1e5b3120325d201e31383434363734343037333730393535313631360a1e22c3a92220", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7d201e311e7b7d1e5b3120325d201e31383434363734343037333730393535313631360a1e22c3a92220", "out": "@1 h7d201e31 x17 @4 h31 i1 @6 h7b7d x17 @9 h5b3120325d x17 @16 h3138343436373434303733373039353531363136 x17 @38 h22c3a922 x17 ~0", "script": ["int64"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "7b2261223a205b5d0a5b5d0a31653430307b2261223a5b312c5b322c7b2261223a337d5d5d0a", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "7b2261223a205b5d0a5b5d0a31653430307b2261223a5b312c5b322c7b2261223a337d5d5d0a", "out": "@0 h7b2261223a205b5d0a5b5d0a31653430307b2261223a5b312c5b322c7b2261223a337d5d5d0a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "7b2261223a205b5d0a5b5d0a31653430307b2261223a5b312c5b322c7b2261223a337d5d5d0a", "out": "@0 h7b2261223a205b5d0a5b5d0a31653430307b2261223a5b312c5b322c7b2261223a337d5d5d0a x3 dead @0 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b5d202c206e756c202c205b312c", "out": "@0 h5b5d w[] @5 !8", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "5b5d202c206e756c202c205b312c", "out": "@0 h5b5d x17 @5 h6e756c x22 ~3", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5b5d2c0a7d2c0a6e756c2c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a7b7d", "out": "@0 h5b5d w[] @4 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
-{"doc": "5b5d2c0a7d2c0a6e756c2c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a7b7d", "out": "@0 h5b5d r[] @4 h7d2c r} @5 h2c r, @7 h6e756c rnul @10 h2c r, @12 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a7b7d x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "comma"}}
+{"doc": "5b5d2c0a7d2c0a6e756c2c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a7b7d", "out": "@0 h5b5d r[] @4 h7d2c r} @5 h2c r, @7 h6e756c rnul @10 h2c r, @12 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a7b7d x28 dead @12 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "22c3a922", "out": "@0 h22c3a922 ws\\xc3\\xa9 ~0", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "22c3a922", "out": "@0 h22c3a922 x17 ~0", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "1e7d0a1e6e756c6c201e7b7d20", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -913,9 +913,9 @@
 {"doc": "22c3a9220d0a31383434363734343037333730393535313631360d0a3165343030", "out": "@0 h22c3a922 ws\\xc3\\xa9 @6 !10", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "22c3a9220d0a31383434363734343037333730393535313631360d0a3165343030", "out": "@0 h22c3a922 r\"\\xc3\\xa9\" @6 h3138343436373434303733373039353531363136 r18446744073709551616 @28 h3165343030 r1e400 ~0", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "5b3120325d0d0a310d0a5d0d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a6e756c6c0d0a74727565", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "5b3120325d0d0a310d0a5d0d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a6e756c6c0d0a74727565", "out": "@0 h5b3120325d x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "5b3120325d0d0a310d0a5d0d0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0d0a6e756c6c0d0a74727565", "out": "@0 h5b3120325d x3 dead @0 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "2d322e357b2261223a312c2262223a5b747275652c6e756c6c5d7d0a7b2261223a0a7b2261223a312c2261223a327d7b2261223a312c2262223a5b747275652c6e756c6c5d7d207b2261223a312c2261223a327d5b312c32330a", "out": "@0 h2d322e35 wdc004000000000000 @4 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @28 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "2d322e357b2261223a312c2262223a5b747275652c6e756c6c5d7d0a7b2261223a0a7b2261223a312c2261223a327d7b2261223a312c2262223a5b747275652c6e756c6c5d7d207b2261223a312c2261223a327d5b312c32330a", "out": "@0 h2d322e35 x17 @4 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d [true,null,] @28 h7b2261223a0a7b2261223a312c2261223a327d7b2261223a312c2262223a5b747275652c6e756c6c5d7d207b2261223a312c2261223a327d5b312c32330a x3 dead", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "2d322e357b2261223a312c2262223a5b747275652c6e756c6c5d7d0a7b2261223a0a7b2261223a312c2261223a327d7b2261223a312c2262223a5b747275652c6e756c6c5d7d207b2261223a312c2261223a327d5b312c32330a", "out": "@0 h2d322e35 x17 @4 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d [true,null,] @28 h7b2261223a0a7b2261223a312c2261223a327d7b2261223a312c2262223a5b747275652c6e756c6c5d7d207b2261223a312c2261223a327d5b312c32330a x3 dead @28 !3", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "6e756c6c2c2d322e352c226f70656e", "out": "@0 h6e756c6c wnull @5 h2d322e35 wdc004000000000000 ~5", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "6e756c6c2c2d322e352c226f70656e", "out": "@0 h6e756c6c x22 @5 h2d322e35 x22 ~5", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "7b2261223a2c0a2d322e35", "out": "~11", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -944,7 +944,7 @@
 {"doc": "5b31383434363734343037333730393535313631362c5b312c5b322c7b2261223a337d5d5d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c5b312c32335d", "out": "@0 !10", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b31383434363734343037333730393535313631362c5b312c5b322c7b2261223a337d5d5d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c5b312c32335d", "out": "@0 h3138343436373434303733373039353531363136 x17 @21 h5b312c5b322c7b2261223a337d5d5d x17 @37 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x17 ~5", "script": ["int64"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e6e756c1e5d0a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e7b2261223a201e7b2261223a312c2261223a327d0a1e6e756c201e5b3120325d0a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c1e5d0a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e7b2261223a201e7b2261223a312c2261223a327d0a1e6e756c201e5b3120325d0a", "out": "@1 h6e756c x17 @5 h5d0a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @8 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @33 h7b2261223a201e7b2261223a312c2261223a327d0a1e6e756c201e5b3120325d0a x17 @40 h7b2261223a312c2261223a327d x17 @55 h6e756c x17 @60 h5b3120325d x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c1e5d0a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e7b2261223a201e7b2261223a312c2261223a327d0a1e6e756c201e5b3120325d0a", "out": "@1 h6e756c x17 @5 h5d0a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @8 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @33 h7b2261223a201e7b2261223a312c2261223a327d0a1e6e756c201e5b3120325d0a x17 @40 h7b2261223a312c2261223a327d x17 @55 h6e756c x17 @60 h5b3120325d x3 dead @60 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b5b312c5b322c7b2261223a337d5d5d2c31653430305d", "out": "@0 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @16 !9", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b5b312c5b322c7b2261223a337d5d5d2c31653430305d", "out": "@0 h5b312c5b322c7b2261223a337d5d5d x17 @16 h3165343030 x17 ~0", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e7b2261223a1e2d322e350a1e6e756c1e3165343030201e6e756c0a1e6e756c6c1e7d20", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -990,7 +990,7 @@
 {"doc": "31383434363734343037333730393535313631362c0a5b312c5b322c7b2261223a337d5d5d2c0a226f70656e2c0a5b5d2c0a7b7d2c0a7b7d2c0a7d2c0a3165343030", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "31383434363734343037333730393535313631362c0a5b312c5b322c7b2261223a337d5d5d2c0a226f70656e2c0a5b5d2c0a7b7d2c0a7b7d2c0a7d2c0a3165343030", "out": "@0 !14", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a5b312c32330a5b5d0a7b2261223a0a7d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @24 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a5b312c32330a5b5d0a7b2261223a0a7d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d ka,b, @24 h5b312c32330a5b5d0a7b2261223a0a7d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @30 h5b5d x17 @33 h7b2261223a0a7d x3 dead", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a5b312c32330a5b5d0a7b2261223a0a7d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d ka,b, @24 h5b312c32330a5b5d0a7b2261223a0a7d0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @30 h5b5d x17 @33 h7b2261223a0a7d x3 dead @33 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "5b312c5b322c7b2261223a337d5d5d5b3120325d", "out": "@0 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @15 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "5b312c5b322c7b2261223a337d5d5d5b3120325d", "out": "@0 h5b312c5b322c7b2261223a337d5d5d x17 @15 h5b3120325d x17 @15 !28", "script": ["int64"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "5b7b2261223a2c5b312c5b322c7b2261223a337d5d5d2c5d2c5b5d2c7b7d2c5b3120325d2c22c3a9225d", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "array"}}
@@ -998,7 +998,7 @@
 {"doc": "310a", "out": "@0 h31 wi1 ~0", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "310a", "out": "@0 h31 r1 ~0", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "7b2261223a2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c31383434363734343037333730393535313631362c22c3a9222c7d2c7b7d", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "comma"}}
-{"doc": "7b2261223a2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c31383434363734343037333730393535313631362c22c3a9222c7d2c7b7d", "out": "@0 h7b2261223a2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c31383434363734343037333730393535313631362c22c3a9222c7d x3 dead", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
+{"doc": "7b2261223a2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c31383434363734343037333730393535313631362c22c3a9222c7d2c7b7d", "out": "@0 h7b2261223a2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c31383434363734343037333730393535313631362c22c3a9222c7d x3 dead @0 !3", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "1e7b2261223a312c2261223a327d0a1e226f70656e201e2d322e350a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e7b7d1e7d0a", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7b2261223a312c2261223a327d0a1e226f70656e201e2d322e350a1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e7b7d1e7d0a", "out": "@0 !14", "script": ["int64"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b7b2261223a312c2261223a327d2c5b3120325d2c7d2c5b312c2c5b3120325d2c747275655d", "out": "@0 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @14 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
@@ -1018,7 +1018,7 @@
 {"doc": "5b31653430302c22c3a9222c7b2261223a312c2261223a327d5d", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b31653430302c22c3a9222c7b2261223a312c2261223a327d5d", "out": "@0 h3165343030 x9 @6 h22c3a922 s\\xc3\\xa9 @11 h7b2261223a312c2261223a327d {a:i1,a:i2,} ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "7b2261223a0a6e756c206e756c20747275650a6e756c205b312c5b322c7b2261223a337d5d5d6e756c0a22c3a922", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "7b2261223a0a6e756c206e756c20747275650a6e756c205b312c5b322c7b2261223a337d5d5d6e756c0a22c3a922", "out": "@0 h7b2261223a0a6e756c206e756c20747275650a6e756c205b312c5b322c7b2261223a337d5d5d6e756c0a22c3a922 x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "7b2261223a0a6e756c206e756c20747275650a6e756c205b312c5b322c7b2261223a337d5d5d6e756c0a22c3a922", "out": "@0 h7b2261223a0a6e756c206e756c20747275650a6e756c205b312c5b322c7b2261223a337d5d5d6e756c0a22c3a922 x28 dead @0 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "1e5b312c32331e5d0a1e226f70656e20", "out": "@1 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e5b312c32331e5d0a1e226f70656e20", "out": "@1 h5b312c32331e5d x17 @7 h5d0a1e226f70656e20 x17 ~6", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c1e5b312c201e22c3a9220a1e5b312c0a1e5b312c201e7b2261223a0a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -1066,7 +1066,7 @@
 {"doc": "6e756c6c0a3165343030", "out": "@0 h6e756c6c wnull @5 !9", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "6e756c6c0a3165343030", "out": "@0 h6e756c6c x17 @5 h3165343030 x17 ~0", "script": ["int64"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e6e756c6c1e7b7d201e31383434363734343037333730393535313631361e5d1e31653430300a1e6e756c6c201e5b312c32330a1e5b312c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e7b7d201e31383434363734343037333730393535313631361e5d1e31653430300a1e6e756c6c201e5b312c32330a1e5b312c", "out": "@1 h6e756c6c x17 @6 h7b7d x17 @10 h3138343436373434303733373039353531363136 x17 @31 h5d1e31 x17 @33 h3165343030 x17 @40 h6e756c6c x17 @46 h5b312c32330a1e5b312c x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e7b7d201e31383434363734343037333730393535313631361e5d1e31653430300a1e6e756c6c201e5b312c32330a1e5b312c", "out": "@1 h6e756c6c x17 @6 h7b7d x17 @10 h3138343436373434303733373039353531363136 x17 @31 h5d1e31 x17 @33 h3165343030 x17 @40 h6e756c6c x17 @46 h5b312c32330a1e5b312c x3 dead @46 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c7d2c5b312c3233", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @24 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c7d2c5b312c3233", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @24 h7d2c x17 @25 h2c x17 @25 !28", "script": ["int64"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5b5d2c5b5d2c7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c5d5d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
@@ -1078,7 +1078,7 @@
 {"doc": "5b312c5b322c7b2261223a337d5d5d2c0a226f70656e", "out": "@0 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] ~5", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "5b312c5b322c7b2261223a337d5d5d2c0a226f70656e", "out": "@0 h5b312c5b322c7b2261223a337d5d5d x17 ~5", "script": ["ptr /a/b/1", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "7b2261223a312c2261223a327d20747275650a7b2261223a0a7b2261223a312c2261223a327d6e756c6c205b5d", "out": "@0 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @14 h74727565 wtrue @19 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "7b2261223a312c2261223a327d20747275650a7b2261223a0a7b2261223a312c2261223a327d6e756c6c205b5d", "out": "@0 h7b2261223a312c2261223a327d x20 @14 h74727565 x17 @19 h7b2261223a0a7b2261223a312c2261223a327d6e756c6c205b5d x3 dead", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "7b2261223a312c2261223a327d20747275650a7b2261223a0a7b2261223a312c2261223a327d6e756c6c205b5d", "out": "@0 h7b2261223a312c2261223a327d x20 @14 h74727565 x17 @19 h7b2261223a0a7b2261223a312c2261223a327d6e756c6c205b5d x3 dead @19 !3", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "7b2261223a0d0a31383434363734343037333730393535313631360d0a7b2261223a", "out": "@0 !10", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "7b2261223a0d0a31383434363734343037333730393535313631360d0a7b2261223a", "out": "@0 h7b2261223a0d0a31383434363734343037333730393535313631360d0a7b2261223a B18446744073709551616\\x0d\\x0a{\"a\": ~5", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "310a7b2261223a312c2262223a5b747275652c6e756c6c5d7d6e756c6c0a2d322e350a6e756c203165343030205d", "out": "@0 h31 wi1 @2 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @25 h6e756c6c wnull @30 h2d322e35 wdc004000000000000 @35 !8", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
@@ -1119,7 +1119,7 @@
 {"doc": "1e6e756c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e311e5b312c5b322c7b2261223a337d5d5d0a1e5b312c5b322c7b2261223a337d5d5d0a1e74727565201e6e756c0a1e5b312c323320", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d1e311e5b312c5b322c7b2261223a337d5d5d0a1e5b312c5b322c7b2261223a337d5d5d0a1e74727565201e6e756c0a1e5b312c323320", "out": "@1 h6e756c x17 @5 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d [true,null,] @29 h31 x17 @31 h5b312c5b322c7b2261223a337d5d5d x17 @48 h5b312c5b322c7b2261223a337d5d5d x17 @65 h74727565 x17 @71 h6e756c x17 @76 h5b312c323320 x17 @76 !28", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e22c3a922201e7b2261223a201e5b312c32330a1e3138343436373434303733373039353531363136201e6e756c", "out": "@1 h22c3a922 ws\\xc3\\xa9 @7 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e22c3a922201e7b2261223a201e5b312c32330a1e3138343436373434303733373039353531363136201e6e756c", "out": "@1 h22c3a922 x17 @7 h7b2261223a201e5b312c32330a1e3138343436373434303733373039353531363136201e6e756c x3 dead", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e22c3a922201e7b2261223a201e5b312c32330a1e3138343436373434303733373039353531363136201e6e756c", "out": "@1 h22c3a922 x17 @7 h7b2261223a201e5b312c32330a1e3138343436373434303733373039353531363136201e6e756c x3 dead @7 !3", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "2d322e3522c3a9227b2261223a7b2262223a5b312c325d7d2c2263223a2278227d31383434363734343037333730393535313631367d5b312c32330a2d322e35207b2261223a", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "2d322e3522c3a9227b2261223a7b2262223a5b312c325d7d2c2263223a2278227d31383434363734343037333730393535313631367d5b312c32330a2d322e35207b2261223a", "out": "@0 h2d322e3522c3a922 x17 @8 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d {b:[i1,i2,],} @33 h3138343436373434303733373039353531363136 x17 @53 h7d5b312c32330a2d322e35207b2261223a x17 @54 h5b312c32330a2d322e35207b2261223a x17 @54 !28", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "1e31", "out": "@1 h31 wi1 ~0", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -1159,7 +1159,7 @@
 {"doc": "1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d1e747275651e7b7d201e6e756c201e7b2261223a20", "out": "@1 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @27 !6", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d1e747275651e7b7d201e6e756c201e7b2261223a20", "out": "@1 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d object @27 h74727565 bool @32 h7b7d object @36 h6e756c null @41 h7b2261223a20 object @41 !28", "script": ["type"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "5b5d2c0a5b312c32332c0a31383434363734343037333730393535313631362c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a2d322e352c0a5b3120325d2c0a6e756c6c2c0a5b312c3233", "out": "@0 h5b5d w[] @4 !10", "script": [], "stream": {"api": "dom", "format": "comma"}}
-{"doc": "5b5d2c0a5b312c32332c0a31383434363734343037333730393535313631362c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a2d322e352c0a5b3120325d2c0a6e756c6c2c0a5b312c3233", "out": "@0 h5b5d r[] @4 h5b312c32332c0a31383434363734343037333730393535313631362c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a2d322e352c0a5b3120325d2c0a6e756c6c2c0a5b312c3233 x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "comma"}}
+{"doc": "5b5d2c0a5b312c32332c0a31383434363734343037333730393535313631362c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a2d322e352c0a5b3120325d2c0a6e756c6c2c0a5b312c3233", "out": "@0 h5b5d r[] @4 h5b312c32332c0a31383434363734343037333730393535313631362c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a2d322e352c0a5b3120325d2c0a6e756c6c2c0a5b312c3233 x28 dead @4 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a747275652c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a5b312c5b322c7b2261223a337d5d5d2c0a7b2261223a2c0a22615c2262222c0a5b312c5b322c7b2261223a337d5d5d2c0a6e756c", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @25 h74727565 wtrue @31 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @56 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] ~35", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a747275652c0a7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c0a5b312c5b322c7b2261223a337d5d5d2c0a7b2261223a2c0a22615c2262222c0a5b312c5b322c7b2261223a337d5d5d2c0a6e756c", "out": "@0 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @25 h74727565 x17 @31 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d x17 @56 h5b312c5b322c7b2261223a337d5d5d e2 ~35", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5b5d2c7b2261223a312c2262223a5b747275652c6e756c6c5d7d2c31", "out": "@0 h5b5d w[] @3 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d w{a:i1,b:[true,null,],} @27 h31 wi1 ~0", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -1169,7 +1169,7 @@
 {"doc": "2d322e350a310a5d0a5b312c0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 h2d322e35 wdc004000000000000 @5 h31 wi1 @7 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "2d322e350a310a5d0a5b312c0a5b312c5b322c7b2261223a337d5d5d", "out": "@0 h2d322e35 r-2.5 @5 h31 r1 @7 h5d0a5b312c0a5b312c5b322c7b2261223a337d5d5d r] ~19", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e7b2261223a312c2261223a327d1e5b312c5b322c7b2261223a337d5d5d0a1e311e5b5d1e6e756c6c1e5b3120325d201e7b2261223a20", "out": "@1 h7b2261223a312c2261223a327d w{a:i1,a:i2,} @15 h5b312c5b322c7b2261223a337d5d5d w[i1,[i2,{a:i3,},],] @32 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7b2261223a312c2261223a327d1e5b312c5b322c7b2261223a337d5d5d0a1e311e5b5d1e6e756c6c1e5b3120325d201e7b2261223a20", "out": "@1 h7b2261223a312c2261223a327d r{\"a\":1,\"a\":2} @15 h5b312c5b322c7b2261223a337d5d5d r[1,[2,{\"a\":3}]] @32 h31 r1 @34 h5b5d r[] @37 h6e756c6c rnull @42 h5b3120325d r[1\\x202] @49 h7b2261223a20 x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7b2261223a312c2261223a327d1e5b312c5b322c7b2261223a337d5d5d0a1e311e5b5d1e6e756c6c1e5b3120325d201e7b2261223a20", "out": "@1 h7b2261223a312c2261223a327d r{\"a\":1,\"a\":2} @15 h5b312c5b322c7b2261223a337d5d5d r[1,[2,{\"a\":3}]] @32 h31 r1 @34 h5b5d r[] @37 h6e756c6c rnull @42 h5b3120325d r[1\\x202] @49 h7b2261223a20 x28 dead @49 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "31383434363734343037333730393535313631360a5b312c5b312c32330a5b3120325d7b2261223a312c2261223a327d5d", "out": "@0 !10", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "31383434363734343037333730393535313631360a5b312c5b312c32330a5b3120325d7b2261223a312c2261223a327d5d", "out": "@0 h3138343436373434303733373039353531363136 x17 @21 h5b312c5b312c32330a5b3120325d7b2261223a312c2261223a327d5d x17 @21 !28", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "1e5b5d0a1e5d20", "out": "@1 h5b5d w[] @5 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -1191,7 +1191,7 @@
 {"doc": "1e22c3a9220a", "out": "@1 h22c3a922 ws\\xc3\\xa9 ~0", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e22c3a9220a", "out": "@1 h22c3a922 x17 ~0", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "310a22c3a9220a31653430300a31383434363734343037333730393535313631360a22c3a9220a31383434363734343037333730393535313631360a5b3120325d0a5b3120325d", "out": "@0 h31 wi1 @2 h22c3a922 ws\\xc3\\xa9 @7 !9", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "310a22c3a9220a31653430300a31383434363734343037333730393535313631360a22c3a9220a31383434363734343037333730393535313631360a5b3120325d0a5b3120325d", "out": "@0 h31 x17 @2 h22c3a922 x17 @7 h3165343030 x17 @13 h3138343436373434303733373039353531363136 x17 @34 h22c3a922 x17 @39 h3138343436373434303733373039353531363136 x17 @60 h5b3120325d x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "310a22c3a9220a31653430300a31383434363734343037333730393535313631360a22c3a9220a31383434363734343037333730393535313631360a5b3120325d0a5b3120325d", "out": "@0 h31 x17 @2 h22c3a922 x17 @7 h3165343030 x17 @13 h3138343436373434303733373039353531363136 x17 @34 h22c3a922 x17 @39 h3138343436373434303733373039353531363136 x17 @60 h5b3120325d x3 dead @60 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "7d202c205b312c3233202c207b7d202c2022615c226222202c2031202c207b2261223a202c205b312c3233", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "7d202c205b312c3233202c207b7d202c2022615c226222202c2031202c207b2261223a202c205b312c3233", "out": "@0 h7d202c x17 @2 h2c x17 @2 !28", "script": ["get a", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "6e756c2c5d2c5b312c", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "comma"}}
@@ -1219,7 +1219,7 @@
 {"doc": "6e756c2c0a31383434363734343037333730393535313631362c0a5b312c5b322c7b2261223a337d5d5d2c0a5b312c32332c0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c0a3138343436373434303733373039353531363136", "out": "@0 !8", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "6e756c2c0a31383434363734343037333730393535313631362c0a5b312c5b322c7b2261223a337d5d5d2c0a5b312c32332c0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d2c0a3138343436373434303733373039353531363136", "out": "@0 h6e756c x17 @5 h3138343436373434303733373039353531363136 x17 @27 h5b312c5b322c7b2261223a337d5d5d e2 ~54", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "1e2d322e35201e7b2261223a1e31653430301e22c3a9221e5b312c5b322c7b2261223a337d5d5d201e6e756c6c0a", "out": "@1 h2d322e35 wdc004000000000000 @7 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e2d322e35201e7b2261223a1e31653430301e22c3a9221e5b312c5b322c7b2261223a337d5d5d201e6e756c6c0a", "out": "@1 h2d322e35 r-2.5 @7 h7b2261223a1e31653430301e22c3a9221e5b312c5b322c7b2261223a337d5d5d201e6e756c6c0a x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e2d322e35201e7b2261223a1e31653430301e22c3a9221e5b312c5b322c7b2261223a337d5d5d201e6e756c6c0a", "out": "@1 h2d322e35 r-2.5 @7 h7b2261223a1e31653430301e22c3a9221e5b312c5b322c7b2261223a337d5d5d201e6e756c6c0a x28 dead @7 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e226f70656e1e5b312c5b322c7b2261223a337d5d5d201e7b7d1e22c3a92220", "out": "@0 !14", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e226f70656e1e5b312c5b322c7b2261223a337d5d5d201e7b7d1e22c3a92220", "out": "@0 !14", "script": ["int64"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "7472756531653430300a5b312c3233203138343436373434303733373039353531363136206e756c0a5b312c3233207b2261223a7b2262223a5b312c325d7d2c2263223a2278227d20", "out": "@0 !6", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
@@ -1251,7 +1251,7 @@
 {"doc": "747275652c0a7b2261223a2c0a22c3a9222c0a22615c2262222c0a5b3120325d2c0a312c0a312c0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@0 h74727565 wtrue @6 !9", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "747275652c0a7b2261223a2c0a22c3a9222c0a22615c2262222c0a5b3120325d2c0a312c0a312c0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@0 h74727565 x17 @6 h7b2261223a2c0a22c3a9222c0a22615c2262222c0a5b3120325d2c0a312c0a312c0a7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x28 @6 !28", "script": ["find b", "walk"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "310d0a5b312c0d0a5b312c32330d0a5b3120325d0d0a22c3a9220d0a7b2261223a312c2261223a327d0d0a5d", "out": "@0 h31 wi1 @3 !3", "script": [], "stream": {"api": "dom", "format": "newline"}}
-{"doc": "310d0a5b312c0d0a5b312c32330d0a5b3120325d0d0a22c3a9220d0a7b2261223a312c2261223a327d0d0a5d", "out": "@0 h31 r1 @3 h5b312c0d0a5b312c32330d0a5b3120325d0d0a22c3a9220d0a7b2261223a312c2261223a327d0d0a5d x28 dead", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "310d0a5b312c0d0a5b312c32330d0a5b3120325d0d0a22c3a9220d0a7b2261223a312c2261223a327d0d0a5d", "out": "@0 h31 r1 @3 h5b312c0d0a5b312c32330d0a5b3120325d0d0a22c3a9220d0a7b2261223a312c2261223a327d0d0a5d x28 dead @3 !28", "script": ["raw"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "7b2261223a2c7b7d", "out": "~8", "script": [], "stream": {"api": "dom", "format": "comma"}}
 {"doc": "7b2261223a2c7b7d", "out": "~8", "script": ["int64"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "5b22c3a9225d", "out": "@0 h22c3a922 ~0", "script": [], "stream": {"api": "ondemand", "format": "array"}}
@@ -1260,11 +1260,11 @@
 {"doc": "5b7b7d2c22615c2262222c5d2c7b2261223a312c2261223a327d5d", "out": "@0 h7b7d w{} @3 h22615c226222 wsa\"b @10 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
 {"doc": "5b7b7d2c22615c2262222c5d2c7b2261223a312c2261223a327d5d", "out": "@0 h7b7d x17 @3 h22615c226222 x17 @10 h5d2c x17 @11 h2c x17 @11 !28", "script": ["int64"], "stream": {"api": "ondemand", "format": "array"}}
 {"doc": "1e7d0a1e310a1e7b7d201e7d201e5b312c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e74727565", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7d0a1e310a1e7b7d201e7d201e5b312c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e74727565", "out": "@1 h7d0a1e31 x17 @4 h31 x17 @7 h7b7d x17 @11 h7d201e5b312c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e74727565 x17 @14 h5b312c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e74727565 x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7d0a1e310a1e7b7d201e7d201e5b312c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e74727565", "out": "@1 h7d0a1e31 x17 @4 h31 x17 @7 h7b7d x17 @11 h7d201e5b312c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e74727565 x17 @14 h5b312c1e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a1e74727565 x3 dead @14 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "7b2261223a7b2261223a312c2262223a5b747275652c6e756c6c5d7d205d31383434363734343037333730393535313631360a5b312c3233747275656e756c6c20", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "7b2261223a7b2261223a312c2262223a5b747275652c6e756c6c5d7d205d31383434363734343037333730393535313631360a5b312c3233747275656e756c6c20", "out": "@0 h7b2261223a7b2261223a312c2262223a5b747275652c6e756c6c5d7d205d r{\"a\":{\"a\":1,\"b\":[true,null]}\\x20] @30 h3138343436373434303733373039353531363136 r18446744073709551616 ~14", "script": ["raw"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d203138343436373434303733373039353531363136207d0a5b3120325d0a22c3a9225b312c5b322c7b2261223a337d5d5d5b312c205b312c3233", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d w{a:{b:[i1,i2,],},c:sx,} @26 !10", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
-{"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d203138343436373434303733373039353531363136207d0a5b3120325d0a22c3a9225b312c5b322c7b2261223a337d5d5d5b312c205b312c3233", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x17 @26 h3138343436373434303733373039353531363136 x17 @47 h7d0a5b3120325d x17 @49 h5b3120325d x3 dead", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d203138343436373434303733373039353531363136207d0a5b3120325d0a22c3a9225b312c5b322c7b2261223a337d5d5d5b312c205b312c3233", "out": "@0 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d x17 @26 h3138343436373434303733373039353531363136 x17 @47 h7d0a5b3120325d x17 @49 h5b3120325d x3 dead @49 !3", "script": ["arr", "each"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "31653430300d0a5b3120325d0d0a5b3120325d0d0a2d322e35", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "newline"}}
 {"doc": "31653430300d0a5b3120325d0d0a5b3120325d0d0a2d322e35", "out": "@0 h3165343030 x17 @7 h5b3120325d x17 @14 h5b3120325d x17 @21 h2d322e35 x17 ~0", "script": ["int64"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "5b5b5d2c7d2c22615c2262222c226f70656e2c747275655d", "out": "~22", "script": [], "stream": {"api": "dom", "format": "array"}}
@@ -1712,33 +1712,33 @@
 {"doc": "1e6e756c0a1e", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c0a1e", "out": "@1 h6e756c x17 ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b", "out": "@1 h6e756c x17 @6 h5b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b", "out": "@1 h6e756c x17 @6 h5b x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b31", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b31", "out": "@1 h6e756c x17 @6 h5b31 x9 @6 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c", "out": "@1 h6e756c x17 @6 h5b312c x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c", "out": "@1 h6e756c x17 @6 h5b312c x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b", "out": "@1 h6e756c x17 @6 h5b312c5b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b", "out": "@1 h6e756c x17 @6 h5b312c5b x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b32", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b32", "out": "@1 h6e756c x17 @6 h5b312c5b32 x9 @6 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b322c", "out": "@1 h6e756c x17 @6 h5b312c5b322c x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b322c", "out": "@1 h6e756c x17 @6 h5b312c5b322c x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b322c7b", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b322c7b", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b22", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b322c7b22", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b22 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b322c7b22", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b22 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b322c7b2261", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b322c7b2261", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b226122", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b322c7b226122", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b226122 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b322c7b226122", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b226122 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261223a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b322c7b2261223a", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261223a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b322c7b2261223a", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261223a x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261223a33", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261223a33", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261223a33 x9 @6 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261223a337d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261223a337d x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d5d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d5d", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261223a337d5d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d5d", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261223a337d5d x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d5d5d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d5d5d", "out": "@1 h6e756c x17 @6 h5b312c5b322c7b2261223a337d5d5d [i1,[i2,{a:i3,},],] ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e5b312c5b322c7b2261223a337d5d5d20", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -2026,7 +2026,7 @@
 {"doc": "3122615c2262226e756c20", "out": "@0 !9", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "3122615c2262226e756c20", "out": "@0 h3122615c226222 x9 @7 h6e756c x17 ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "1e7b", "out": "@1 !3", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e7b", "out": "@1 h7b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e7b", "out": "@1 h7b x3 dead @1 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e7b7d", "out": "@1 h7b7d {} ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e7b7d0a", "out": "@1 h7b7d w{} ~0", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e7b7d0a", "out": "@1 h7b7d {} ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
@@ -2057,7 +2057,7 @@
 {"doc": "1e6e756c6c201e", "out": "@1 h6e756c6c wnull ~0", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c201e", "out": "@1 h6e756c6c null ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c201e5b", "out": "@1 h6e756c6c wnull @7 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c201e5b", "out": "@1 h6e756c6c null @7 h5b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c201e5b", "out": "@1 h6e756c6c null @7 h5b x3 dead @7 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c201e5b5d", "out": "@1 h6e756c6c wnull @7 h5b5d w[] ~0", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c201e5b5d", "out": "@1 h6e756c6c null @7 h5b5d [] ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c201e5b5d0a", "out": "@1 h6e756c6c wnull @7 h5b5d w[] ~0", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -2119,53 +2119,53 @@
 {"doc": "7472756522c3a9222022615c226222", "out": "@0 !6", "script": [], "stream": {"api": "dom", "format": "whitespace"}}
 {"doc": "7472756522c3a9222022615c226222", "out": "@0 h7472756522c3a922 x17 @9 h22615c226222 sa\"b ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "whitespace"}}
 {"doc": "1e6e756c0a1e7b", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b", "out": "@1 h6e756c x17 @6 h7b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b", "out": "@1 h6e756c x17 @6 h7b x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b22", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b22", "out": "@1 h6e756c x17 @6 h7b22 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b22", "out": "@1 h6e756c x17 @6 h7b22 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261", "out": "@1 h6e756c x17 @6 h7b2261 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261", "out": "@1 h6e756c x17 @6 h7b2261 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b226122", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b226122", "out": "@1 h6e756c x17 @6 h7b226122 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b226122", "out": "@1 h6e756c x17 @6 h7b226122 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a", "out": "@1 h6e756c x17 @6 h7b2261223a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a", "out": "@1 h6e756c x17 @6 h7b2261223a x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b", "out": "@1 h6e756c x17 @6 h7b2261223a7b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b", "out": "@1 h6e756c x17 @6 h7b2261223a7b x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b22", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b22", "out": "@1 h6e756c x17 @6 h7b2261223a7b22 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b22", "out": "@1 h6e756c x17 @6 h7b2261223a7b22 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b226222", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b226222", "out": "@1 h6e756c x17 @6 h7b2261223a7b226222 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b226222", "out": "@1 h6e756c x17 @6 h7b2261223a7b226222 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b31", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b31", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b31 x9 @6 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c32", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c32", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c32 x9 @6 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c22", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c22", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c22 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c22", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c22 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c226322", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c226322", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c226322 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c226322", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c226322 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a22", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a22", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a22 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a22", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a22 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a227822", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a227822", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a227822 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a227822", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a227822 x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d", "out": "@1 h6e756c x17 @6 h7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d {a:{b:[i1,i2,],},c:sx,} ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c0a1e7b2261223a7b2262223a5b312c325d7d2c2263223a2278227d0a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -2446,29 +2446,29 @@
 {"doc": "1e6e756c6c1e6e756c201e", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e", "out": "@1 h6e756c6c x17 ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b", "out": "@1 h6e756c6c x17 @11 h7b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b", "out": "@1 h6e756c6c x17 @11 h7b x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b22", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b22", "out": "@1 h6e756c6c x17 @11 h7b22 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b22", "out": "@1 h6e756c6c x17 @11 h7b22 x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261", "out": "@1 h6e756c6c x17 @11 h7b2261 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261", "out": "@1 h6e756c6c x17 @11 h7b2261 x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b226122", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b226122", "out": "@1 h6e756c6c x17 @11 h7b226122 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b226122", "out": "@1 h6e756c6c x17 @11 h7b226122 x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a", "out": "@1 h6e756c6c x17 @11 h7b2261223a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a", "out": "@1 h6e756c6c x17 @11 h7b2261223a x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a31", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a31", "out": "@1 h6e756c6c x17 @11 h7b2261223a31 x9 @11 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c22", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c22", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c22 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c22", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c22 x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262 x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c226222", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c226222", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c226222 x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c226222", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c226222 x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b74", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b74", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b74 x17 @11 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b7472", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -2478,7 +2478,7 @@
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b74727565", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b74727565", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b74727565 x17 @11 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b747275652c x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b747275652c x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b747275652c6e x17 @11 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e75", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -2488,7 +2488,7 @@
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e756c6c", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e756c6c", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b747275652c6e756c6c x17 @11 !28", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e756c6c5d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e756c6c5d", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b747275652c6e756c6c5d x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e756c6c5d", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b747275652c6e756c6c5d x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d", "out": "@1 h6e756c6c x17 @11 h7b2261223a312c2262223a5b747275652c6e756c6c5d7d {a:i1,b:[true,null,],} ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e6e756c6c1e6e756c201e7b2261223a312c2262223a5b747275652c6e756c6c5d7d0a", "out": "@1 !8", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -2506,7 +2506,7 @@
 {"doc": "1e747275651e6e756c6c1e", "out": "@1 !6", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e747275651e6e756c6c1e", "out": "@1 h74727565 x17 ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e747275651e6e756c6c1e5b", "out": "@1 !6", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e747275651e6e756c6c1e5b", "out": "@1 h74727565 x17 @11 h5b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e747275651e6e756c6c1e5b", "out": "@1 h74727565 x17 @11 h5b x3 dead @11 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e747275651e6e756c6c1e5b5d", "out": "@1 !6", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e747275651e6e756c6c1e5b5d", "out": "@1 h74727565 x17 @11 h5b5d [] ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e31", "out": "@1 h31 i1 ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
@@ -2846,7 +2846,7 @@
 {"doc": "1e2d322e351e", "out": "@1 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e2d322e351e", "out": "@1 h2d322e35 dc004000000000000 ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e2d322e351e7b", "out": "@1 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
-{"doc": "1e2d322e351e7b", "out": "@1 h2d322e35 dc004000000000000 @6 h7b x3 dead", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e2d322e351e7b", "out": "@1 h2d322e35 dc004000000000000 @6 h7b x3 dead @6 !3", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e2d322e351e7b7d", "out": "@1 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e2d322e351e7b7d", "out": "@1 h2d322e35 dc004000000000000 @6 h7b7d {} ~0", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e2d322e351e7b7d0a", "out": "@1 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
@@ -2936,3 +2936,7 @@
 {"doc": "1e310a1e203222616263", "out": "@1 h31 wi1 @5 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
 {"doc": "1e310a1e203222616263", "out": "@1 h31 @5 h3222616263 ~4", "script": [], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "1e310a1e203222616263", "out": "@1 h31 i1 @5 h3222616263 i2 ~4", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "7b22612220317d0a7b2262223a327d0a7b2262223a327d0a7b2262223a327d0a", "out": "@0 h7b22612220317d x3 dead @0 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "whitespace"}}
+{"doc": "7b22612220317d0a7b2262223a327d0a7b2262223a327d0a7b2262223a327d0a", "out": "@0 h7b22612220317d x3 dead @0 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "newline"}}
+{"doc": "1e7b22612220317d0a1e7b2262223a327d0a1e7b2262223a327d0a1e7b2262223a327d0a", "out": "@1 h7b22612220317d x3 dead @1 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "7b22612220317d2c7b2262223a327d2c7b2262223a327d2c7b2262223a327d2c", "out": "@0 h7b22612220317d x3 dead @0 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "comma"}}
