@@ -17,6 +17,12 @@ type Parser struct {
 	// 0 means 1,000,000; above 1 GiB it means 1 GiB; it is rounded up to a
 	// multiple of 64. It changes speed and memory, never results.
 	BatchSize int
+	// MaxDepth limits nesting: a read that starts an array or object at
+	// depth MaxDepth or deeper (the root is at depth 1), empty ones
+	// included, fails with ErrDepth, as C++ v5.1.1 built with development
+	// checks does. Values skipped without being started do not count. 0 or
+	// negative means 1024 (C++ DEFAULT_MAX_DEPTH).
+	MaxDepth int
 
 	doc     Document
 	idx     []uint32      // Iterate's indices, apart from the stream's
@@ -25,6 +31,17 @@ type Parser struct {
 }
 
 var bom = []byte{0xEF, 0xBB, 0xBF}
+
+// defaultMaxDepth is C++ DEFAULT_MAX_DEPTH.
+const defaultMaxDepth = 1024
+
+// maxDepth is MaxDepth, with 0 or negative meaning defaultMaxDepth.
+func (p *Parser) maxDepth() int {
+	if p.MaxDepth <= 0 {
+		return defaultMaxDepth
+	}
+	return p.MaxDepth
+}
 
 // maxSize is the largest input: structural indices are 32 bits wide.
 const maxSize = 0xFFFFFFFF - 3
@@ -63,6 +80,7 @@ func (p *Parser) Iterate(b []byte) (*Document, error) {
 		n:      n,
 		end:    n,
 		depth:  1,
+		limit:  p.maxDepth(),
 		gen:    d.gen + 1,
 		strs:   d.strs[:0],
 		starts: d.starts[:0],
@@ -94,7 +112,9 @@ type Document struct {
 	n      int      // number of structural indices
 	pos    int      // the cursor: an index into idx
 	depth  int      // depth of the cursor (the root value is at depth 1)
+	limit  int      // Parser.MaxDepth: no array or object starts at this depth or deeper
 	err    error    // a fatal error; reads fail with it from then on
+	dead   bool     // abandoned after a fatal error (C++ !is_alive)
 	gen    uint32   // incremented by every Iterate, to detect stale handles
 	strs   []byte   // unescaped strings, until the next Iterate or Rewind
 	starts []int    // starts[depth]: start of the container open at depth (misuse checks)
@@ -162,11 +182,14 @@ func (d *Document) fail(err error) error {
 // abandon stops all further iteration after a fatal error.
 func (d *Document) abandon() {
 	d.depth = 0
+	d.dead = true
 }
 
 // abandoned reports whether a fatal error abandoned d (C++ is_alive is
-// false): Rewind cannot bring it back.
-func (d *Document) abandoned() bool { return d.depth == 0 && d.err != nil }
+// false): Rewind cannot bring it back. A recorded error alone does not
+// abandon d: after ErrDepth, C++ leaves the document alive, even once a
+// read has taken its cursor to depth 0.
+func (d *Document) abandoned() bool { return d.dead }
 
 func (d *Document) setStart(depth, pos int) {
 	for len(d.starts) <= depth {

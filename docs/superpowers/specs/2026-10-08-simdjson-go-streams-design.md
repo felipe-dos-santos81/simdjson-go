@@ -147,12 +147,13 @@ for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
   `ErrOutOfOrderIteration`.
 - Offsets index the caller's `b`, so they count a skipped BOM and the brackets of
   `CommaDelimitedArray` (C++'s `current_index` does not).
-- `MaxDepth` and `BigIntAsString` apply to every document.
+- `MaxDepth` and `BigIntAsString` apply to every document; so does `ondemand.Parser.MaxDepth`.
 - On-Demand: `Document.AtEnd` says whether this document has been read to its end (C++ compares
   with the end of the batch). Read errors (wrong type, bad number, missing field) belong to the
   read and do not end the stream; the next step skips the rest of the document, as in C++.
-  After a fatal error (`ErrTape`, `ErrIncompleteArrayOrObject`), which may abandon the document,
-  the next step ends the stream with that error at the document's start (C++ v5.1.1).
+  After a fatal error (`ErrTape`, `ErrIncompleteArrayOrObject`, `ErrDepth`), which may abandon
+  the document, the next step ends the stream with that error at the document's start (C++
+  v5.1.1).
   Handles from an earlier document return `ErrOutOfOrderIteration`.
 
 ## 4. Behaviour

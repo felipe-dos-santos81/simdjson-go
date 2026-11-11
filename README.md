@@ -56,6 +56,7 @@ for tweet, err := range arr.All() {
 
 Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the structural characters, and each value is parsed when read, as the type it is read as. It suits reading some fields of large documents; it is 1.3–2× faster than `Parse` plus the DOM on C++'s benchmark tasks and allocates nothing once warm.
 
+- **`Parser`**: `Iterate(b)` returns the `*Document`. `MaxDepth` (default 1024) limits nesting: a read that starts an array or object at depth `MaxDepth` or deeper (the root is at depth 1), empty ones included, fails with `ErrDepth`, as C++ built with development checks does; values skipped without being read do not count. **This limit is new:** before, `ondemand` had none, as C++'s release build has none, so a document nested 1024 levels or more, read with a zero `Parser`, now fails with `ErrDepth`. To read deeper documents, raise it: `ondemand.Parser{MaxDepth: 100_000}`. Documents from `IterateMany` obey the same limit.
 - **`Document`** (the root): `Get`, `FindNext`, `Object`, `Array`, `Value`, typed getters for a scalar root, `AtPointer`, `Raw`, `Rewind`, `AtEnd`.
 - **`Value`**: `Type`, `NumberType`, `Int64`, `Uint64`, `Float64`, `Bool`, `IsNull`, `String`, `StringBytes`, `Raw`, `Object`, `Array`, `Get`, `FindNext`, `AtPointer`.
 - **`Object`**: `Get` (searches forward, then wraps around once), `FindNext` (forward only), `All` (`iter.Seq2[Field, error]`), `Count`, `Reset`, `Raw`, `AtPointer`. **`Field`**: `Key`, `RawKey`, `Value`. **`Array`**: `All`, `At`, `Count`, `Reset`, `Raw`, `AtPointer`.

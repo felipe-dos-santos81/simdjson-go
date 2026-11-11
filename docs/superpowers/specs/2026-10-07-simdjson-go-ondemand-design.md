@@ -49,7 +49,7 @@ All with 0 allocations per operation. `BenchmarkParse` after the refactor: −0.
 | Package | `simdjson-go/ondemand` | Mirrors C++'s namespace; avoids clashing with the DOM's `Object`/`Array` |
 | Engine | A port of C++'s `json_iterator` and `value_iterator` over the stage-1 index, no tape | Same semantics by construction; tape building is about 60% of `Parse` on twitter |
 | C++ build | Release semantics, with the development checks turned into errors | The oracle is a release build; the development checks only catch misuse, which must not crash Go |
-| Depth | No limit, as C++ On-Demand has none | Nothing recurses per level; depth costs no memory beyond one int per open level |
+| Depth | `Parser.MaxDepth`, 1024 when 0, as C++ v5.1.1's development build (§4) | Its development checks record every open container in `max_depth()` entries and report `DEPTH_ERROR` past them; the release build, which the oracle replays, has no limit. Nothing recurses per level, so a raised limit costs one int per open level |
 | Speed bar | ≥1.5× our DOM on the C++ benchmark tasks | Measurable in-repo, no C++ benchmark harness needed |
 
 **Out of scope:** `iterate_many` and other document streams (sub-project 2); C++'s
@@ -61,7 +61,10 @@ debug/logging helpers; the `_in_string` getters; writing JSON.
 ```go
 package ondemand // import "simdjson-go/ondemand"
 
-type Parser struct{ /* buffers */ } // zero value ready; reuse it; not safe for concurrent use
+type Parser struct { // zero value ready; reuse it; not safe for concurrent use
+	MaxDepth int // no array or object starts at this depth (the root's is 1); 0 or negative: 1024
+	/* BatchSize (streams spec), buffers */
+}
 func (p *Parser) Iterate(b []byte) (*Document, error)
 
 // Document is the root value.
@@ -120,7 +123,8 @@ func (a Array) AtPointer(ptr string) (Value, error)
 
 Errors are the root package's sentinels, the same values in both packages, so `errors.Is` works
 either way. Four are added, named after their C++ codes: `ErrOutOfOrderIteration`,
-`ErrIncompleteArrayOrObject`, `ErrScalarDocumentAsValue`, `ErrTrailingContent`.
+`ErrIncompleteArrayOrObject`, `ErrScalarDocumentAsValue`, `ErrTrailingContent`. `ErrDepth`, the
+DOM's, reports `MaxDepth` (§4).
 
 ## 4. Behaviour
 
@@ -183,6 +187,18 @@ marked **Go**.
   `ErrIncorrectType` (C++ resumes it as an object without checking). The `*Document` is a Go
   trade-off, not C++ behaviour: `Iterate` returns the same `*Document` every time so that it does
   not allocate, so after the next `Iterate` an old `*Document` reads the new document.
+- **Depth (C++ v5.1.1, development build).** A read that starts an array or object at depth
+  `MaxDepth` or deeper (the root is at depth 1, so at most `MaxDepth`-1 levels nest) fails with
+  `ErrDepth`, an empty one included: C++ checks before it looks for the closing bracket. A scalar
+  at that depth reads, and values skipped without being started do not count (`Raw`, lookups and
+  loops step over deeper ones). The error is recorded, as a fatal one is, but does not abandon the
+  document: `Rewind` and `AtPointer` still work, and lookups go on from the cursor, which stays
+  just after the refused container's opening bracket. Iterating an array or object (`All`,
+  `At`, `Count`) then reports `ErrDepth` and abandons the document, and `Reset` reports it, as
+  for any recorded error. In a stream, the next step ends the stream with `ErrDepth` at the document's start.
+  **This changes a default:** `ondemand` had no limit before (C++'s release build still has
+  none), so a document nested 1024 levels or more, read with a zero `Parser`, now fails with
+  `ErrDepth`; raise `MaxDepth` to read it.
 - **Lifetime.** A `Document` and every handle and `Raw`/`RawKey` slice are valid until the next
   `Iterate`; `StringBytes` until the next `Iterate` or `Rewind` (C++ reuses its string buffer;
   `Key` and `String` return copies). The input is not copied or modified and needs no padding.
@@ -237,6 +253,11 @@ marked **Go**.
   values or fails with it, apart from C++'s own differences (§4).
 - **Misuse.** Out-of-order and repeated container reads, a stale field, zero handles and handles
   after `Iterate` return `ErrOutOfOrderIteration`; a saved scalar reads correctly later.
+- **Depth.** The oracle's release build has no limit, so `TestMaxDepth` holds values measured
+  on C++ v5.1.1 built with development checks: `MaxDepth` minus one, at and past the limit, for
+  arrays, objects and empty ones, a skipped value, the default, reads after the error and a
+  stream. `FuzzOnDemand` compares with the DOM without a limit and runs its scripts with
+  `MaxDepth` 3.
 - **Fuzzing.** `FuzzOnDemand`: arbitrary input and an arbitrary read script; never panics; the full
   walk agrees with the DOM.
 - **Benchmarks.** The six C++ tasks, each with On-Demand and with `Parse` plus DOM, and a test that

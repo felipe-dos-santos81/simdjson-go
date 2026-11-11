@@ -38,11 +38,11 @@ type StreamError = jsonerr.StreamError
 // Iterate or IterateMany on p, and b must not change until the loop ends.
 // Read errors belong to the read and do not end the stream: the next step
 // skips the rest of the document, as C++ does. A fatal one (ErrTape,
-// ErrIncompleteArrayOrObject) does: the next step ends the stream with
-// that error at the document's offset. An error ending the stream
-// is always the last item: a *StreamError with the failing document's
-// offset (ErrTrailingContent when b ends with an incomplete document,
-// which C++ drops silently). Empty input yields nothing. Stage 1 runs
+// ErrIncompleteArrayOrObject, ErrDepth past p.MaxDepth) does: the next
+// step ends the stream with that error at the document's offset. An error
+// ending the stream is always the last item: a *StreamError with the
+// failing document's offset (ErrTrailingContent when b ends with an
+// incomplete document, which C++ drops silently). Empty input yields nothing. Stage 1 runs
 // BatchSize bytes at a time; the batch size never changes what is yielded.
 // Starting another stream on p ends this one with ErrOutOfOrderIteration.
 func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
@@ -64,7 +64,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			return
 		}
 		p.streams++
-		gen, r, d := p.streams, &p.stream, &p.doc
+		gen, r, d, limit := p.streams, &p.stream, &p.doc, p.maxDepth()
 		r.Reset(buf, f, p.BatchSize)
 		defer func() {
 			if p.streams == gen { // else the stream that reset r owns it
@@ -102,7 +102,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				fail(base+start, err)
 				return
 			}
-			d.view(r, pos, end, base+start, f == CommaDelimited, pad)
+			d.view(r, pos, end, base+start, f == CommaDelimited, pad, limit)
 			mine, nextOff := d.gen, base+r.End(end)
 			if !yield(d, nil) {
 				return
@@ -158,7 +158,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 // those are final up to the decided point only; a read that would go past
 // it (on a malformed root, or out of order) first indexes the rest, as C++
 // reads on to the end of its one batch (reach, more).
-func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool, pad byte) {
+func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool, pad byte, limit int) {
 	rd := r
 	if r.Done {
 		rd = nil
@@ -172,6 +172,7 @@ func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool, pad byt
 		repoch: r.Epoch(),
 		end:    end - pos,
 		depth:  1,
+		limit:  limit,
 		gen:    d.gen + 1,
 		strs:   d.strs[:0],
 		starts: d.starts[:0],

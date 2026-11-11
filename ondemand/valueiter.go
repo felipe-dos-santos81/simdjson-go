@@ -95,6 +95,9 @@ func (it valueIter) startRootObject() (bool, error) {
 }
 
 func (it valueIter) startedObject() (bool, error) {
+	if it.depth >= it.d.limit {
+		return false, it.d.fail(jsonerr.ErrDepth)
+	}
 	it.d.reach()
 	it.d.setStart(it.depth, it.start)
 	if it.d.peek() == '}' {
@@ -397,6 +400,9 @@ func (it valueIter) startRootArray() (bool, error) {
 }
 
 func (it valueIter) startedArray() (bool, error) {
+	if it.depth >= it.d.limit { // before the empty check, as for objects
+		return false, it.d.fail(jsonerr.ErrDepth)
+	}
 	it.d.reach()
 	if it.d.peek() == ']' {
 		it.d.advance()

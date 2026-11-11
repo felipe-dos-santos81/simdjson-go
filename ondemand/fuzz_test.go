@@ -2,6 +2,7 @@ package ondemand_test
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	"simdjson-go"
@@ -26,12 +27,16 @@ func FuzzOnDemand(f *testing.F) {
 		f.Add([]byte(s), []byte{0, 12, 4, 26})
 	}
 	f.Fuzz(func(t *testing.T, in, ops []byte) {
-		var od ondemand.Parser
+		// Unlimited, as the DOM parser here: the walk follows C++'s
+		// release build, which has no On-Demand depth limit.
+		od := ondemand.Parser{MaxDepth: math.MaxInt32}
 		agree(t, &od, newDOMParser(), in)
 		script := make([]string, 0, len(ops))
 		for _, b := range ops {
 			script = append(script, fuzzOps[int(b)%len(fuzzOps)])
 		}
+		// A low limit, so that scripts also meet ErrDepth and read on after it.
+		od.MaxDepth = 3
 		runScript(&od, in, script) // must not panic
 	})
 }
