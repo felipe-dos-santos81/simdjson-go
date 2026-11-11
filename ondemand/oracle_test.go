@@ -408,6 +408,17 @@ func runOps(doc *ondemand.Document, script []string, toks *[]string) error {
 				return err
 			}
 			st = append(st, slot{k: kValue, v: v})
+		case "pint":
+			v, err := doc.AtPointer(arg)
+			var x int64
+			if err == nil {
+				x, err = v.Int64()
+			}
+			if err != nil {
+				*toks = append(*toks, errToken(err))
+			} else {
+				*toks = append(*toks, "i"+strconv.FormatInt(x, 10))
+			}
 		case "pop":
 			if len(st) > 1 {
 				st = st[:len(st)-1]
@@ -454,6 +465,27 @@ func runOps(doc *ondemand.Document, script []string, toks *[]string) error {
 					return err
 				}
 				b.WriteString(esc(f.RawKey()) + ",")
+			}
+			*toks = append(*toks, "k"+b.String())
+			st = st[:len(st)-1]
+		case "keyread":
+			if top.k != kObject {
+				return jsonerr.ErrIncorrectType
+			}
+			reads := strings.Fields(arg)
+			var b strings.Builder
+			i := 0
+			for f, err := range top.o.All() {
+				if err != nil {
+					return err
+				}
+				s, err := read(f.Value(), reads[i%len(reads)])
+				if err != nil {
+					return err
+				}
+				*toks = append(*toks, s)
+				b.WriteString(esc(f.RawKey()) + ",")
+				i++
 			}
 			*toks = append(*toks, "k"+b.String())
 			st = st[:len(st)-1]

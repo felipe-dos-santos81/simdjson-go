@@ -48,12 +48,6 @@ func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			fail(0, ErrCapacity)
 			return
 		}
-		// The byte after C++'s input: its padding, or, as C++ strips the
-		// brackets by moving its pointers, the array's own ']'.
-		var pad byte
-		if f == CommaDelimitedArray {
-			pad = ']'
-		}
 		buf, base, f, ok := stream.Input(b, f)
 		if !ok {
 			fail(0, ErrTape)
@@ -82,25 +76,10 @@ func (p *Parser) ParseMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				return
 			}
 			start := int(r.Idx[pos])
-			// A document still open at the end of the input reads pad there
-			// (C++'s sentinel structural_indexes[n] = len); it then ends the
-			// stream, where C++ goes on past its sentinel.
-			last := byte(0) // what a read past lim sees
-			if r.Done {
-				last = pad
-			}
-			n, err := p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true, last)
-			if err != nil && last != pad {
-				// A failed walk may have read 0 at lim. Had lim started the
-				// dropped tail, it would have read pad (only a
-				// CommaDelimitedArray has one): find out.
-				for !r.Done && r.Decided() == lim {
-					r.Load()
-				}
-				if r.Done && r.N == lim {
-					n, err = p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true, pad)
-				}
-			}
+			// A document still open at lim reads 0 there and fails, as C++
+			// v5.1.1 bounds the walk of its last batch: in CommaDelimitedArray
+			// too, where the byte after C++'s input is the array's own ']'.
+			n, err := p.build(buf, r.Idx[pos:lim], r.End(lim)-start, true)
 			if err != nil {
 				// A stage 1 error among the bytes the document holds (by a
 				// bracket count, as stage 2 stopped early) comes first.

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Regenerates testdata/ondemand/oracle.jsonl and testdata/stream/oracle.jsonl:
-# builds oracle.cpp against the C++ simdjson v5.0.2 single-header release
+# builds oracle.cpp against the C++ simdjson v5.1.1 single-header release
 # (scripts/fetch-simdjson.sh: downloaded, or taken from $SIMDJSON_SINGLEHEADER),
 # runs gen.py's cases through it, and records the output, stream cases in their
 # own file. Needs a C++20 compiler, curl, python3 and the corpora (make testdata).

@@ -91,7 +91,7 @@ func TestTapeLayout(t *testing.T) {
 }
 
 func TestParseErrors(t *testing.T) {
-	// Expected errors were produced by C++ simdjson v5.0.2 (dom::parser).
+	// Expected errors were produced by C++ simdjson v5.1.1 (dom::parser).
 	tests := []struct {
 		in   string
 		want error

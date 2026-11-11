@@ -1,6 +1,7 @@
 package ondemand_test
 
 import (
+	"encoding/hex"
 	"errors"
 	"strings"
 	"testing"
@@ -159,7 +160,7 @@ func TestAtPointerDeep(t *testing.T) {
 	} {
 		doc := strings.Repeat(c.open, depth) + "7" + strings.Repeat(c.close, depth)
 		ptr := strings.Repeat(c.seg, depth)
-		var p ondemand.Parser
+		p := ondemand.Parser{MaxDepth: depth + 1}
 		d, err := p.Iterate([]byte(doc))
 		if err != nil {
 			t.Fatal(err)
@@ -175,6 +176,62 @@ func TestAtPointerDeep(t *testing.T) {
 		if n, err := v.Int64(); n != 7 || err != nil {
 			t.Errorf("%s: leaf = %d, %v; want 7", c.seg, n, err)
 		}
+	}
+}
+
+// TestMaxDepth: which reads Parser.MaxDepth refuses, and the document they
+// leave. The expected values come from C++ v5.1.1 built with
+// SIMDJSON_DEVELOPMENT_CHECKS (oracle.cpp, with parser.allocate(len,
+// MaxDepth)): the recorded oracle is the release build, which has no limit.
+func TestMaxDepth(t *testing.T) {
+	arr := func(n int, in string) string { return strings.Repeat("[", n) + in + strings.Repeat("]", n) }
+	obj := func(n int, in string) string { return strings.Repeat(`{"a":`, n) + in + strings.Repeat("}", n) }
+	ptr := func(seg string, n int) string { return strings.Repeat(seg, n) }
+	for _, c := range []struct {
+		max    int
+		in     string
+		script []string
+		want   string
+	}{
+		// The root is at depth 1: an array or object starting at depth
+		// MaxDepth fails.
+		{16, arr(15, "1"), []string{"pint " + ptr("/0", 15)}, "i1"},
+		{16, arr(16, "1"), []string{"pint " + ptr("/0", 16)}, "!4"},
+		{16, arr(17, "1"), []string{"pint " + ptr("/0", 17)}, "!4"},
+		{16, obj(15, "1"), []string{"pint " + ptr("/a", 15)}, "i1"},
+		{16, obj(16, "1"), []string{"pint " + ptr("/a", 16)}, "!4"},
+		// Empty ones too.
+		{16, arr(14, "[]"), []string{"ptr " + ptr("/0", 14), "arr", "count"}, "n0"},
+		{16, arr(15, "[]"), []string{"ptr " + ptr("/0", 15), "arr", "count"}, "!4"},
+		{16, arr(14, "{}"), []string{"ptr " + ptr("/0", 14), "obj", "count"}, "n0"},
+		{16, arr(15, "{}"), []string{"ptr " + ptr("/0", 15), "obj", "count"}, "!4"},
+		// A value skipped without being started does not count.
+		{16, "[" + arr(20, "1") + ",2]", []string{"arr", "at 1", "int64"}, "i2"},
+		// 0 means 1024.
+		{0, arr(1023, "1"), []string{"pint " + ptr("/0", 1023)}, "i1"},
+		{0, arr(1024, "1"), []string{"pint " + ptr("/0", 1024)}, "!4"},
+		// The error is kept: iterating after a Rewind reports it and
+		// abandons the document (the error counts as element 0, then
+		// AtPointer reports it again).
+		{16, "[" + arr(20, "1") + ",2]", []string{"pint " + ptr("/0", 16), "pint /1", "pint /1"}, "!4 !19 !4"},
+		// The error alone does not abandon the document, even once Raw has
+		// taken its cursor to depth 0.
+		{16, `{"a":` + arr(20, "1") + `,"b":2}`, []string{"pint /a" + ptr("/0", 15), "raw", "pint /b"},
+			`!4 r{"a":` + arr(20, "1") + ` i2`},
+	} {
+		p := ondemand.Parser{MaxDepth: c.max}
+		if got := runScript(&p, []byte(c.in), c.script); got != c.want {
+			t.Errorf("MaxDepth %d, %.40q %.40q: got %.80s, want %.80s", c.max, c.in, c.script, got, c.want)
+		}
+	}
+
+	// A stream document obeys the limit. C++'s development build then ends
+	// the stream ("x4 @4 !4"); Go yields the next document (streams spec §4.3).
+	p := ondemand.Parser{MaxDepth: 16}
+	deep := arr(16, "1")
+	want := "@0 h5b315d [i1,] @4 h" + hex.EncodeToString([]byte(deep)) + " x4 @38 h5b325d [i2,] ~0"
+	if got := streamOut(nil, &p, "ondemand", []byte("[1]\n"+deep+"\n[2]\n"), simdjson.Whitespace, []string{"walk"}); got != want {
+		t.Errorf("stream: got %s, want %s", got, want)
 	}
 }
 

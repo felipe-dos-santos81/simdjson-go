@@ -54,7 +54,7 @@ def scalar_cases():
         for op in READS:
             yield case(s, script=[op])
         yield case(s + " ", script=["int64"])
-        for pad in (19, 20, 21, 1082, 1083):  # C++ copies a root scalar with its trailing space
+        for pad in (19, 20, 21, 1082, 1083):  # C++ copies a root scalar to a buffer; trailing space does not count
             for op in ("int64", "uint64", "double", "ntype", "bool", "null", "walk"):
                 yield case(s + " " * pad, script=[op])
         yield case(s + " 1", script=["double"])
@@ -100,6 +100,19 @@ def long_name_cases():
         for n in names:
             for op in ("get", "find"):
                 yield case(d, script=[op + " " + n, "walk"])
+
+
+def backslash_cases():
+    # v5.1.1: a name ending in an odd number of backslashes matches no key (its
+    # last backslash would escape the quote that ends the raw key).
+    d = '{"\\"admin":true,"\\\\":1}'
+    for script in (["find \\", "walk"], ["get \\", "walk"], ["ptr /\\", "walk"], ["get \\\\", "walk"],
+                   ["find \\\\\\", "walk"]):
+        yield case(d, script=script)
+    for n in (20, 70):  # names of 9 to 64 bytes and of more than 64 take their own paths
+        d = '{"%s\\"admin":true}' % ("k" * (n - 1))
+        for op in ("get", "find"):
+            yield case(d, script=[op + " " + "k" * (n - 1) + "\\", "walk"])
 
 
 def container_cases():
@@ -174,6 +187,35 @@ def mutation_cases():
             yield case(d, script=script)
 
 
+def root_buffer_cases():
+    # C++ copies a root number without the white space after it into a
+    # 21- or 1083-byte buffer; one that fills it is followed by NUL there.
+    for s in ("1." + "1" * 1080, "1." + "1" * 1080 + " ", "1." + "1" * 1081, "-0." + "1" * 1080,
+              "1." + "1" * 1081 + " ", "1" * 1083, "1" * 1083 + " ", "1" * 1084):
+        for op in ("double", "ntype"):
+            yield case(s, script=[op])
+    for s, op in (("18446744073709551615     ", "uint64"), ("18446744073709551615     ", "int64"),
+                  ("-9223372036854775808     ", "int64"), ("1234567890123456789012", "int64")):
+        yield case(s, script=[op])
+    yield case("-1.5\x1e\n", script=["walk"])  # RS is dropped too, outside a stream (the DOM rejects it)
+
+
+def false_cases():
+    # v5.1.1: a root false needs its e; the fifth byte was not read before.
+    for s in ("falsx", "fals1"):
+        for op in ("bool", "walk"):
+            yield case(s, script=[op])
+
+
+def exponent_cases():
+    # v5.1.1: Float64 reads an exponent of any length (20 or more digits was NUMBER_ERROR).
+    for s in ("1e000000000000000000001", "5E-0000000000000000000001", "0e9999999999999999999999999999",
+              "-0e+99999999999999999999", "1.5e-99999999999999999999", "1e99999999999999999999"):
+        yield case(s, script=["double"])
+        yield case(s, script=["walk"])
+        yield case("[%s]" % s, script=["arr", "at 0", "double"])
+
+
 RS_ = random.Random(20261008)  # separate, so the On-Demand cases stay byte-identical
 SFORMATS = ["whitespace", "newline", "sequence", "comma", "array"]
 SDOCS = ["1", "-2.5", "1e400", '"a\\"b"', '"é"', "true", "nul", "null", "[]", "{}", "[1,[2,{\"a\":3}]]",
@@ -236,11 +278,85 @@ def stream_cases():
         for fmt in (["whitespace", "newline"] if f.endswith(".ndjson") else ["whitespace"]):
             yield scase(file=path, fmt=fmt)
             yield scase(file=path, fmt=fmt, api="ondemand", script=["walk"])
+    # A gap before the delimiter: C++ reads a root number without it.
+    for doc, fmt, op in (("1" + " " * 30 + ",2", "comma", "int64"), ("-42" + " " * 2000 + ",-1", "comma", "double"),
+                         ("\x1e1" + " " * 30 + "\x1e2", "sequence", "int64"),
+                         ("\x1e-1.5\x1e" + " " * 30 + "2", "sequence", "double")):
+        yield scase(doc, fmt=fmt, api="ondemand", script=[op])
+
+
+def raw_cases():
+    # v5.1.1: raw ends on the value's last byte, also after the value was read,
+    # and after it on a scalar document a stream yields the very next one.
+    scripts = (["int64", "raw"], ["walk", "raw"], ["get a", "int64", "raw"], ["raw", "raw"])
+    for doc, script in zip(("5 ", "[1,2] ", '{"a":1,"b":2} ', "[1,2] "), scripts):
+        yield case(doc, script=script)
+    for doc, fmt in (("5 6 7", "whitespace"), ('[1,2] "s" {"a":1,"b":2}\n7', "newline"),
+                     ('\x1e{"a":1,"b":2}\n\x1e"x"\n', "sequence"), ('3 , [1,2],{"a":1}', "comma")):
+        for script in scripts:
+            yield scase(doc, fmt=fmt, api="ondemand", script=script)
+
+
+def rawkey_cases():
+    # v5.1.1: escaped_key() of a field whose value was read first is the key, not
+    # the key run on into the value (v5.0.2 read the ':' at the token before the cursor).
+    yield case('{"name":"Alice","tags":["x","y"],"age" :42,"obj":{"a":1}}', script=["obj", "keyread string raw int64 raw"])
+
+
+def stream_end_cases():
+    # v5.1.1: a value at the end of a last batch's indices has an empty raw token
+    # (v5.0.2 took the length from a smaller next index and crashed).
+    yield scase("\x1e}\x1e{\"\":\"", fmt="sequence", api="ondemand", script=["obj", "get ", "raw"])
+
+
+def rs_quote_cases():
+    # v5.1.1: a sequence ending in an unclosed string whose quote stage 1 did not
+    # index (it follows a scalar byte: an RS, or the 2) keeps the last index; the
+    # drop starts at the quote. White space before the quote: the quote is indexed.
+    for doc in ("\x1e1\n\x1e2\n\x1e  \"abc", "\x1e1\n\x1e 2\"abc"):
+        yield scase(doc, fmt="sequence")
+        for script in ([], ["walk"]):
+            yield scase(doc, fmt="sequence", api="ondemand", script=script)
+
+
+def dead_cases():
+    # v5.1.1: a document that met a fatal error stays dead. at_pointer returns
+    # the error again, and a stream ends at the document with it.
+    for doc, ptrs in (('{"a";1,"b":2}', ("/a", "/b", "")), ('{"a":1 "b":2}', ("/a", "/b", "/a")),
+                      ('{"a":1,"b":2', ("/a", "/b"))):
+        yield case(doc, script=["pint " + p for p in ptrs])
+    for doc, fmt in (('{"a" 1}\n{"b":2}\n{"b":2}\n{"b":2}\n', "whitespace"),
+                     ('{"a" 1}\n{"b":2}\n{"b":2}\n{"b":2}\n', "newline"),
+                     ('\x1e{"a" 1}\n\x1e{"b":2}\n\x1e{"b":2}\n\x1e{"b":2}\n', "sequence"),
+                     ('{"a" 1},{"b":2},{"b":2},{"b":2},', "comma")):
+        yield scase(doc, fmt=fmt, api="ondemand", script=["obj", "keys"])
+
+
+def open_last_cases():
+    # v5.1.1: a document still open at the end of an array stream fails; it
+    # does not close on the array's ']' (this one crashed v5.0.2).
+    yield scase('[[2[["]', fmt="array")
+
+
+def dead_raw_cases():
+    # v5.1.1: raw on a document that at_pointer abandoned. get_object and
+    # get_array step past the bracket before check_root_* fails, so raw ends
+    # on it; with the cursor further on, raw ends on the token before it. A
+    # rewind does not revive the document. pint can abandon a stream document
+    # without ending the script; the stream ends there.
+    for doc in ('{"a":1,"b":2', '[1,2', '{"a";1,"b":2}'):
+        yield case(doc, script=["pint /a", "raw"])
+    yield case('{"a":1 "b":2}', script=["pint /b", "rewind", "get a", "int64"])
+    yield scase('{"a" 1}\n{"b":2}\n', api="ondemand", script=["pint /a"])
+    # The cursor is past the bracket then, so a later read resumes the object.
+    yield case('{"a":1,"b":2', script=["pint /a", "get a", "int64"])
 
 
 def main():
     seen = set()
-    for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, stream_cases):
+    for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
+                false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases, stream_end_cases,
+                rs_quote_cases, dead_cases, open_last_cases, dead_raw_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

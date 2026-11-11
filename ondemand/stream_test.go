@@ -1,6 +1,7 @@
 package ondemand_test
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"iter"
@@ -99,31 +100,6 @@ func TestIterateMany(t *testing.T) {
 	// On-Demand only: the unbalanced document is yielded; skipping it fails.
 	if got := odItems(&p, []byte("[1,23 [1,23]"), ondemand.Whitespace); got != "0:[1,23 [1,23] !0 incomplete" {
 		t.Errorf("[1,23 [1,23]: %s", got)
-	}
-}
-
-// A document still open at the end of a CommaDelimitedArray's contents reads
-// the array's own ']' there, as C++ (its sentinel structural_indexes[n] = len
-// points at the byte after its input, which is that ']').
-func TestIterateManyArrayEnd(t *testing.T) {
-	var p ondemand.Parser
-	var got []string
-	for doc, err := range p.IterateMany([]byte("[[1 2]]"), ondemand.CommaDelimitedArray) {
-		if err != nil {
-			got = append(got, itemErr(err))
-			continue
-		}
-		var b strings.Builder
-		if err := walk(doc, &b); err != nil {
-			t.Fatal(err)
-		}
-		got = append(got, fmt.Sprintf("%d:%s:%s", doc.Offset(), doc.Source(), b.String()))
-	}
-	if s := strings.Join(got, " "); s != "1:[1 2]]:[i1,] !4 trailing" {
-		t.Errorf("got %s", s)
-	}
-	if got := odItems(&p, []byte(`[{},nul,[1 2]]`), ondemand.CommaDelimitedArray); got != "1:{} 4:nul 8:[1 2]] !8 incomplete" {
-		t.Errorf("unread: %s", got)
 	}
 }
 
@@ -291,33 +267,19 @@ func TestStreamStage1Errors(t *testing.T) {
 }
 
 // TestIterateManyAbandoned: after a read that abandons a document (a fatal
-// error), the next step skips from the document's root, as for an unread
-// document, and the stream goes on to the next record.
+// error), the next step skips the document from its root and the stream
+// goes on, where C++ v5.1.1 ends it (streams spec §4.3). At BatchSize 64 the
+// dead document crosses the first window's end.
 func TestIterateManyAbandoned(t *testing.T) {
-	cases := []struct{ in, want string }{
-		{"{\"a\":1}\n{\"a\":}\n{\"a\":3}", `0:{"a":1} 8:{"a":}:dead 15:{"a":3}`},
-		{"[{\"a\":}, 1, [2, 3], {\"x\":1}]\n7", `0:[{"a":}, 1, [2, 3], {"x":1}]:dead 29:7`},
-	}
-	var p ondemand.Parser
-	for _, c := range cases {
-		for _, f := range []ondemand.Format{ondemand.NewlineDelimited, ondemand.Whitespace} {
-			for _, bs := range []int{0, 64} {
-				p.BatchSize = bs
-				var got []string
-				for doc, err := range p.IterateMany([]byte(c.in), f) {
-					if err != nil {
-						got = append(got, itemErr(err))
-						continue
-					}
-					item := fmt.Sprintf("%d:%s", doc.Offset(), doc.Source())
-					if walk(doc, new(strings.Builder)) != nil && ondemand.Abandoned(doc) {
-						item += ":dead"
-					}
-					got = append(got, item)
-				}
-				if s := strings.Join(got, " "); s != c.want {
-					t.Errorf("%q, format %d, BatchSize %d:\n got  %s\n want %s", c.in, f, bs, s, c.want)
-				}
+	pad := `{"p":"` + strings.Repeat("x", 50) + `"}`
+	in := []byte(pad + "\n{\"a\":}\n{\"a\":3}")
+	want := "@0 h" + hex.EncodeToString([]byte(pad)) + " {p:s" + strings.Repeat("x", 50) +
+		",} @59 h7b2261223a7d x3 dead @66 h7b2261223a337d {a:i3,} ~0"
+	for _, f := range []simdjson.Format{simdjson.NewlineDelimited, simdjson.Whitespace} {
+		for _, bs := range []int{0, 64} {
+			p := ondemand.Parser{BatchSize: bs}
+			if got := streamOut(nil, &p, "ondemand", in, f, []string{"walk"}); got != want {
+				t.Errorf("format %d, BatchSize %d:\n got  %s\n want %s", f, bs, got, want)
 			}
 		}
 	}
@@ -396,7 +358,7 @@ func TestIterateManyReadPastRoot(t *testing.T) {
 				return err.Error()
 			}
 			return string(raw)
-		}, "0:[}:[}" + rest[:len(rest)-1] + fmt.Sprintf(" %d:0:%s", len(rest)+1, simdjson.ErrIncorrectType)},
+		}, "0:[}:[}" + rest[:len(rest)-2] + fmt.Sprintf(" %d:0:%s", len(rest)+1, simdjson.ErrIncorrectType)},
 		{misuse, func(doc *ondemand.Document) string {
 			if _, err := doc.Raw(); err != nil {
 				return err.Error()
@@ -410,7 +372,7 @@ func TestIterateManyReadPastRoot(t *testing.T) {
 				return err.Error()
 			}
 			return string(raw)
-		}, "0:[]:" + misuse[:len(misuse)-1] + fmt.Sprintf(" %d:0:%s", len(misuse)-1, simdjson.ErrIncorrectType)},
+		}, "0:[]:" + misuse[:len(misuse)-2] + fmt.Sprintf(" %d:0:%s", len(misuse)-1, simdjson.ErrIncorrectType)},
 	} {
 		var p ondemand.Parser
 		var want string

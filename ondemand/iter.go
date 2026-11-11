@@ -17,6 +17,12 @@ type Parser struct {
 	// 0 means 1,000,000; above 1 GiB it means 1 GiB; it is rounded up to a
 	// multiple of 64. It changes speed and memory, never results.
 	BatchSize int
+	// MaxDepth limits nesting: a read that starts an array or object at
+	// depth MaxDepth or deeper (the root is at depth 1), empty ones
+	// included, fails with ErrDepth, as C++ v5.1.1 built with development
+	// checks does. Values skipped without being started do not count. 0 or
+	// negative means 1024 (C++ DEFAULT_MAX_DEPTH).
+	MaxDepth int
 
 	doc     Document
 	idx     []uint32      // Iterate's indices, apart from the stream's
@@ -25,6 +31,17 @@ type Parser struct {
 }
 
 var bom = []byte{0xEF, 0xBB, 0xBF}
+
+// defaultMaxDepth is C++ DEFAULT_MAX_DEPTH.
+const defaultMaxDepth = 1024
+
+// maxDepth is MaxDepth, with 0 or negative meaning defaultMaxDepth.
+func (p *Parser) maxDepth() int {
+	if p.MaxDepth <= 0 {
+		return defaultMaxDepth
+	}
+	return p.MaxDepth
+}
 
 // maxSize is the largest input: structural indices are 32 bits wide.
 const maxSize = 0xFFFFFFFF - 3
@@ -63,6 +80,7 @@ func (p *Parser) Iterate(b []byte) (*Document, error) {
 		n:      n,
 		end:    n,
 		depth:  1,
+		limit:  p.maxDepth(),
 		gen:    d.gen + 1,
 		strs:   d.strs[:0],
 		starts: d.starts[:0],
@@ -94,7 +112,9 @@ type Document struct {
 	n      int      // number of structural indices
 	pos    int      // the cursor: an index into idx
 	depth  int      // depth of the cursor (the root value is at depth 1)
+	limit  int      // Parser.MaxDepth: no array or object starts at this depth or deeper
 	err    error    // a fatal error; reads fail with it from then on
+	dead   bool     // abandoned after a fatal error (C++ !is_alive)
 	gen    uint32   // incremented by every Iterate, to detect stale handles
 	strs   []byte   // unescaped strings, until the next Iterate or Rewind
 	starts []int    // starts[depth]: start of the container open at depth (misuse checks)
@@ -141,7 +161,7 @@ func (d *Document) exhausted() bool { return d.pos == d.n }
 
 // tokenLen is C++ peek_length: the distance to the next structural index.
 // At the end of a stream, C++'s sentinels can make it negative (the dropped
-// tail starts before len(buf)), which C++ reads as huge: Go reads 0.
+// tail starts before len(buf)). C++ returns 0 then since v5.1.1; so does Go.
 func (d *Document) tokenLen(i int) int { return max(int(d.idx[i+1])-int(d.idx[i]), 0) }
 
 // rootTokenLen is C++ peek_root_length.
@@ -162,7 +182,14 @@ func (d *Document) fail(err error) error {
 // abandon stops all further iteration after a fatal error.
 func (d *Document) abandon() {
 	d.depth = 0
+	d.dead = true
 }
+
+// abandoned reports whether a fatal error abandoned d (C++ is_alive is
+// false): Rewind cannot bring it back. A recorded error alone does not
+// abandon d: after ErrDepth, C++ leaves the document alive, even once a
+// read has taken its cursor to depth 0.
+func (d *Document) abandoned() bool { return d.dead }
 
 func (d *Document) setStart(depth, pos int) {
 	for len(d.starts) <= depth {
@@ -223,16 +250,11 @@ func (d *Document) skipChild(parentDepth int) error {
 	for {
 		idx := d.idx[:d.n] // every index below n is inside the input
 		for ; pos < len(idx); pos++ {
-			switch buf[idx[pos]] {
-			case '[', '{':
-				depth++
-			case ']', '}':
-				depth--
-				if depth <= parentDepth {
-					d.pos, d.depth = pos+1, depth
-					d.reach() // it may have walked far: what follows reads on
-					return nil
-				}
+			depth += int(stream.DepthDelta[buf[idx[pos]]])
+			if depth <= parentDepth {
+				d.pos, d.depth = pos+1, depth
+				d.reach() // it may have walked far: what follows reads on
+				return nil
 			}
 		}
 		if !d.more() {
@@ -261,15 +283,16 @@ func (d *Document) unescape(off int) ([]byte, error) {
 	return out[start:len(out):len(out)], nil
 }
 
-// rawText returns the input from offset start to the cursor's structural
-// (C++ raw_json's end point), or ErrOutOfOrderIteration if the cursor is not
+// rawText returns the input from offset start to the end of the token before
+// the cursor, the closing bracket of a container just skipped (C++
+// raw_json's end point), or ErrOutOfOrderIteration if the cursor is not
 // after start (a handle used out of order).
 func (d *Document) rawText(start int) ([]byte, error) {
-	if d.pos >= len(d.idx) {
+	if d.pos < 1 || d.pos > d.n {
 		return nil, jsonerr.ErrOutOfOrderIteration
 	}
-	end := int(d.idx[d.pos])
-	if d.pos > d.n || end < start {
+	end := int(d.idx[d.pos-1]) + 1
+	if end < start {
 		return nil, jsonerr.ErrOutOfOrderIteration
 	}
 	return d.buf[start:end], nil
@@ -293,9 +316,10 @@ func (d *Document) copyString(mark int, b []byte) string {
 // Rewind moves the cursor back to the start of the document, so it can be
 // read again (C++ document::rewind). Slices from StringBytes read before
 // the Rewind may be overwritten. As C++ json_iterator::rewind, it keeps a
-// fatal error, which iteration, Count and Reset report again.
+// fatal error, which iteration, Count and Reset report again. A document
+// that a fatal error abandoned is left as it is (C++ v5.1.1).
 func (d *Document) Rewind() {
-	if d.n == 0 {
+	if d.n == 0 || d.abandoned() {
 		return
 	}
 	d.pos = 0

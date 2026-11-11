@@ -14,7 +14,7 @@ import (
 // parse_double, get_number_type and check_if_integer). Each reads the
 // number at the start of s; bytes past the end of s read as pad: 0 for a
 // value inside the document (C++'s padding), ' ' for a root scalar (C++
-// copies those to a space-padded buffer).
+// copies those to a space-padded buffer), 0 for one that fills that buffer.
 
 func at(s []byte, i int, pad byte) byte {
 	if i < len(s) {
@@ -155,7 +155,7 @@ func parseDouble(s []byte, pad byte) (float64, error) {
 			}
 			p++
 		}
-		if p == expStart || p-expStart > 19 {
+		if p == expStart {
 			return 0, jsonerr.ErrNumber
 		}
 		if expNeg {

@@ -4,9 +4,9 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 
 ## Ground rules
 
-- **C++ simdjson v5.0.2 is the oracle.** The tape format, the error returned for each bad input, and the edge cases must match C++. Some of those cases look like bugs but are intended, so don't "fix" them: the design spec lists them (§5.5, §9). Change parsing behaviour only together with evidence from C++.
+- **C++ simdjson v5.1.1 is the oracle.** The tape format, the error returned for each bad input, and the edge cases must match C++. Some of those cases look like bugs but are intended, so don't "fix" them: the design spec lists them (§5.5, §9). Change parsing behaviour only together with evidence from C++.
 - **Go 1.27, standard library only.** No cgo, no third-party modules in the library or its tests. Dev tooling run through `go run` (the pinned `benchstat` in the Makefile) is the only exception.
-- **Recorded C++ results are generated, never edited by hand.** C++ v5.0.2's release build is the oracle for package `ondemand` and for the streams. `testdata/ondemand/oracle.jsonl` holds ~30,000 scripted reads (`TestOracle`); `testdata/stream/oracle.jsonl` holds ~3,000 streams through `parse_many`/`iterate_many` in one batch (`TestStreamOracle`). To change them, edit `scripts/ondemand-oracle/` and run `make oracle`.
+- **Recorded C++ results are generated, never edited by hand.** C++ v5.1.1's release build is the oracle for package `ondemand` and for the streams. `testdata/ondemand/oracle.jsonl` holds ~30,000 scripted reads (`TestOracle`); `testdata/stream/oracle.jsonl` holds ~3,000 streams through `parse_many`/`iterate_many` in one batch (`TestStreamOracle`). To change them, edit `scripts/ondemand-oracle/` and run `make oracle`. Put new cases in a function of their own, called after the existing groups in `gen.py`: the sync plans name cases by number, and appending keeps the numbers valid.
 - **`encoding/json/v2` is the oracle for data binding.** `Unmarshal` and `Marshal` must agree with the installed v2 on values, output bytes and error classes; the one allowed difference is listed in the binding spec (§1, §6).
 - **The spec is the authority.** Read the spec before you change behaviour. If the code and the spec disagree, fix one of them in the same change.
   - [`2026-10-06-simdjson-go-core-design.md`](docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md): parser, DOM
@@ -32,7 +32,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `ondemand/` | On-Demand: `iter.go` and `valueiter.go` port C++'s `json_iterator` and `value_iterator`; `numbers.go` its typed number parsers; `document.go`, `value.go`, `object.go`, `array.go` the API |
 | `scripts/ondemand-oracle/` | The C++ program and case generator behind `make oracle` |
 | `scripts/cpp-bench/` | `make bench-cpp`: the C++ harness (C++'s own benchmark bodies, printed as Go benchmark lines), the run script and the table script |
-| `scripts/fetch-simdjson.sh` | Gets C++ v5.0.2's single header for `make oracle` and `make bench-cpp` |
+| `scripts/fetch-simdjson.sh` | Gets C++ v5.1.1's single header for `make oracle` and `make bench-cpp` |
 | `testdata/ondemand/`, `testdata/stream/` | C++'s recorded results (`TestOracle`, `TestStreamOracle`) |
 | `element.go`, `pointer.go`, `serialize.go` | DOM API, JSON Pointer, `AppendJSON` and `Minify` |
 | `options.go`, `typeplan.go` | Data binding: options, the per-type codec cache, struct field plans (adapted from v2's `fields.go`) |
@@ -40,6 +40,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `methods.go`, `time.go`, `strcache.go` | `MarshalJSON`/`UnmarshalJSON`/text methods, `time.Time`, the string cache |
 | `*_test.go` | Unit, corpus (`corpus_test.go`), fuzz (`fuzz_test.go`) and benchmark tests; data binding against v2 in `bind_test.go`, `bind_fuzz_test.go`, `bind_bench_test.go`; stage 2 binding mode in `binding_test.go` |
 | `scripts/fetch-testdata.sh` | Downloads the pinned corpora (`make testdata`) |
+| `docs/upstream-sync-prompt.md`, `docs/upstream/` | The prompt that plans a sync with a new C++ release, and each sync's plan: a ledger of the upstream commits and one porting prompt per package |
 
 ## Commands
 
@@ -67,6 +68,12 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 - **If a fuzzer fails, investigate the parser first.** Do not loosen the oracle in `fuzz_test.go` to make it pass. Each adjustment the oracle makes to `encoding/json` models a documented difference from C++.
 - **Never skip the corpus tests.** They `t.Fatal` when `testdata/` is missing, and that's deliberate.
 - `Parse` must not read past `len(b)`, must not keep or modify `b`, and must not allocate once the `Parser` has grown its buffers. `BenchmarkParse` reports allocs/op.
+
+## Following a new C++ release
+
+- Give [`docs/upstream-sync-prompt.md`](docs/upstream-sync-prompt.md) to an agent. It writes the plan, `docs/upstream/<BASE>..<TARGET>.md`; other agents run the plan's prompts, one package each.
+- **A sync lands as one branch.** Its first package moves the pin and regenerates the oracles, so `TestOracle` and `TestStreamOracle` fail on the cases that later packages own. Those commits are the one exception to "`make check` must pass before committing": it must pass at the plan's closing package, and the branch is merged as one unit.
+- **Packages built in parallel** each put the regenerated oracle files in a commit of their own, apart from the code. After each merge, run `make oracle` again and commit its output.
 
 ## Writing tests
 
@@ -107,11 +114,11 @@ Write fewer, better tests. Someone has to read, maintain and wait in CI for ever
 
 - **Literal `\u` escapes in tests.** Test inputs such as `` `"é"` `` must keep the backslash. Some editors and tools decode them to `é`, which silently weakens the test. Check with `grep -c 'u00e9'`.
 - **`archsimd` shift direction.** `x.ConcatShiftBytesRight(y, n)` treats `y` as the low half. The byte k positions before `in[i]` is `in.ConcatShiftBytesRight(prev, 16-k)[i]`.
-- **Depth.** Empty `[]` and `{}` don't count toward `MaxDepth`, as in C++ (but they do in binding mode, as in v2). The parser and DOM never recurse per nesting level (`AppendJSON` and `AtPointer` walk the tape iteratively); keep it that way so a raised `MaxDepth` cannot overflow the stack. The binding codecs do recurse, as v2's do, bounded by v2's depth limit of 10,000.
+- **Depth.** Empty `[]` and `{}` don't count toward the DOM's `MaxDepth`, as in C++ (but they do in binding mode, as in v2). `ondemand.Parser.MaxDepth` (0 means 1024) is checked where a read starts an array or object, before the empty check, so empty ones do count there, as in C++'s development build; skipped values never count, so keep the check out of `skipChild`. `TestMaxDepth` holds C++'s measured values (the recorded oracle has no limit). The parser and DOM never recurse per nesting level (`AppendJSON` and `AtPointer` walk the tape iteratively); keep it that way so a raised `MaxDepth` cannot overflow the stack. The binding codecs do recurse, as v2's do, bounded by v2's depth limit of 10,000.
 - **Binding mode.** `Parser.binding` (set only by `Unmarshal`) makes stage 2 record input offsets and repeated names. Keep every binding-only step behind `if b.binding`, so plain `Parse` and its tape stay as C++ defines them.
 - **Duplicate-name hashing.** `checkNames` (stage 2) hashes names with seeded `hash/maphash`. A cheaper unseeded or prefix/suffix hash lets crafted or ordinary input (same-length URLs, timestamps) make `Unmarshal` quadratic; `TestCollidingNames` guards it.
 - **Benchmark noise.** Speed bars (binding spec §1) are ratios against v2 or against `main`; twitter `Unmarshal` sits near its 1.4× bar. On a loaded machine, compare in the same binary or alternate old/new test binaries run by run, and record `uptime`. `make bench-cpp` alternates C++ and Go rounds for the same reason.
-- **On-Demand ports C++'s release build.** C++'s debug-only checks (`SIMDJSON_DEVELOPMENT_CHECKS`) become `ErrOutOfOrderIteration`, but its end-of-input checks (`SIMDJSON_CHECK_EOF`) are off, as in release: past the last structural the iterator reads 0, like C++'s padding. Keep every index into the input bounds-safe; `FuzzOnDemand` runs arbitrary read sequences to catch panics.
+- **On-Demand ports C++'s release build.** C++'s debug-only checks (`SIMDJSON_DEVELOPMENT_CHECKS`) become `ErrOutOfOrderIteration`, and its depth check `ErrDepth` (which leaves the document alive, unlike an abandoning fatal error), but its end-of-input checks (`SIMDJSON_CHECK_EOF`) are off, as in release: past the last structural the iterator reads 0, like C++'s padding. Keep every index into the input bounds-safe; `FuzzOnDemand` runs arbitrary read sequences to catch panics.
 - **Streams' decided point.** Documents are handed out only before the last boundary candidate (`Reader.Decided`), because C++ trims only after it. Stage 2 and On-Demand must not read past a candidate inside a document; the fuzzers check this.
 - **Stream document lifetime.** `IterateMany` invalidates the document it yielded at the loop's next step, before `Reader.Compact` moves the indices the document views. `Iterate` keeps its own index buffer (`Parser.idx`), so a call inside the loop cannot overwrite the stream's.
 - **Tape counts.** A container's element count saturates at 0xFFFFFF (`saturated`), and `Len()` then walks the tape. Read the count field only through `Element.exactCount`, which says whether it is exact.

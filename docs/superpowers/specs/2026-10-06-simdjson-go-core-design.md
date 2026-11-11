@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-06
 - **Status:** Draft, awaiting review
-- **Reference:** C++ simdjson v5.0.2-9-ge9cdb8751 at `~/code/theirs/simdjson`
+- **Reference:** C++ simdjson v5.1.1 at `~/code/theirs/simdjson`
 
 ## 1. Goal
 
@@ -307,7 +307,7 @@ Not ported (no Go equivalent or not reachable): `MEMALLOC` (Go panics on OOM), `
 `minefieldcheck`, plus `tests/minify_tests.cpp` and `tests/unicode_tests.cpp` (its invalid
 UTF-8 sequences). Each becomes a table-driven Go test keeping the original inputs and
 expected errors; expected error codes not stated in the C++ tests are taken from running C++
-simdjson v5.0.2 on the same input. Tests for C++-only
+simdjson v5.1.1 on the same input. Tests for C++-only
 features (ranges, trivially-copyable, single-header, compile-time) are not ported.
 
 ### 8.2 Corpora

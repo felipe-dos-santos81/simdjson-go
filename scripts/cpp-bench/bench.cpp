@@ -1,7 +1,7 @@
-// bench runs C++ simdjson v5.0.2 on the inputs of simdjson-go's benchmarks
+// bench runs C++ simdjson v5.1.1 on the inputs of simdjson-go's benchmarks
 // and prints the results in Go's benchmark format, under the names of the Go
 // benchmarks, for benchstat to compare (run.sh). The task bodies are copied
-// from v5.0.2's benchmark/<task>/simdjson_{dom,ondemand}.h, which the Go
+// from v5.1.1's benchmark/<task>/simdjson_{dom,ondemand}.h, which the Go
 // benchmarks port.
 //
 // usage: bench CORPUS_DIR GEN_DIR FILE...

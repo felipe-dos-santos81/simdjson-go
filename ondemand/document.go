@@ -1,8 +1,11 @@
 package ondemand
 
 import (
+	"cmp"
+
 	"simdjson-go/internal/jsonerr"
 	"simdjson-go/internal/number"
+	"simdjson-go/internal/stream"
 )
 
 // The document's getters read its root value. As in C++, a scalar root
@@ -13,7 +16,10 @@ func (d *Document) root() valueIter { return valueIter{d, 1, 0} }
 
 func (d *Document) atRoot() bool { return d.pos == 0 }
 
-// Root lengths C++ copies a root scalar into before parsing it.
+// Root lengths C++ copies a root number into before parsing it. They limit
+// the number's own text: the white space, commas and RS after it do not
+// count (valueIter.rootScalar). A number of exactly maxRootFloat bytes is
+// followed by NUL in C++'s buffer, so Float64 fails on it.
 const (
 	maxRootInt   = 21       // 20 digits and a sign
 	maxRootFloat = 1074 + 9 // the longest float C++ accepts
@@ -23,11 +29,11 @@ const (
 func rootScalar[T any](d *Document, n int, parse func([]byte, byte) (T, error)) (T, error) {
 	var zero T
 	it := d.root()
-	s, ok := it.rootScalar(n)
+	s, pad, ok := it.rootScalar(n)
 	if !ok {
 		return zero, jsonerr.ErrNumber
 	}
-	x, err := parse(s, ' ')
+	x, err := parse(s, pad)
 	if err != nil {
 		return zero, err
 	}
@@ -68,8 +74,8 @@ func (d *Document) NumberType() (NumberType, error) {
 		return 0, err
 	}
 	it := d.root()
-	s, ok := it.rootScalar(maxRootFloat)
-	if !ok {
+	s, pad, ok := it.rootScalar(maxRootFloat)
+	if !ok { // C++ checks the whole token, white space and all
 		if !checkIfInteger(d.rootText()) {
 			return 0, jsonerr.ErrNumber
 		}
@@ -78,7 +84,7 @@ func (d *Document) NumberType() (NumberType, error) {
 		}
 		return BigInt, nil
 	}
-	t, err := numberType(s, ' ')
+	t, err := numberType(s, pad)
 	if err == nil && it.trailing() {
 		return 0, jsonerr.ErrTrailingContent
 	}
@@ -111,12 +117,11 @@ func (d *Document) rootText() []byte {
 }
 
 // rootLiteral is C++ get_root_bool/is_root_null's test: s is lit, or lit
-// and a terminator, comparing only lit's first four bytes (so "falsy"
-// reads as false, as in C++). Value's parseBool and IsNull read a padded
-// copy instead; C++ has the two variants too.
+// and a terminator. Value's parseBool and IsNull read a padded copy
+// instead; C++ has the two variants too.
 func rootLiteral(s []byte, lit string) bool {
 	n := len(lit)
-	return len(s) >= n && string(s[:4]) == lit[:4] && (len(s) == n || number.IsStructuralOrSpace[s[n]])
+	return len(s) >= n && string(s[:n]) == lit && (len(s) == n || number.IsStructuralOrSpace[s[n]])
 }
 
 // IsNull is Value.IsNull for a scalar document.
@@ -254,14 +259,22 @@ func (d *Document) FindNext(name string) (Value, error) {
 	return o.FindNext(name)
 }
 
-// Raw returns the whole document's JSON text from its first character to
-// the next structural character after the root value, consuming it.
+// Raw returns the root value's JSON text from its first byte to its last,
+// consuming it (C++ document::raw_json): an array or object ends on its
+// closing bracket, a scalar at the end of its token. As in C++ it is not
+// order-checked: wherever the cursor is, it reads the rest of the root, or
+// nothing if the root was read to its end, and returns the root's text.
+// On a document a fatal error abandoned it reads nothing more and returns
+// the text up to the token before the cursor: "{" for {"a":1,"b":2 after
+// AtPointer("/a"), whose root check, as C++'s, fails past the bracket.
+// Unlike C++ it returns ErrOutOfOrderIteration where C++'s end point is not
+// in the input: with the cursor past the last structural, C++ adds a
+// padding byte that Go does not have; with the cursor still on the root's
+// first token (a root check failed in Value or AtPointer("")), C++ reads
+// before its index array.
 func (d *Document) Raw() ([]byte, error) {
 	if err := d.check(); err != nil {
 		return nil, err
-	}
-	if !d.atRoot() {
-		return nil, jsonerr.ErrOutOfOrderIteration
 	}
 	start := int(d.idx[0])
 	switch d.root().typ() {
@@ -270,17 +283,55 @@ func (d *Document) Raw() ([]byte, error) {
 			d.abandon()
 			return nil, err
 		}
-	default:
-		d.advance()
+		return d.rawText(start)
 	}
-	return d.rawText(start)
+	if d.depth > 0 { // C++ consume: step over the scalar, unless a read did
+		d.advance()
+		d.depth = 0
+	}
+	return d.scalarText(start), nil
+}
+
+// scalarText is the end of C++ document::raw_json for a scalar root at
+// offset start: a string ends at its closing quote; anything else at the
+// first white space, structural character, quote, RS or NUL. Neither runs
+// past the cursor's structural.
+func (d *Document) scalarText(start int) []byte {
+	next := len(d.buf)
+	if d.pos < len(d.idx) {
+		next = min(int(d.idx[d.pos]), next)
+	}
+	next = max(next, start) // C++ is undefined below start
+	buf, end := d.buf, start+1
+	if buf[start] == '"' {
+		for end < next {
+			c := buf[end]
+			end++
+			if c == '\\' {
+				end++
+			} else if c == '"' {
+				break
+			}
+		}
+		end = min(end, next)
+	} else {
+		for end < next && !number.IsStructuralOrSpace[buf[end]] && buf[end] != '"' && buf[end] != stream.RS && buf[end] != 0 {
+			end++
+		}
+	}
+	return buf[start:end]
 }
 
 // AtPointer rewinds the document and returns the value at the RFC 6901 JSON
 // Pointer ptr, looking fields up in order. An empty pointer is the root.
+// A document that a fatal error abandoned cannot be rewound: every later
+// call returns that error (C++ v5.1.1).
 func (d *Document) AtPointer(ptr string) (Value, error) {
 	if err := d.check(); err != nil {
 		return Value{}, err
+	}
+	if d.abandoned() { // ErrTape if no error was recorded (C++: UNINITIALIZED)
+		return Value{}, cmp.Or(d.err, jsonerr.ErrTape)
 	}
 	d.Rewind()
 	if ptr == "" {
@@ -290,6 +341,9 @@ func (d *Document) AtPointer(ptr string) (Value, error) {
 	case TypeArray, TypeObject:
 		v, err := d.Value() // checks the root container, as C++'s get_array/get_object do
 		if err != nil {
+			if d.abandoned() { // they step past the bracket first: Raw then ends on it
+				d.advance()
+			}
 			return Value{}, err
 		}
 		return atPointer(v, ptr)

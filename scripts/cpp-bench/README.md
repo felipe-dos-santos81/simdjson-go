@@ -1,10 +1,10 @@
 # C++ comparison
 
-`make bench-cpp` runs simdjson-go and C++ simdjson v5.0.2 on the same inputs
+`make bench-cpp` runs simdjson-go and C++ simdjson v5.1.1 on the same inputs
 and compares them. It needs a C++20 compiler, curl (or
 `$SIMDJSON_SINGLEHEADER`), python3 and the corpora (`make testdata`).
 
-- `bench.cpp` runs C++'s own benchmark bodies (v5.0.2's
+- `bench.cpp` runs C++'s own benchmark bodies (v5.1.1's
   `benchmark/<task>/simdjson_{dom,ondemand}.h`) and prints Go benchmark lines
   under the names of the Go benchmarks: `BenchmarkParse`, `BenchmarkParseMany`
   (`bench_test.go`), `BenchmarkTasks` and `BenchmarkIterateMany`

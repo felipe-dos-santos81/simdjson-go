@@ -7,20 +7,20 @@
   (`docs/superpowers/specs/2026-10-08-simdjson-go-streams-design.md`), and the benchmarks
   that already exist for them: `BenchmarkParse`, `BenchmarkParseMany` (`bench_test.go`),
   `BenchmarkTasks`, `BenchmarkIterateMany` (`ondemand/bench_test.go`)
-- **Reference:** C++ simdjson v5.0.2, its benchmark bodies in
+- **Reference:** C++ simdjson v5.1.1, its benchmark bodies in
   `benchmark/<task>/simdjson_{dom,ondemand}.h` (tasks `partial_tweets`, `distinct_user_id`,
   `find_tweet`, `top_tweet`, `kostya`, `large_random`, `amazon_cellphones`)
 
 ## 1. Goal
 
-One `make` target that runs simdjson-go and C++ simdjson v5.0.2 on the same inputs and prints a
+One `make` target that runs simdjson-go and C++ simdjson v5.1.1 on the same inputs and prints a
 table of their speed, row by row, for the README's Performance section. It covers the DOM parse,
 the On-Demand tasks and the streams. It runs by hand, on a quiet machine; not in CI.
 
 ### Success criteria
 
 1. **Same work on both sides.** Each row times the same operation on the same bytes: the C++
-   body is copied from v5.0.2's benchmark suite, which the Go benchmark of the same name ports.
+   body is copied from v5.1.1's benchmark suite, which the Go benchmark of the same name ports.
 2. **Every row pairs.** The table has a C++ and a Go value on every row, or the run fails.
 3. **Statistics.** `count` runs per side (default 6), alternated, compared by the pinned
    `benchstat` with confidence intervals and p-values.
@@ -65,7 +65,7 @@ python3 and the corpora (`make testdata`), as `make oracle` does.
 
 | Path | What |
 |---|---|
-| `scripts/fetch-simdjson.sh DIR` | Puts v5.0.2's `simdjson.h` and `simdjson.cpp` in DIR: copied from `$SIMDJSON_SINGLEHEADER` when set, else downloaded. `scripts/ondemand-oracle/regen.sh` uses it too, so the download exists once |
+| `scripts/fetch-simdjson.sh DIR` | Puts v5.1.1's `simdjson.h` and `simdjson.cpp` in DIR: copied from `$SIMDJSON_SINGLEHEADER` when set, else downloaded. `scripts/ondemand-oracle/regen.sh` uses it too, so the download exists once |
 | `scripts/cpp-bench/bench.cpp` | The C++ harness (§5) |
 | `scripts/cpp-bench/run.sh` | Builds both sides, runs them alternately, calls benchstat and `table.py` (§6) |
 | `scripts/cpp-bench/table.py` | benchstat CSV to the Markdown table (§6) |
@@ -106,7 +106,7 @@ Each row times exactly what the Go benchmark of the same name times.
 - Streams: `default` is C++'s default batch (1,000,000 bytes) with `threaded = true`, against
   Go's default `BatchSize` with its stage 1 goroutine. `single` is `batch_size = len(input)`,
   against Go's one window. The brand map lives across iterations on both sides, as it always
-  did in Go; v5.0.2's runner clears it before each run, outside the timed body, and the keys
+  did in Go; v5.1.1's runner clears it before each run, outside the timed body, and the keys
   stop changing after the first run, so the timed work is the same.
 - Each input is copied into a `padded_string` once, outside the timed loop: Go's `Parse` needs
   no padding.
@@ -177,7 +177,7 @@ benchmark fails the run instead of shortening the table.
 ## 8. Docs
 
 - `README.md`: the streams table's input becomes C++'s 10 MiB build (re-measured in the same
-  run); a "Against C++ simdjson v5.0.2" table in Performance, from a real run (machine,
+  run); a "Against C++ simdjson v5.1.1" table in Performance, from a real run (machine,
   `count`); `make bench-cpp` under Development.
 - `AGENTS.md`: layout rows for `scripts/cpp-bench/` and `scripts/fetch-simdjson.sh`; the command;
   in the Benchmark-noise trap, that the comparison alternates its runs; under "When you change
@@ -193,20 +193,23 @@ round took about 70 s, and Go ran at 0.23–0.40× of C++ (geomean 0.29×).
 
 ## Results
 
-Measured on an Apple M3 Max (14 cores), `make bench-cpp` with count=6. `uptime` at the end: load
-averages 1.33 / 15.71 / 17.02, 14 minutes after a boot, so the machine was busy before the run;
-the confidence intervals stay within ±8% (C++ task rows) and ±5% (all Go rows). Go runs at
-0.20–0.49× of C++'s throughput (geomean 0.29×): 0.20× on `update-center.json`, 0.49× on
-`canada.json`, 0.25–0.27× on the other parse and stream rows, 0.29–0.40× on the On-Demand
-tasks. The table is in README.md (Performance). The same run refreshed the README's streams
-table (new input) and its On-Demand row: `kostya` 1.43× and `large_random` 1.31× there are
-lower than the earlier 1.63× and 1.61×, which were measured with `make bench` in a separate run.
-
-An earlier full run (load about 19, another session's `make check`) was discarded.
+C++ simdjson v5.1.1 against the Go branch that syncs with it (`sync/simdjson-v5.1.1`, after the
+On-Demand skip-loop and `MaxDepth` changes), measured on an Apple M3 Max (14 cores), `make
+bench-cpp` with count=6. `uptime` before the run: load averages 3.74 / 9.37 / 12.01; after it:
+1.71 / 3.98 / 8.17. Earlier work on the machine had just ended, so it was quiet during the run
+but not idle before it. All 26 rows are paired. The confidence intervals stay within ±3% on
+every row except `Tasks/top_tweet/dom` (C++ ±8%). Go runs at 0.20–0.49× of C++'s throughput
+(geomean 0.29×): 0.20× on `update-center.json`, 0.49× on `canada.json`, 0.25–0.28× on the other
+parse and stream rows, 0.26–0.31× on the DOM and On-Demand `partial_tweets`, `distinct_user_id`,
+`find_tweet` and `top_tweet` rows, 0.33–0.39× on `kostya` and `large_random`. The table is in
+README.md (Performance). The benchmark bodies in `bench.cpp` are v5.1.1's
+`benchmark/<task>/simdjson_{dom,ondemand}.h`; the previous tag has the same ones, so the
+ratios moved only through C++'s own speed-ups (skipping, small documents) and Go's. The
+README's streams and On-Demand-over-DOM tables are computed from this run's Go column.
 
 ## 9. Risks
 
-- **The C++ bodies drift from the Go ports.** The Go ports follow v5.0.2's suite; the harness
+- **The C++ bodies drift from the Go ports.** The Go ports follow v5.1.1's suite; the harness
   copies the same files at the same tag. A change to a Go task needs the same change in
   `bench.cpp`.
 - **Noise.** A loaded machine skews both sides; alternating rounds and benchstat's intervals show

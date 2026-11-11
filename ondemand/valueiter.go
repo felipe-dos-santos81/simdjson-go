@@ -95,6 +95,9 @@ func (it valueIter) startRootObject() (bool, error) {
 }
 
 func (it valueIter) startedObject() (bool, error) {
+	if it.depth >= it.d.limit {
+		return false, it.d.fail(jsonerr.ErrDepth)
+	}
 	it.d.reach()
 	it.d.setStart(it.depth, it.start)
 	if it.d.peek() == '}' {
@@ -181,6 +184,8 @@ func (it valueIter) fieldValue() error {
 
 // keyEquals is C++ raw_json_string::unsafe_is_equal: the raw key (as
 // written, escapes included) at buf[off+1:] equals key, followed by a quote.
+// A key that ends in an odd number of backslashes never matches: the last
+// one escapes that quote, so it does not end the raw key (C++ v5.1.1).
 func (it valueIter) keyEquals(off int, key string) bool {
 	b := it.d.buf
 	end := off + 1 + len(key)
@@ -191,7 +196,13 @@ func (it valueIter) keyEquals(off int, key string) bool {
 		// Past SIMDJSON_PADDING (64), C++ compares with is_equal, which
 		// stops at an unescaped quote in key: such a key never matches,
 		// even where the raw text runs on into the next field.
-		return string(b[off+1:end]) == key && (len(key) <= 64 || !hasUnescapedQuote(key))
+		if string(b[off+1:end]) != key {
+			return false
+		}
+		if len(key) > 64 {
+			return !hasUnescapedQuote(key)
+		}
+		return !escapesQuote(key)
 	}
 	seg := b[off+1 : end] // short keys: a loop beats the memequal call
 	for i := range seg {
@@ -199,11 +210,30 @@ func (it valueIter) keyEquals(off int, key string) bool {
 			return false
 		}
 	}
-	return true
+	return !escapesQuote(key)
+}
+
+// escapesQuote reports whether key ends in an odd number of backslashes. The
+// last-byte test comes first so that the count stays off the common path.
+func escapesQuote(key string) bool {
+	return len(key) > 0 && key[len(key)-1] == '\\' && oddBackslashes(key)
+}
+
+// oddBackslashes is not inlined, so that its loop stays off keyEquals'
+// common path (upstream 50f0739c).
+//
+//go:noinline
+func oddBackslashes(key string) bool {
+	n := 0
+	for n < len(key) && key[len(key)-1-n] == '\\' {
+		n++
+	}
+	return n%2 == 1
 }
 
 // hasUnescapedQuote reports whether s has a quote not escaped by a
-// backslash, with C++ raw_json_string::is_equal's escape tracking.
+// backslash, or ends escaping one, with C++ raw_json_string::is_equal's
+// escape tracking: such a name never matches.
 func hasUnescapedQuote(s string) bool {
 	escaping := false
 	for i := 0; i < len(s); i++ {
@@ -216,7 +246,7 @@ func hasUnescapedQuote(s string) bool {
 			escaping = false
 		}
 	}
-	return false
+	return escaping
 }
 
 func (it valueIter) findFieldRaw(key string) (bool, error) {
@@ -373,6 +403,9 @@ func (it valueIter) startRootArray() (bool, error) {
 }
 
 func (it valueIter) startedArray() (bool, error) {
+	if it.depth >= it.d.limit { // before the empty check, as for objects
+		return false, it.d.fail(jsonerr.ErrDepth)
+	}
 	it.d.reach()
 	if it.d.peek() == ']' {
 		it.d.advance()
@@ -443,15 +476,28 @@ func (it valueIter) advanceScalar() {
 	it.d.depth = it.depth - 1
 }
 
-// rootScalar returns the bytes C++ copies to its temporary buffer for a
-// root scalar (peek_root_length bytes), or ok false if they exceed n.
-func (it valueIter) rootScalar(n int) (s []byte, ok bool) {
+// rootScalar returns the bytes C++ copy_to_buffer copies to its n-byte
+// buffer for a root scalar, and pad, the byte that follows them there, or ok
+// false if they exceed n. C++ copies peek_root_length bytes without the
+// white space, commas and RS after the scalar (a stream's delimiter, which
+// stage 1 drops from the index), pads the rest of the buffer with spaces,
+// and ends it with NUL: a scalar that fills the buffer is followed by NUL.
+func (it valueIter) rootScalar(n int) (s []byte, pad byte, ok bool) {
 	off := it.scalarStart()
 	l := it.d.rootTokenLen(it.start)
-	if l > n {
-		return nil, false
+	for l > 0 {
+		if c := it.d.buf[off+l-1]; c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != ',' && c != 0x1E {
+			break
+		}
+		l--
 	}
-	return it.d.buf[off : off+l], true
+	if l > n {
+		return nil, 0, false
+	}
+	if l == n {
+		return it.d.buf[off : off+l], 0, true
+	}
+	return it.d.buf[off : off+l], ' ', true
 }
 
 // trailing reports C++ TRAILING_CONTENT: a root scalar followed by more

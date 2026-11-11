@@ -37,10 +37,13 @@ type StreamError = jsonerr.StreamError
 // everything read from it are valid until the loop's next step or the next
 // Iterate or IterateMany on p, and b must not change until the loop ends.
 // Read errors belong to the read and do not end the stream: the next step
-// skips the rest of the document, as C++ does. An error ending the stream
-// is always the last item: a *StreamError with the failing document's
-// offset (ErrTrailingContent when b ends with an incomplete document,
-// which C++ drops silently). Empty input yields nothing. Stage 1 runs
+// skips the rest of the document, as C++ does. After a fatal one (ErrTape,
+// ErrIncompleteArrayOrObject, ErrDepth past p.MaxDepth) it skips the whole
+// document from its root, where C++ v5.1.1 ends the stream: one bad record
+// does not cost the rest. An error ending the stream is always the last
+// item: a *StreamError with the failing document's offset
+// (ErrTrailingContent when b ends with an incomplete document, which C++
+// drops silently). Empty input yields nothing. Stage 1 runs
 // BatchSize bytes at a time; the batch size never changes what is yielded.
 // Starting another stream on p ends this one with ErrOutOfOrderIteration.
 func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
@@ -62,7 +65,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			return
 		}
 		p.streams++
-		gen, r, d := p.streams, &p.stream, &p.doc
+		gen, r, d, limit := p.streams, &p.stream, &p.doc, p.maxDepth()
 		r.Reset(buf, f, p.BatchSize)
 		defer func() {
 			if p.streams == gen { // else the stream that reset r owns it
@@ -100,7 +103,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				fail(base+start, err)
 				return
 			}
-			d.view(r, pos, end, base+start, f == CommaDelimited, pad)
+			d.view(r, pos, end, base+start, f == CommaDelimited, pad, limit)
 			mine, nextOff := d.gen, base+r.End(end)
 			if !yield(d, nil) {
 				return
@@ -110,14 +113,15 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 				return
 			}
 			// C++ next_document, from the reader's cursor, or from the root
-			// if an Iterate on p replaced the document or a read abandoned
-			// it (C++ is undefined there; a root read to its end also has
-			// depth 0, but no error).
+			// if an Iterate on p replaced the document or a read met a fatal
+			// error or ErrDepth: its cursor and depth may not match the input
+			// then (ErrDepth leaves the cursor inside the container it failed
+			// to start). C++ v5.1.1 ends the stream there instead (spec §4.3).
 			cur, depth := pos, 1
-			if d.gen == mine && (d.depth > 0 || d.err == nil) {
-				cur, depth = pos+d.pos, d.depth
-			}
 			if d.gen == mine {
+				if d.err == nil && !d.abandoned() {
+					cur, depth = pos+d.pos, d.depth
+				}
 				// The document's step is over; Compact may move the indices
 				// it views, so later reads report ErrOutOfOrderIteration.
 				d.kill()
@@ -152,7 +156,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 // those are final up to the decided point only; a read that would go past
 // it (on a malformed root, or out of order) first indexes the rest, as C++
 // reads on to the end of its one batch (reach, more).
-func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool, pad byte) {
+func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool, pad byte, limit int) {
 	rd := r
 	if r.Done {
 		rd = nil
@@ -166,6 +170,7 @@ func (d *Document) view(r *stream.Reader, pos, end, off int, comma bool, pad byt
 		repoch: r.Epoch(),
 		end:    end - pos,
 		depth:  1,
+		limit:  limit,
 		gen:    d.gen + 1,
 		strs:   d.strs[:0],
 		starts: d.starts[:0],
@@ -195,10 +200,11 @@ func (d *Document) Source() []byte {
 	default:
 		return stream.ScalarSource(d.buf, start, int(d.idx[1]), d.comma)
 	}
-	i := 1
-	for ; i <= d.n; i++ {
-		if i == d.n {
-			d.more() // C++'s walk reaches the end of its one batch
+	for i := 1; ; i++ {
+		if i >= d.n && (!d.more() || i >= d.n) {
+			// Never closes: C++'s walk reaches the end of its one batch and
+			// stops there, not one byte past it.
+			return d.buf[start:len(d.buf):len(d.buf)]
 		}
 		switch d.peekAt(i) {
 		case '{', '[':
@@ -207,17 +213,10 @@ func (d *Document) Source() []byte {
 			depth--
 		}
 		if depth == 0 {
-			break
+			end := int(d.idx[i]) + 1
+			return d.buf[start:end:end]
 		}
 	}
-	// C++ can end one byte past its input: into its padding, where Go stops
-	// at the input's end, or on the array's ']', which b still holds.
-	limit := len(d.buf)
-	if d.pad != 0 {
-		limit++
-	}
-	end := min(int(d.idx[min(i, len(d.idx)-1)])+1, limit)
-	return d.buf[start:end:end]
 }
 
 // more extends a stream document's view to the whole input, loading every

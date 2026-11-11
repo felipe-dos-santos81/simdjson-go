@@ -85,10 +85,8 @@ func walkDOM(e simdjson.Element, out *strings.Builder) {
 
 // streamOut runs a stream through the DOM or On-Demand and prints it as
 // oracle.cpp does, translating Go's offsets and final ErrTrailingContent
-// to C++'s current_index and truncated_bytes. With stopDead, like
-// oracle.cpp, it stops after a read that abandoned its document: C++
-// cannot go on from there (Go skips from the document's root).
-func streamOut(dp *simdjson.Parser, op *ondemand.Parser, api string, in []byte, f simdjson.Format, script []string, stopDead bool) string {
+// to C++'s current_index and truncated_bytes.
+func streamOut(dp *simdjson.Parser, op *ondemand.Parser, api string, in []byte, f simdjson.Format, script []string) string {
 	buf, base, _, ok := stream.Input(in, f)
 	var toks []string
 	end := func(err error) string {
@@ -122,12 +120,9 @@ func streamOut(dp *simdjson.Parser, op *ondemand.Parser, api string, in []byte, 
 			toks = append(toks, "@"+strconv.Itoa(doc.Offset()-base), "h"+hex.EncodeToString(doc.Source()))
 			if err := runOps(doc, script, &toks); err != nil {
 				toks = append(toks, "x"+errToken(err)[1:])
-				if ondemand.Abandoned(doc) {
-					toks = append(toks, "dead")
-					if stopDead {
-						return joinOut(toks)
-					}
-				}
+			}
+			if ondemand.Abandoned(doc) {
+				toks = append(toks, "dead")
 			}
 		}
 	}
@@ -145,7 +140,7 @@ func TestStreamOracle(t *testing.T) {
 	sc.Buffer(nil, 1<<26)
 	var dp simdjson.Parser
 	var op ondemand.Parser
-	n, skipped, pastEndSkipped, failed := 0, 0, 0, 0
+	n, skipped, fatalCut, failed := 0, 0, 0, 0
 	for sc.Scan() {
 		var c streamCase
 		if err := json.Unmarshal(sc.Bytes(), &c); err != nil {
@@ -163,17 +158,12 @@ func TestStreamOracle(t *testing.T) {
 			skipped++
 			continue
 		}
-		got := streamOut(&dp, &op, c.Stream.API, in, f, c.Script, true)
-		if c.Stream.API == "dom" && f == simdjson.CommaDelimitedArray {
-			buf, _, _, _ := stream.Input(in, f)
-			if want, ok := pastEnd(c.Out, len(buf)); ok {
-				// Compare up to the document that closed on the array's ']';
-				// Go then ends the stream: one ~n, or one @n !code.
-				pastEndSkipped++
-				c.Out = want
-				if rest, ok := strings.CutPrefix(got, want+" "); ok && streamEnd(rest) {
-					got = want
-				}
+		got := streamOut(&dp, &op, c.Stream.API, in, f, c.Script)
+		if want, ok := cutFatalEnd(c.Out); ok && c.Stream.API == "ondemand" && got != c.Out {
+			fatalCut++
+			c.Out = want
+			if strings.HasPrefix(got, want+" ") {
+				got = want
 			}
 		}
 		if got != c.Out {
@@ -190,32 +180,41 @@ func TestStreamOracle(t *testing.T) {
 	if failed > 0 {
 		t.Errorf("%d of %d cases differ", failed, n)
 	}
-	t.Logf("%d cases, %d skipped (stage 1 errors), %d compared only up to C++ reading past its end", n, skipped, pastEndSkipped)
+	t.Logf("%d cases, %d skipped (stage 1 errors), %d compared only up to C++ ending the stream after a fatal read error", n, skipped, fatalCut)
 }
 
-// streamEnd reports whether out is just the end of a stream: "~n" or "@n !code".
-func streamEnd(out string) bool {
+// cutFatalEnd recognizes C++ output whose stream ends at its last document
+// because a read on it met a fatal error: "@n h… … dead @n !code", or, when
+// the error did not abandon the document (skip_child's), "@n h… … xcode @n
+// !code". Go yields the documents after it instead (streams spec §4.3, a
+// documented difference). It returns the output up to that document's last
+// token, "dead" included. TestStreamOracle cuts only where the full output
+// differs, so a stream end Go shares with C++ is still compared.
+//
+// Past a cut point no C++ output exists to compare Go's with. What checks
+// it: the skip from the root is the path every unread document takes,
+// which the uncut cases cover; TestIterateManyAbandoned and TestMaxDepth's
+// stream row hold two inputs; FuzzIterateMany checks that every batch size
+// gives the same result.
+func cutFatalEnd(out string) (string, bool) {
 	toks := strings.Fields(out)
-	return len(toks) == 1 && toks[0][0] == '~' || len(toks) == 2 && toks[0][0] == '@' && toks[1][0] == '!'
-}
-
-// pastEnd recognizes C++ DOM output for a CommaDelimitedArray stream whose
-// document reached the end of the array's contents (n bytes), closed on the
-// array's own ']' (its source ends one byte past them), and was followed by
-// more: C++ then goes on past its end-of-input sentinel, which Go does not
-// port (spec §4.3). It returns the output up to that document.
-func pastEnd(out string, n int) (string, bool) {
-	toks := strings.Fields(out)
-	for i := 0; i+3 < len(toks); i++ {
-		if toks[i][0] != '@' || toks[i+1][0] != 'h' {
-			continue
+	k := len(toks)
+	if k < 4 || toks[k-2][0] != '@' || toks[k-1][0] != '!' {
+		return "", false
+	}
+	if last := toks[k-3]; last != "dead" {
+		if last[0] != 'x' || last[1:] != toks[k-1][1:] {
+			return "", false
 		}
-		at, err := strconv.Atoi(toks[i][1:])
-		if err == nil && at+(len(toks[i+1])-1)/2 == n+1 && toks[i+3][0] == '@' {
-			return strings.Join(toks[:i+3], " "), true
+		i := k - 3
+		for i >= 0 && toks[i][0] != '@' {
+			i--
+		}
+		if i < 0 || toks[i] != toks[k-2] { // the error is not the last document's
+			return "", false
 		}
 	}
-	return "", false
+	return strings.Join(toks[:k-2], " "), true
 }
 
 // FuzzIterateMany checks that no batch size changes what either stream
@@ -236,9 +235,9 @@ func FuzzIterateMany(f *testing.F) {
 		var op ondemand.Parser
 		for _, api := range []string{"dom", "ondemand"} {
 			dp.BatchSize, op.BatchSize = 0, 0
-			want := streamOut(&dp, &op, api, in, fm, script, false)
+			want := streamOut(&dp, &op, api, in, fm, script)
 			dp.BatchSize, op.BatchSize = 64*(1+int(batch)%8), 64*(1+int(batch)%8)
-			if got := streamOut(&dp, &op, api, in, fm, script, false); got != want {
+			if got := streamOut(&dp, &op, api, in, fm, script); got != want {
 				t.Fatalf("%s, BatchSize %d, %q %q:\n got  %s\n want %s", api, dp.BatchSize, in, script, got, want)
 			}
 		}
