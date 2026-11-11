@@ -1,6 +1,6 @@
 # On-Demand oracle
 
-`testdata/ondemand/oracle.jsonl` records what C++ simdjson v5.0.2's ondemand API
+`testdata/ondemand/oracle.jsonl` records what C++ simdjson v5.1.1's ondemand API
 returns for about 30,000 scripted reads; `ondemand/oracle_test.go` replays them.
 `testdata/stream/oracle.jsonl` records what its `parse_many` and `iterate_many`
 return for about 3,000 streams read in one batch;
@@ -11,7 +11,7 @@ return for about 3,000 streams read in one batch;
 - `oracle.cpp` runs each script through C++ ondemand, built in release mode
   (`-O2 -DNDEBUG`), and prints the output. Its header documents the script
   language; `runOps` in `oracle_test.go` mirrors it line for line.
-- `regen.sh` (`make oracle`) builds `oracle.cpp` against the v5.0.2
+- `regen.sh` (`make oracle`) builds `oracle.cpp` against the v5.1.1
   single-header release (downloaded, or from `$SIMDJSON_SINGLEHEADER`) and
   rewrites both files. It needs a C++20 compiler, curl, python3 and the
   corpora (`make testdata`).

@@ -1,6 +1,6 @@
 // The On-Demand oracle: runs scripted reads through C++ simdjson ondemand
 // and prints what each read returns, for ondemand/oracle_test.go to replay.
-// See README.md in this directory. Built against the simdjson v5.0.2
+// See README.md in this directory. Built against the simdjson v5.1.1
 // single-header release (simdjson.h, simdjson.cpp) in release mode.
 //
 // Input, one JSON object per line on stdin:

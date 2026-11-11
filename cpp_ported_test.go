@@ -2,7 +2,7 @@ package simdjson
 
 // Ports of C++ simdjson tests/dom/unpadded_tests.cpp, and of the basictests.cpp
 // and document_tests.cpp cases not covered by the other test files. Expected
-// errors that the C++ tests leave implicit come from C++ simdjson v5.0.2.
+// errors that the C++ tests leave implicit come from C++ simdjson v5.1.1.
 
 import (
 	"fmt"
@@ -282,7 +282,7 @@ func TestUnpaddedEscapesAtEnd(t *testing.T) {
 		{`\n`, `\n`}, {`\t`, `\t`}, {`\"`, `\"`}, {`\\`, `\\`}, {`\/`, `/`},
 		{`\b`, `\b`}, {`\f`, `\f`}, {`\r`, `\r`},
 		{"\xC3\xA9", "\xC3\xA9"}, {"\xF0\x9F\x98\x80", "\xF0\x9F\x98\x80"},
-		// A lone high surrogate: the C++ test calls it valid, but C++ v5.0.2
+		// A lone high surrogate: the C++ test calls it valid, but C++ v5.1.1
 		// (padded and unpadded alike) rejects it with STRING_ERROR.
 		{`\uD800`, ""},
 	}

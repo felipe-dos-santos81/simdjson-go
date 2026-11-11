@@ -5,7 +5,7 @@
 - **Builds on:** sub-project 1 (core + DOM), `docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`
 - **Followed by:** sub-project 3b, `Unmarshal` on On-Demand, was prototyped and dropped: with
   v2's full validation it gained 1.13–1.26× (binding spec §1)
-- **Reference semantics:** C++ simdjson v5.0.2 `ondemand`, release build (`doc/basics.md`,
+- **Reference semantics:** C++ simdjson v5.1.1 `ondemand`, release build (`doc/basics.md`,
   `doc/ondemand_design.md`, `include/simdjson/generic/ondemand/`, `benchmark/*/simdjson_ondemand.h`)
 
 ## 1. Goal

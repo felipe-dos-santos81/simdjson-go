@@ -1,5 +1,5 @@
 #!/bin/sh
-# Benchmarks simdjson-go against C++ simdjson v5.0.2 (make bench-cpp): builds
+# Benchmarks simdjson-go against C++ simdjson v5.1.1 (make bench-cpp): builds
 # bench.cpp and the Go test binaries (NEON), runs both COUNT times, taking
 # turns, and compares them with benchstat (the command in $BENCHSTAT). The
 # FILEs (default: the six files of BenchmarkParse) are the parse inputs of both

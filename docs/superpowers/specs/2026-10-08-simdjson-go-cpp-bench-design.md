@@ -7,20 +7,20 @@
   (`docs/superpowers/specs/2026-10-08-simdjson-go-streams-design.md`), and the benchmarks
   that already exist for them: `BenchmarkParse`, `BenchmarkParseMany` (`bench_test.go`),
   `BenchmarkTasks`, `BenchmarkIterateMany` (`ondemand/bench_test.go`)
-- **Reference:** C++ simdjson v5.0.2, its benchmark bodies in
+- **Reference:** C++ simdjson v5.1.1, its benchmark bodies in
   `benchmark/<task>/simdjson_{dom,ondemand}.h` (tasks `partial_tweets`, `distinct_user_id`,
   `find_tweet`, `top_tweet`, `kostya`, `large_random`, `amazon_cellphones`)
 
 ## 1. Goal
 
-One `make` target that runs simdjson-go and C++ simdjson v5.0.2 on the same inputs and prints a
+One `make` target that runs simdjson-go and C++ simdjson v5.1.1 on the same inputs and prints a
 table of their speed, row by row, for the README's Performance section. It covers the DOM parse,
 the On-Demand tasks and the streams. It runs by hand, on a quiet machine; not in CI.
 
 ### Success criteria
 
 1. **Same work on both sides.** Each row times the same operation on the same bytes: the C++
-   body is copied from v5.0.2's benchmark suite, which the Go benchmark of the same name ports.
+   body is copied from v5.1.1's benchmark suite, which the Go benchmark of the same name ports.
 2. **Every row pairs.** The table has a C++ and a Go value on every row, or the run fails.
 3. **Statistics.** `count` runs per side (default 6), alternated, compared by the pinned
    `benchstat` with confidence intervals and p-values.
@@ -65,7 +65,7 @@ python3 and the corpora (`make testdata`), as `make oracle` does.
 
 | Path | What |
 |---|---|
-| `scripts/fetch-simdjson.sh DIR` | Puts v5.0.2's `simdjson.h` and `simdjson.cpp` in DIR: copied from `$SIMDJSON_SINGLEHEADER` when set, else downloaded. `scripts/ondemand-oracle/regen.sh` uses it too, so the download exists once |
+| `scripts/fetch-simdjson.sh DIR` | Puts v5.1.1's `simdjson.h` and `simdjson.cpp` in DIR: copied from `$SIMDJSON_SINGLEHEADER` when set, else downloaded. `scripts/ondemand-oracle/regen.sh` uses it too, so the download exists once |
 | `scripts/cpp-bench/bench.cpp` | The C++ harness (§5) |
 | `scripts/cpp-bench/run.sh` | Builds both sides, runs them alternately, calls benchstat and `table.py` (§6) |
 | `scripts/cpp-bench/table.py` | benchstat CSV to the Markdown table (§6) |
@@ -106,7 +106,7 @@ Each row times exactly what the Go benchmark of the same name times.
 - Streams: `default` is C++'s default batch (1,000,000 bytes) with `threaded = true`, against
   Go's default `BatchSize` with its stage 1 goroutine. `single` is `batch_size = len(input)`,
   against Go's one window. The brand map lives across iterations on both sides, as it always
-  did in Go; v5.0.2's runner clears it before each run, outside the timed body, and the keys
+  did in Go; v5.1.1's runner clears it before each run, outside the timed body, and the keys
   stop changing after the first run, so the timed work is the same.
 - Each input is copied into a `padded_string` once, outside the timed loop: Go's `Parse` needs
   no padding.
@@ -206,7 +206,7 @@ An earlier full run (load about 19, another session's `make check`) was discarde
 
 ## 9. Risks
 
-- **The C++ bodies drift from the Go ports.** The Go ports follow v5.0.2's suite; the harness
+- **The C++ bodies drift from the Go ports.** The Go ports follow v5.1.1's suite; the harness
   copies the same files at the same tag. A change to a Go task needs the same change in
   `bench.cpp`.
 - **Noise.** A loaded machine skews both sides; alternating rounds and benchstat's intervals show

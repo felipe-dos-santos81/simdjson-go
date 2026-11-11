@@ -1,5 +1,5 @@
 // Package ondemand reads JSON lazily, forward only: a port of C++ simdjson's
-// On-Demand API (v5.0.2). [Parser.Iterate] runs stage 1 only, validating
+// On-Demand API (v5.1.1). [Parser.Iterate] runs stage 1 only, validating
 // UTF-8 and finding the structural characters; each value is parsed when it
 // is read, as the type it is read as.
 //

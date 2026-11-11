@@ -4,9 +4,9 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 
 ## Ground rules
 
-- **C++ simdjson v5.0.2 is the oracle.** The tape format, the error returned for each bad input, and the edge cases must match C++. Some of those cases look like bugs but are intended, so don't "fix" them: the design spec lists them (§5.5, §9). Change parsing behaviour only together with evidence from C++.
+- **C++ simdjson v5.1.1 is the oracle.** The tape format, the error returned for each bad input, and the edge cases must match C++. Some of those cases look like bugs but are intended, so don't "fix" them: the design spec lists them (§5.5, §9). Change parsing behaviour only together with evidence from C++.
 - **Go 1.27, standard library only.** No cgo, no third-party modules in the library or its tests. Dev tooling run through `go run` (the pinned `benchstat` in the Makefile) is the only exception.
-- **Recorded C++ results are generated, never edited by hand.** C++ v5.0.2's release build is the oracle for package `ondemand` and for the streams. `testdata/ondemand/oracle.jsonl` holds ~30,000 scripted reads (`TestOracle`); `testdata/stream/oracle.jsonl` holds ~3,000 streams through `parse_many`/`iterate_many` in one batch (`TestStreamOracle`). To change them, edit `scripts/ondemand-oracle/` and run `make oracle`.
+- **Recorded C++ results are generated, never edited by hand.** C++ v5.1.1's release build is the oracle for package `ondemand` and for the streams. `testdata/ondemand/oracle.jsonl` holds ~30,000 scripted reads (`TestOracle`); `testdata/stream/oracle.jsonl` holds ~3,000 streams through `parse_many`/`iterate_many` in one batch (`TestStreamOracle`). To change them, edit `scripts/ondemand-oracle/` and run `make oracle`.
 - **`encoding/json/v2` is the oracle for data binding.** `Unmarshal` and `Marshal` must agree with the installed v2 on values, output bytes and error classes; the one allowed difference is listed in the binding spec (§1, §6).
 - **The spec is the authority.** Read the spec before you change behaviour. If the code and the spec disagree, fix one of them in the same change.
   - [`2026-10-06-simdjson-go-core-design.md`](docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md): parser, DOM
@@ -32,7 +32,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `ondemand/` | On-Demand: `iter.go` and `valueiter.go` port C++'s `json_iterator` and `value_iterator`; `numbers.go` its typed number parsers; `document.go`, `value.go`, `object.go`, `array.go` the API |
 | `scripts/ondemand-oracle/` | The C++ program and case generator behind `make oracle` |
 | `scripts/cpp-bench/` | `make bench-cpp`: the C++ harness (C++'s own benchmark bodies, printed as Go benchmark lines), the run script and the table script |
-| `scripts/fetch-simdjson.sh` | Gets C++ v5.0.2's single header for `make oracle` and `make bench-cpp` |
+| `scripts/fetch-simdjson.sh` | Gets C++ v5.1.1's single header for `make oracle` and `make bench-cpp` |
 | `testdata/ondemand/`, `testdata/stream/` | C++'s recorded results (`TestOracle`, `TestStreamOracle`) |
 | `element.go`, `pointer.go`, `serialize.go` | DOM API, JSON Pointer, `AppendJSON` and `Minify` |
 | `options.go`, `typeplan.go` | Data binding: options, the per-type codec cache, struct field plans (adapted from v2's `fields.go`) |

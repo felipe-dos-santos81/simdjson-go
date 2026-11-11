@@ -4,7 +4,7 @@
 - **Status:** Approved; implemented
 - **Builds on:** sub-project 1 (core + DOM), `docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md`;
   sub-project 3a (On-Demand), `docs/superpowers/specs/2026-10-07-simdjson-go-ondemand-design.md`
-- **Reference semantics:** C++ simdjson v5.0.2 `dom::parser::parse_many` and
+- **Reference semantics:** C++ simdjson v5.1.1 `dom::parser::parse_many` and
   `ondemand::parser::iterate_many` (`include/simdjson/dom/document_stream*.h`,
   `include/simdjson/generic/ondemand/document_stream*.h`,
   `src/generic/stage1/find_next_document_index.h`, `json_structural_indexer.h`,
@@ -147,8 +147,7 @@ for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
   `ErrOutOfOrderIteration`.
 - Offsets index the caller's `b`, so they count a skipped BOM and the brackets of
   `CommaDelimitedArray` (C++'s `current_index` does not).
-- `MaxDepth` and `BigIntAsString` apply to every document (C++'s threaded path loses them after
-  the first batch).
+- `MaxDepth` and `BigIntAsString` apply to every document.
 - On-Demand: `Document.AtEnd` says whether this document has been read to its end (C++ compares
   with the end of the batch). Read errors (wrong type, bad number, missing field) belong to the
   read and do not end the stream; the next step skips the rest of the document, as in C++.
@@ -211,8 +210,6 @@ All of it is a consequence of C++'s windows or threads:
 - `CAPACITY` for a document longer than `batch_size`, and for a scalar touching the window edge.
 - A stage 1 error failing every document of its batch.
 - `json_sequence` silently skipping a window without RS.
-- The threaded path's two divergences: settings lost after the first batch, and documents skipped
-  after an empty mid-stream batch.
 - The fallback kernel's narrower UTF-8 check (Go has one checker, equal to NEON).
 - After the DOM's last document closes on that `]` (§4.2), C++ goes on parsing past its own
   end-of-input sentinel, into indices its comma filter left behind and then stale memory; Go

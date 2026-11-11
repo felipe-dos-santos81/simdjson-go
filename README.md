@@ -2,7 +2,7 @@
 
 A pure-Go port of [simdjson](https://github.com/simdjson/simdjson): its parser, DOM and On-Demand APIs, plus `Unmarshal` and `Marshal` that behave like `encoding/json/v2`. No cgo, no dependencies outside the standard library. On arm64, an optional NEON kernel speeds up the structural scan.
 
-The parser, the On-Demand reader and the document streams match C++ simdjson v5.0.2: tape format, error codes and edge cases. Tests check them against C++: the parser on the simdjson-data corpora, On-Demand on about 30,000 reads recorded from C++, and the streams on about 3,000 recorded streams.
+The parser, the On-Demand reader and the document streams match C++ simdjson v5.1.1: tape format, error codes and edge cases. Tests check them against C++: the parser on the simdjson-data corpora, On-Demand on about 30,000 reads recorded from C++, and the streams on about 3,000 recorded streams.
 
 ## Usage
 
