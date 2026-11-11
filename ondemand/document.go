@@ -114,12 +114,11 @@ func (d *Document) rootText() []byte {
 }
 
 // rootLiteral is C++ get_root_bool/is_root_null's test: s is lit, or lit
-// and a terminator, comparing only lit's first four bytes (so "falsy"
-// reads as false, as in C++). Value's parseBool and IsNull read a padded
-// copy instead; C++ has the two variants too.
+// and a terminator. Value's parseBool and IsNull read a padded copy
+// instead; C++ has the two variants too.
 func rootLiteral(s []byte, lit string) bool {
 	n := len(lit)
-	return len(s) >= n && string(s[:4]) == lit[:4] && (len(s) == n || number.IsStructuralOrSpace[s[n]])
+	return len(s) >= n && string(s[:n]) == lit && (len(s) == n || number.IsStructuralOrSpace[s[n]])
 }
 
 // IsNull is Value.IsNull for a scalar document.

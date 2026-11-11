@@ -232,10 +232,10 @@ var bom = []byte{0xEF, 0xBB, 0xBF}
 // knownDifference reports C++'s known differences between On-Demand and
 // the DOM when one fails and the other does not. On-Demand alone fails on
 // an exponent of more than 19 digits and by the root-buffer rule below;
-// On-Demand alone succeeds on a root "falsX" (any fifth byte, read as
-// false), on a root number followed by RS (C++ drops it with the white space
-// after the number, as a stream's delimiter) and on an integer too long for
-// 64 bits that it does not validate (read with Raw; see walkInfo.badBigInt).
+// On-Demand alone succeeds on a root number followed by RS (C++ drops it
+// with the white space after the number, as a stream's delimiter) and on an
+// integer too long for 64 bits that it does not validate (read with Raw; see
+// walkInfo.badBigInt).
 func knownDifference(in []byte, info walkInfo, errOD, errDOM error) bool {
 	if errOD != nil && errDOM == nil {
 		return exponentTooLong(in) || rootBufferDifference(in)
@@ -244,8 +244,7 @@ func knownDifference(in []byte, info walkInfo, errOD, errDOM error) bool {
 	tail := bytes.TrimRight(root, " \t\n\r")
 	num := bytes.TrimRight(tail, "\x1e")
 	return errOD == nil && errDOM != nil &&
-		(bytes.HasPrefix(root, []byte("fals")) && !bytes.HasPrefix(root, []byte("false")) || info.badBigInt ||
-			len(num) < len(tail) && rootNumber.Match(num))
+		(info.badBigInt || len(num) < len(tail) && rootNumber.Match(num))
 }
 
 // rootBufferDifference reports C++'s root-buffer rule: C++ copies a root

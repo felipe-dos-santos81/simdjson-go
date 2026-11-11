@@ -187,6 +187,13 @@ def root_buffer_cases():
     yield case("-1.5\x1e\n", script=["walk"])  # RS is dropped too, outside a stream (the DOM rejects it)
 
 
+def false_cases():
+    # v5.1.1: a root false needs its e; the fifth byte was not read before.
+    for s in ("falsx", "fals1"):
+        for op in ("bool", "walk"):
+            yield case(s, script=[op])
+
+
 RS_ = random.Random(20261008)  # separate, so the On-Demand cases stay byte-identical
 SFORMATS = ["whitespace", "newline", "sequence", "comma", "array"]
 SDOCS = ["1", "-2.5", "1e400", '"a\\"b"', '"é"', "true", "nul", "null", "[]", "{}", "[1,[2,{\"a\":3}]]",
@@ -259,7 +266,7 @@ def stream_cases():
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
-                stream_cases):
+                false_cases, stream_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:
