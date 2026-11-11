@@ -177,7 +177,7 @@ benchmark fails the run instead of shortening the table.
 ## 8. Docs
 
 - `README.md`: the streams table's input becomes C++'s 10 MiB build (re-measured in the same
-  run); a "Against C++ simdjson v5.0.2" table in Performance, from a real run (machine,
+  run); a "Against C++ simdjson v5.1.1" table in Performance, from a real run (machine,
   `count`); `make bench-cpp` under Development.
 - `AGENTS.md`: layout rows for `scripts/cpp-bench/` and `scripts/fetch-simdjson.sh`; the command;
   in the Benchmark-noise trap, that the comparison alternates its runs; under "When you change
@@ -193,16 +193,20 @@ round took about 70 s, and Go ran at 0.23–0.40× of C++ (geomean 0.29×).
 
 ## Results
 
-Measured on an Apple M3 Max (14 cores), `make bench-cpp` with count=6. `uptime` at the end: load
-averages 1.33 / 15.71 / 17.02, 14 minutes after a boot, so the machine was busy before the run;
-the confidence intervals stay within ±8% (C++ task rows) and ±5% (all Go rows). Go runs at
-0.20–0.49× of C++'s throughput (geomean 0.29×): 0.20× on `update-center.json`, 0.49× on
-`canada.json`, 0.25–0.27× on the other parse and stream rows, 0.29–0.40× on the On-Demand
-tasks. The table is in README.md (Performance). The same run refreshed the README's streams
-table (new input) and its On-Demand row: `kostya` 1.43× and `large_random` 1.31× there are
-lower than the earlier 1.63× and 1.61×, which were measured with `make bench` in a separate run.
-
-An earlier full run (load about 19, another session's `make check`) was discarded.
+C++ simdjson v5.1.1 against the Go branch that syncs with it (`sync/simdjson-v5.1.1`, after the
+On-Demand skip-loop and `MaxDepth` changes), measured on an Apple M3 Max (14 cores), `make
+bench-cpp` with count=6. `uptime` before the run: load averages 3.74 / 9.37 / 12.01; after it:
+1.71 / 3.98 / 8.17. Earlier work on the machine had just ended, so it was quiet during the run
+but not idle before it. All 26 rows are paired. The confidence intervals stay within ±3% on
+every row except `Tasks/top_tweet/dom` (C++ ±8%). Go runs at 0.20–0.49× of C++'s throughput
+(geomean 0.29×): 0.20× on `update-center.json`, 0.49× on `canada.json`, 0.26–0.28× on the other
+parse and stream rows, 0.26–0.31× on the DOM and On-Demand `partial_tweets`, `distinct_user_id`,
+`find_tweet` and `top_tweet` rows, 0.33–0.39× on `kostya` and `large_random`. The table is in
+README.md (Performance). The benchmark bodies in `bench.cpp` are v5.1.1's
+`benchmark/<task>/simdjson_{dom,ondemand}.h`; the previous tag has the same ones, so the
+ratios moved only through C++'s own speed-ups (skipping, small documents) and Go's. This run
+did not re-measure the README's streams and On-Demand-over-DOM tables, which come from `make
+bench`.
 
 ## 9. Risks
 

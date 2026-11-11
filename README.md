@@ -150,36 +150,37 @@ Streams on `large_amazon_cellphones` (C++'s 10 MiB build of `amazon_cellphones.n
 | `ParseMany` | 769 MiB/s | 1079 MiB/s | 1.40× |
 | `IterateMany` | 931 MiB/s | 1392 MiB/s | 1.50× |
 
-Against C++ simdjson v5.0.2 on the same machine and inputs (`make bench-cpp`: C++ built with `-O3` and threads, NEON Go build, median of 6 alternating runs). Go runs at 0.20–0.49× of C++'s throughput, 0.29× on the geometric mean:
+Against C++ simdjson v5.1.1 on the same machine and inputs (`make bench-cpp`: C++ built with `-O3` and threads, NEON Go build, median of 6 alternating runs, Apple M3 Max with 14 cores). The load average was 3.74 / 9.37 / 12.01 before the run and 1.71 / 3.98 / 8.17 after it, so the machine was still settling from earlier work; the confidence intervals stay within ±3% on every row except `Tasks/top_tweet/dom` (C++ ±8%). Go runs at 0.20–0.49× of C++'s throughput, 0.29× on the geometric mean:
 
 | Benchmark | C++ | Go | Go / C++ |
 |---|---|---|---|
-| `Parse/twitter.json` | 4131 MiB/s | 1080 MiB/s | 0.26× |
-| `Parse/citm_catalog.json` | 4663 MiB/s | 1268 MiB/s | 0.27× |
-| `Parse/canada.json` | 1468 MiB/s | 724 MiB/s | 0.49× |
-| `Parse/github_events.json` | 4535 MiB/s | 1145 MiB/s | 0.25× |
-| `Parse/gsoc-2018.json` | 5320 MiB/s | 1445 MiB/s | 0.27× |
-| `Parse/update-center.json` | 3728 MiB/s | 755 MiB/s | 0.20× |
-| `ParseMany/amazon_cellphones/default` | 3017 MiB/s | 778 MiB/s | 0.26× |
-| `ParseMany/amazon_cellphones/single` | 3023 MiB/s | 779 MiB/s | 0.26× |
-| `ParseMany/large_amazon_cellphones/default` | 4031 MiB/s | 1079 MiB/s | 0.27× |
-| `ParseMany/large_amazon_cellphones/single` | 2968 MiB/s | 769 MiB/s | 0.26× |
-| `Tasks/partial_tweets/ondemand` | 5553 MiB/s | 1750 MiB/s | 0.32× |
-| `Tasks/partial_tweets/dom` | 3888 MiB/s | 1039 MiB/s | 0.27× |
-| `Tasks/distinct_user_id/ondemand` | 5677 MiB/s | 1814 MiB/s | 0.32× |
-| `Tasks/distinct_user_id/dom` | 3965 MiB/s | 1058 MiB/s | 0.27× |
-| `Tasks/find_tweet/ondemand` | 7557 MiB/s | 2170 MiB/s | 0.29× |
-| `Tasks/find_tweet/dom` | 4129 MiB/s | 1082 MiB/s | 0.26× |
-| `Tasks/top_tweet/ondemand` | 5681 MiB/s | 1809 MiB/s | 0.32× |
-| `Tasks/top_tweet/dom` | 4045 MiB/s | 1074 MiB/s | 0.27× |
-| `Tasks/kostya/ondemand` | 3610 MiB/s | 1319 MiB/s | 0.37× |
-| `Tasks/kostya/dom` | 2893 MiB/s | 921 MiB/s | 0.32× |
-| `Tasks/large_random/ondemand` | 1666 MiB/s | 665 MiB/s | 0.40× |
-| `Tasks/large_random/dom` | 1322 MiB/s | 508 MiB/s | 0.38× |
-| `IterateMany/amazon_cellphones/default` | 3587 MiB/s | 945 MiB/s | 0.26× |
-| `IterateMany/amazon_cellphones/single` | 3578 MiB/s | 947 MiB/s | 0.26× |
-| `IterateMany/large_amazon_cellphones/default` | 5112 MiB/s | 1392 MiB/s | 0.27× |
-| `IterateMany/large_amazon_cellphones/single` | 3532 MiB/s | 931 MiB/s | 0.26× |
+| `Parse/twitter.json` | 4098 MiB/s | 1071 MiB/s | 0.26× |
+| `Parse/citm_catalog.json` | 4634 MiB/s | 1267 MiB/s | 0.27× |
+| `Parse/canada.json` | 1455 MiB/s | 718 MiB/s | 0.49× |
+| `Parse/github_events.json` | 4507 MiB/s | 1141 MiB/s | 0.25× |
+| `Parse/gsoc-2018.json` | 5339 MiB/s | 1440 MiB/s | 0.27× |
+| `Parse/update-center.json` | 3706 MiB/s | 748 MiB/s | 0.20× |
+| `ParseMany/amazon_cellphones/default` | 2906 MiB/s | 779 MiB/s | 0.27× |
+| `ParseMany/amazon_cellphones/single` | 2909 MiB/s | 780 MiB/s | 0.27× |
+| `ParseMany/large_amazon_cellphones/default` | 3829 MiB/s | 1082 MiB/s | 0.28× |
+| `ParseMany/large_amazon_cellphones/single` | 2868 MiB/s | 769 MiB/s | 0.27× |
+| `Tasks/partial_tweets/ondemand` | 5940 MiB/s | 1802 MiB/s | 0.30× |
+| `Tasks/partial_tweets/dom` | 3847 MiB/s | 1031 MiB/s | 0.27× |
+| `Tasks/distinct_user_id/ondemand` | 6049 MiB/s | 1856 MiB/s | 0.31× |
+| `Tasks/distinct_user_id/dom` | 3942 MiB/s | 1051 MiB/s | 0.27× |
+| `Tasks/find_tweet/ondemand` | 7654 MiB/s | 2168 MiB/s | 0.28× |
+| `Tasks/find_tweet/dom` | 4078 MiB/s | 1074 MiB/s | 0.26× |
+| `Tasks/top_tweet/ondemand` | 6083 MiB/s | 1866 MiB/s | 0.31× |
+| `Tasks/top_tweet/dom` | 3970 MiB/s | 1066 MiB/s | 0.27× |
+| `Tasks/kostya/ondemand` | 3659 MiB/s | 1347 MiB/s | 0.37× |
+| `Tasks/kostya/dom` | 2832 MiB/s | 930 MiB/s | 0.33× |
+| `Tasks/large_random/ondemand` | 1679 MiB/s | 655 MiB/s | 0.39× |
+| `Tasks/large_random/dom` | 1303 MiB/s | 514 MiB/s | 0.39× |
+| `IterateMany/amazon_cellphones/default` | 3626 MiB/s | 940 MiB/s | 0.26× |
+| `IterateMany/amazon_cellphones/single` | 3644 MiB/s | 940 MiB/s | 0.26× |
+| `IterateMany/large_amazon_cellphones/default` | 5195 MiB/s | 1401 MiB/s | 0.27× |
+| `IterateMany/large_amazon_cellphones/single` | 3525 MiB/s | 923 MiB/s | 0.26× |
+| geomean | | | 0.29× |
 
 ## Development
 
