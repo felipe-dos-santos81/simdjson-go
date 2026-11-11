@@ -30765,3 +30765,7 @@
 {"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b5c2261646d696e223a747275657d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkk\\", "walk"]}
 {"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b5c2261646d696e223a747275657d", "out": "!20", "script": ["get kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\\", "walk"]}
 {"doc": "7b226b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b5c2261646d696e223a747275657d", "out": "!20", "script": ["find kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\\", "walk"]}
+{"doc": "3520", "out": "i5 r5", "script": ["int64", "raw"]}
+{"doc": "5b312c325d20", "out": "[i1,i2,] r[1,2]", "script": ["walk", "raw"]}
+{"doc": "7b2261223a312c2262223a327d20", "out": "i1 r{\"a\":1,\"b\":2}", "script": ["get a", "int64", "raw"]}
+{"doc": "5b312c325d20", "out": "r[1,2] r[1,2]", "script": ["raw", "raw"]}

@@ -261,15 +261,16 @@ func (d *Document) unescape(off int) ([]byte, error) {
 	return out[start:len(out):len(out)], nil
 }
 
-// rawText returns the input from offset start to the cursor's structural
-// (C++ raw_json's end point), or ErrOutOfOrderIteration if the cursor is not
+// rawText returns the input from offset start to the end of the token before
+// the cursor, the closing bracket of a container just skipped (C++
+// raw_json's end point), or ErrOutOfOrderIteration if the cursor is not
 // after start (a handle used out of order).
 func (d *Document) rawText(start int) ([]byte, error) {
-	if d.pos >= len(d.idx) {
+	if d.pos < 1 || d.pos > d.n {
 		return nil, jsonerr.ErrOutOfOrderIteration
 	}
-	end := int(d.idx[d.pos])
-	if d.pos > d.n || end < start {
+	end := int(d.idx[d.pos-1]) + 1
+	if end < start {
 		return nil, jsonerr.ErrOutOfOrderIteration
 	}
 	return d.buf[start:end], nil

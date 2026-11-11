@@ -3,6 +3,7 @@ package ondemand
 import (
 	"simdjson-go/internal/jsonerr"
 	"simdjson-go/internal/number"
+	"simdjson-go/internal/stream"
 )
 
 // The document's getters read its root value. As in C++, a scalar root
@@ -256,14 +257,14 @@ func (d *Document) FindNext(name string) (Value, error) {
 	return o.FindNext(name)
 }
 
-// Raw returns the whole document's JSON text from its first character to
-// the next structural character after the root value, consuming it.
+// Raw returns the root value's JSON text from its first byte to its last,
+// consuming it (C++ document::raw_json): an array or object ends on its
+// closing bracket, a scalar at the end of its token. As in C++ it is not
+// order-checked: wherever the cursor is, it reads the rest of the root, or
+// nothing if the root was read to its end, and returns the root's text.
 func (d *Document) Raw() ([]byte, error) {
 	if err := d.check(); err != nil {
 		return nil, err
-	}
-	if !d.atRoot() {
-		return nil, jsonerr.ErrOutOfOrderIteration
 	}
 	start := int(d.idx[0])
 	switch d.root().typ() {
@@ -272,10 +273,43 @@ func (d *Document) Raw() ([]byte, error) {
 			d.abandon()
 			return nil, err
 		}
-	default:
-		d.advance()
+		return d.rawText(start)
 	}
-	return d.rawText(start)
+	if d.depth > 0 { // C++ consume: step over the scalar, unless a read did
+		d.advance()
+		d.depth = 0
+	}
+	return d.scalarText(start), nil
+}
+
+// scalarText is the end of C++ document::raw_json for a scalar root at
+// offset start: a string ends at its closing quote; anything else at the
+// first white space, structural character, quote, RS or NUL. Neither runs
+// past the cursor's structural.
+func (d *Document) scalarText(start int) []byte {
+	next := len(d.buf)
+	if d.pos < len(d.idx) {
+		next = min(int(d.idx[d.pos]), next)
+	}
+	next = max(next, start) // C++ is undefined below start
+	buf, end := d.buf, start+1
+	if buf[start] == '"' {
+		for end < next {
+			c := buf[end]
+			end++
+			if c == '\\' {
+				end++
+			} else if c == '"' {
+				break
+			}
+		}
+		end = min(end, next)
+	} else {
+		for end < next && !number.IsStructuralOrSpace[buf[end]] && buf[end] != '"' && buf[end] != stream.RS && buf[end] != 0 {
+			end++
+		}
+	}
+	return buf[start:end]
 }
 
 // AtPointer rewinds the document and returns the value at the RFC 6901 JSON

@@ -163,6 +163,14 @@ marked **Go**.
   `BigInt` (read with `Raw`), as C++'s `check_if_integer` does. A number of exactly 1083 bytes
   fills C++'s buffer and is followed there by NUL, not a space: `Float64` is `ErrNumber`, and
   `NumberType` reads the NUL as a non-terminator, so 1083 digits are `Float64`.
+- **Raw.** `Raw` on a document, an object or an array ends on the value's last byte: a container
+  on its closing bracket, a scalar document at the end of its token (a string at its closing
+  quote; anything else at the first white space, structural character, quote, RS or NUL), so
+  neither the white space after it nor, in a stream, a delimiter or the next document is included
+  (C++ v5.1.1). `Value.Raw` on a scalar is C++ `raw_json_token`: the token up to the next
+  structural character, white space included. `Document.Raw` is not order-checked: wherever the
+  cursor is, it reads the rest of the root (nothing if it was read to its end) and returns the
+  root's text; after it, a stream's next step yields the very next document.
 - **Differences from the DOM** (all C++'s own): the `BigInt` and root-buffer rules above. Of the root-buffer rule, only `Float64`'s limit shows in a full walk: a root number
   of 1083 bytes, or a longer one that is not an integer, fails, where the DOM reads it; a root
   number followed by RS is read, where the DOM rejects it. Everything else a full walk accepts,

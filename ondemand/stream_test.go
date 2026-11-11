@@ -396,7 +396,7 @@ func TestIterateManyReadPastRoot(t *testing.T) {
 				return err.Error()
 			}
 			return string(raw)
-		}, "0:[}:[}" + rest[:len(rest)-1] + fmt.Sprintf(" %d:0:%s", len(rest)+1, simdjson.ErrIncorrectType)},
+		}, "0:[}:[}" + rest[:len(rest)-2] + fmt.Sprintf(" %d:0:%s", len(rest)+1, simdjson.ErrIncorrectType)},
 		{misuse, func(doc *ondemand.Document) string {
 			if _, err := doc.Raw(); err != nil {
 				return err.Error()
@@ -410,7 +410,7 @@ func TestIterateManyReadPastRoot(t *testing.T) {
 				return err.Error()
 			}
 			return string(raw)
-		}, "0:[]:" + misuse[:len(misuse)-1] + fmt.Sprintf(" %d:0:%s", len(misuse)-1, simdjson.ErrIncorrectType)},
+		}, "0:[]:" + misuse[:len(misuse)-2] + fmt.Sprintf(" %d:0:%s", len(misuse)-1, simdjson.ErrIncorrectType)},
 	} {
 		var p ondemand.Parser
 		var want string

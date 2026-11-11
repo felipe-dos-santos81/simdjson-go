@@ -285,10 +285,22 @@ def stream_cases():
         yield scase(doc, fmt=fmt, api="ondemand", script=[op])
 
 
+def raw_cases():
+    # v5.1.1: raw ends on the value's last byte, also after the value was read,
+    # and after it on a scalar document a stream yields the very next one.
+    scripts = (["int64", "raw"], ["walk", "raw"], ["get a", "int64", "raw"], ["raw", "raw"])
+    for doc, script in zip(("5 ", "[1,2] ", '{"a":1,"b":2} ', "[1,2] "), scripts):
+        yield case(doc, script=script)
+    for doc, fmt in (("5 6 7", "whitespace"), ('[1,2] "s" {"a":1,"b":2}\n7', "newline"),
+                     ('\x1e{"a":1,"b":2}\n\x1e"x"\n', "sequence"), ('3 , [1,2],{"a":1}', "comma")):
+        for script in scripts:
+            yield scase(doc, fmt=fmt, api="ondemand", script=script)
+
+
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
-                false_cases, exponent_cases, backslash_cases, stream_cases):
+                false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:
