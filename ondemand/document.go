@@ -13,7 +13,10 @@ func (d *Document) root() valueIter { return valueIter{d, 1, 0} }
 
 func (d *Document) atRoot() bool { return d.pos == 0 }
 
-// Root lengths C++ copies a root scalar into before parsing it.
+// Root lengths C++ copies a root number into before parsing it. They limit
+// the number's own text: the white space, commas and RS after it do not
+// count (valueIter.rootScalar). A number of exactly maxRootFloat bytes is
+// followed by NUL in C++'s buffer, so Float64 fails on it.
 const (
 	maxRootInt   = 21       // 20 digits and a sign
 	maxRootFloat = 1074 + 9 // the longest float C++ accepts
@@ -23,11 +26,11 @@ const (
 func rootScalar[T any](d *Document, n int, parse func([]byte, byte) (T, error)) (T, error) {
 	var zero T
 	it := d.root()
-	s, ok := it.rootScalar(n)
+	s, pad, ok := it.rootScalar(n)
 	if !ok {
 		return zero, jsonerr.ErrNumber
 	}
-	x, err := parse(s, ' ')
+	x, err := parse(s, pad)
 	if err != nil {
 		return zero, err
 	}
@@ -68,8 +71,8 @@ func (d *Document) NumberType() (NumberType, error) {
 		return 0, err
 	}
 	it := d.root()
-	s, ok := it.rootScalar(maxRootFloat)
-	if !ok {
+	s, pad, ok := it.rootScalar(maxRootFloat)
+	if !ok { // C++ checks the whole token, white space and all
 		if !checkIfInteger(d.rootText()) {
 			return 0, jsonerr.ErrNumber
 		}
@@ -78,7 +81,7 @@ func (d *Document) NumberType() (NumberType, error) {
 		}
 		return BigInt, nil
 	}
-	t, err := numberType(s, ' ')
+	t, err := numberType(s, pad)
 	if err == nil && it.trailing() {
 		return 0, jsonerr.ErrTrailingContent
 	}

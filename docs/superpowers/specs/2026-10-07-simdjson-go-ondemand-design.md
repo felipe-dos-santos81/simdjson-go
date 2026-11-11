@@ -151,14 +151,21 @@ marked **Go**.
   and overflow (`ErrNumber`); `NumberType` classifies from the digits without validating, and a
   `BigInt` is read with `Raw`, unvalidated.
 - **Scalar documents.** A root scalar is read with the document's getters (`Value` is
-  `ErrScalarDocumentAsValue`); content after it is `ErrTrailingContent`. As C++ copies the root
-  scalar and its trailing whitespace into a fixed buffer, a root integer longer than 21 bytes with
-  that whitespace, or a number longer than 1083, is `ErrNumber`; past 1083 bytes, `NumberType`
-  classifies a root that is `-` or digits followed by whitespace as `BigInt` (read with `Raw`), as
-  C++'s `check_if_integer` does; and a root `false` is recognised
-  by its first four bytes (`falsy` reads as `false`).
+  `ErrScalarDocumentAsValue`); content after it is `ErrTrailingContent`. As C++ copies a root
+  number into a fixed buffer, 21 bytes for `Int64` and `Uint64` and 1083 for `Float64` and
+  `NumberType`, a root number whose own text is longer is `ErrNumber`. The white space after it,
+  and in a stream the `,` or RS delimiter and the white space around it, do not count. C++ drops
+  them before parsing, so a root number followed by RS (`-1.5\x1e`) reads as the number even
+  outside a stream. Past 1083 bytes, `NumberType` classifies a root that is `-` and digits as
+  `BigInt` (read with `Raw`), as C++'s `check_if_integer` does. A number of exactly 1083 bytes
+  fills C++'s buffer and is followed there by NUL, not a space: `Float64` is `ErrNumber`, and
+  `NumberType` reads the NUL as a non-terminator, so 1083 digits are `Float64`. A root `false` is
+  recognised by its first four bytes (`falsy` reads as `false`).
 - **Differences from the DOM** (all C++'s own): the exponent, `BigInt`, root-buffer and `false`
-  rules above. Everything else a full walk accepts, the DOM accepts, with the same values.
+  rules above. Of the root-buffer rule, only `Float64`'s limit shows in a full walk: a root number
+  of 1083 bytes, or a longer one that is not an integer, fails, where the DOM reads it; a root
+  number followed by RS is read, where the DOM rejects it. Everything else a full walk accepts,
+  the DOM accepts, with the same values.
 - **Misuse (Go).** Reading a container out of order, iterating a container whose iteration has
   already started, a stale `Field`, a zero handle, or any handle after the next `Iterate` returns
   `ErrOutOfOrderIteration` and never panics. These are C++'s development-build checks; release C++

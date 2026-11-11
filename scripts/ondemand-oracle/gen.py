@@ -54,7 +54,7 @@ def scalar_cases():
         for op in READS:
             yield case(s, script=[op])
         yield case(s + " ", script=["int64"])
-        for pad in (19, 20, 21, 1082, 1083):  # C++ copies a root scalar with its trailing space
+        for pad in (19, 20, 21, 1082, 1083):  # C++ copies a root scalar to a buffer; trailing space does not count
             for op in ("int64", "uint64", "double", "ntype", "bool", "null", "walk"):
                 yield case(s + " " * pad, script=[op])
         yield case(s + " 1", script=["double"])
@@ -174,6 +174,19 @@ def mutation_cases():
             yield case(d, script=script)
 
 
+def root_buffer_cases():
+    # C++ copies a root number without the white space after it into a
+    # 21- or 1083-byte buffer; one that fills it is followed by NUL there.
+    for s in ("1." + "1" * 1080, "1." + "1" * 1080 + " ", "1." + "1" * 1081, "-0." + "1" * 1080,
+              "1." + "1" * 1081 + " ", "1" * 1083, "1" * 1083 + " ", "1" * 1084):
+        for op in ("double", "ntype"):
+            yield case(s, script=[op])
+    for s, op in (("18446744073709551615     ", "uint64"), ("18446744073709551615     ", "int64"),
+                  ("-9223372036854775808     ", "int64"), ("1234567890123456789012", "int64")):
+        yield case(s, script=[op])
+    yield case("-1.5\x1e\n", script=["walk"])  # RS is dropped too, outside a stream (the DOM rejects it)
+
+
 RS_ = random.Random(20261008)  # separate, so the On-Demand cases stay byte-identical
 SFORMATS = ["whitespace", "newline", "sequence", "comma", "array"]
 SDOCS = ["1", "-2.5", "1e400", '"a\\"b"', '"é"', "true", "nul", "null", "[]", "{}", "[1,[2,{\"a\":3}]]",
@@ -236,11 +249,17 @@ def stream_cases():
         for fmt in (["whitespace", "newline"] if f.endswith(".ndjson") else ["whitespace"]):
             yield scase(file=path, fmt=fmt)
             yield scase(file=path, fmt=fmt, api="ondemand", script=["walk"])
+    # A gap before the delimiter: C++ reads a root number without it.
+    for doc, fmt, op in (("1" + " " * 30 + ",2", "comma", "int64"), ("-42" + " " * 2000 + ",-1", "comma", "double"),
+                         ("\x1e1" + " " * 30 + "\x1e2", "sequence", "int64"),
+                         ("\x1e-1.5\x1e" + " " * 30 + "2", "sequence", "double")):
+        yield scase(doc, fmt=fmt, api="ondemand", script=[op])
 
 
 def main():
     seen = set()
-    for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, stream_cases):
+    for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
+                stream_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

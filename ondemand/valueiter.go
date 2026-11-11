@@ -443,15 +443,28 @@ func (it valueIter) advanceScalar() {
 	it.d.depth = it.depth - 1
 }
 
-// rootScalar returns the bytes C++ copies to its temporary buffer for a
-// root scalar (peek_root_length bytes), or ok false if they exceed n.
-func (it valueIter) rootScalar(n int) (s []byte, ok bool) {
+// rootScalar returns the bytes C++ copy_to_buffer copies to its n-byte
+// buffer for a root scalar, and pad, the byte that follows them there, or ok
+// false if they exceed n. C++ copies peek_root_length bytes without the
+// white space, commas and RS after the scalar (a stream's delimiter, which
+// stage 1 drops from the index), pads the rest of the buffer with spaces,
+// and ends it with NUL: a scalar that fills the buffer is followed by NUL.
+func (it valueIter) rootScalar(n int) (s []byte, pad byte, ok bool) {
 	off := it.scalarStart()
 	l := it.d.rootTokenLen(it.start)
-	if l > n {
-		return nil, false
+	for l > 0 {
+		if c := it.d.buf[off+l-1]; c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != ',' && c != 0x1E {
+			break
+		}
+		l--
 	}
-	return it.d.buf[off : off+l], true
+	if l > n {
+		return nil, 0, false
+	}
+	if l == n {
+		return it.d.buf[off : off+l], 0, true
+	}
+	return it.d.buf[off : off+l], ' ', true
 }
 
 // trailing reports C++ TRAILING_CONTENT: a root scalar followed by more
