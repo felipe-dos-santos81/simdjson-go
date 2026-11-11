@@ -397,12 +397,6 @@ static stream_format parse_format(std::string_view f) {
   return stream_format::whitespace_delimited;
 }
 
-// clip bounds a source to the input: C++ can end one byte into the padding.
-static std::string_view clip(std::string_view s, const padded_string &json) {
-  size_t room = size_t(json.data() + json.size() - s.data());
-  return s.substr(0, std::min(s.size(), room));
-}
-
 static dom::parser dom_stream_parser;
 static ondemand::parser od_stream_parser;
 
@@ -420,7 +414,7 @@ static void run_stream(const std::string &input, std::string_view api, std::stri
       out.add("@" + std::to_string(it.current_index()));
       dom::element e;
       if ((err = (*it).get(e))) { out.add("!" + std::to_string(int(err))); return; }
-      out.add("h" + tohex(clip(it.source(), json)));
+      out.add("h" + tohex(it.source()));
       std::string w;
       walk_dom(e, w);
       out.add("w" + w);
@@ -435,7 +429,7 @@ static void run_stream(const std::string &input, std::string_view api, std::stri
     out.add("@" + std::to_string(it.current_index()));
     ondemand::document_reference d;
     if ((err = (*it).get(d))) { out.add("!" + std::to_string(int(err))); return; }
-    out.add("h" + tohex(clip(it.source(), json)));
+    out.add("h" + tohex(it.source()));
     if ((err = run(d, script, out))) { out.add("x" + std::to_string(int(err))); }
     // A read that abandoned the document leaves C++ with a null parser,
     // which the next step can dereference: nothing past it is defined.

@@ -195,10 +195,11 @@ func (d *Document) Source() []byte {
 	default:
 		return stream.ScalarSource(d.buf, start, int(d.idx[1]), d.comma)
 	}
-	i := 1
-	for ; i <= d.n; i++ {
-		if i == d.n {
-			d.more() // C++'s walk reaches the end of its one batch
+	for i := 1; ; i++ {
+		if i >= d.n && (!d.more() || i >= d.n) {
+			// Never closes: C++'s walk reaches the end of its one batch and
+			// stops there, not one byte past it.
+			return d.buf[start:len(d.buf):len(d.buf)]
 		}
 		switch d.peekAt(i) {
 		case '{', '[':
@@ -207,17 +208,10 @@ func (d *Document) Source() []byte {
 			depth--
 		}
 		if depth == 0 {
-			break
+			end := int(d.idx[i]) + 1
+			return d.buf[start:end:end]
 		}
 	}
-	// C++ can end one byte past its input: into its padding, where Go stops
-	// at the input's end, or on the array's ']', which b still holds.
-	limit := len(d.buf)
-	if d.pad != 0 {
-		limit++
-	}
-	end := min(int(d.idx[min(i, len(d.idx)-1)])+1, limit)
-	return d.buf[start:end:end]
 }
 
 // more extends a stream document's view to the whole input, loading every

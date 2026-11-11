@@ -300,6 +300,12 @@ stream has ended (`Release`) or been replaced cannot grow. `peekAt` and `advance
 check, so they stay inlined. Past the last document, C++'s sentinels (`len`, where the dropped tail
 starts, 0) can make `peek_length` negative, which C++ reads as a huge `size_t`: Go reads 0.
 
+`Source` of a document whose brackets never balance within the batch (`[1 2` or `[1 2]`, whose
+tail `2]` is dropped) is the input from its first byte to the end of the batch (for
+`CommaDelimitedArray`, the end of the array's contents, without its `]`). C++ v5.1.1 stops its
+bracket walk before the end-of-batch entry; v5.0.2 read that entry as a token and ended one byte
+past the entry after it.
+
 ## 6. Changes to existing code
 
 - `internal/stage1`: `Stream` (§5.1); `Index` built on it.
