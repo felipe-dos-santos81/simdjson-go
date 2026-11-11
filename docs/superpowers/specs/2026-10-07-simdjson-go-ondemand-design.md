@@ -256,8 +256,8 @@ marked **Go**.
 - **Depth.** The oracle's release build has no limit, so `TestMaxDepth` holds values measured
   on C++ v5.1.1 built with development checks: `MaxDepth` minus one, at and past the limit, for
   arrays, objects and empty ones, a skipped value, the default, reads after the error and a
-  stream. `FuzzOnDemand` compares with the DOM without a limit and runs its scripts with
-  `MaxDepth` 3.
+  stream. `FuzzOnDemand` compares with the DOM without a limit, and runs each script twice:
+  without a limit, then with `MaxDepth` 1 to 4.
 - **Fuzzing.** `FuzzOnDemand`: arbitrary input and an arbitrary read script; never panics; the full
   walk agrees with the DOM.
 - **Benchmarks.** The six C++ tasks, each with On-Demand and with `Parse` plus DOM, and a test that
