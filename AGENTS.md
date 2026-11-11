@@ -40,6 +40,8 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `methods.go`, `time.go`, `strcache.go` | `MarshalJSON`/`UnmarshalJSON`/text methods, `time.Time`, the string cache |
 | `*_test.go` | Unit, corpus (`corpus_test.go`), fuzz (`fuzz_test.go`) and benchmark tests; data binding against v2 in `bind_test.go`, `bind_fuzz_test.go`, `bind_bench_test.go`; stage 2 binding mode in `binding_test.go` |
 | `scripts/fetch-testdata.sh` | Downloads the pinned corpora (`make testdata`) |
+| `cmd/simdjson/` | The `simdjson` command (`validate`, `minify`, `get`): a thin wrapper over `Parse`, `Minify` and `AtPointer`, tested through `run` in `main_test.go` |
+| `.github/workflows/release.yml` | On a `vX.Y.Z` tag: builds and smoke-tests the command on Linux, macOS and Windows runners (arm64 with `GOEXPERIMENT=simd`) and publishes a GitHub Release. A manual run uploads the archives as artifacts only |
 | `docs/upstream-sync-prompt.md`, `docs/upstream/` | The prompt that plans a sync with a new C++ release, and each sync's plan: a ledger of the upstream commits and one porting prompt per package |
 
 ## Commands
@@ -52,6 +54,7 @@ make fuzz target=FuzzParse time=60s       # any Fuzz* target; the Makefile picks
 make bench neon=1 bench=Unmarshal/        # binding benchmarks sit beside their v2 equivalents
 make oracle       # record C++'s results again (needs a C++20 compiler, curl, python3)
 make bench-cpp    # Go vs C++ simdjson, benchstat and a Markdown table (needs a C++20 compiler)
+make build        # the simdjson command, into ./simdjson [neon=1]
 ```
 
 Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates about 0.5 GB.

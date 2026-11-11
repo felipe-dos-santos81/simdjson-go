@@ -1,0 +1,112 @@
+# Builds the simdjson command (cmd/simdjson) for Linux, macOS and Windows and,
+# on a version tag, publishes a GitHub Release with the archives and
+# SHA256SUMS. A manual run (workflow_dispatch) builds and uploads the archives
+# as workflow artifacts only.
+#
+# Each archive is built and smoke-tested on a runner of its own system. arm64
+# binaries use the NEON kernel (GOEXPERIMENT=simd); the others the portable one.
+name: release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest, os: linux, arch: x64 }
+          - { runner: ubuntu-24.04-arm, os: linux, arch: arm64, simd: simd }
+          - { runner: macos-latest, os: macos, arch: universal, simd: simd } # an arm64 runner
+          - { runner: windows-latest, os: windows, arch: x64, exe: .exe }
+          - { runner: windows-11-arm, os: windows, arch: arm64, simd: simd, exe: .exe }
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      CGO_ENABLED: '0'
+      GOEXPERIMENT: ${{ matrix.simd }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false # the module has no dependencies to cache
+      - name: Version
+        run: echo "VER=$(if [ "$GITHUB_REF_TYPE" = tag ]; then echo "${GITHUB_REF_NAME#v}"; else echo 0.0.0-dev; fi)" >> "$GITHUB_ENV"
+      - name: Test the command
+        run: go test ./cmd/...
+      - name: Build
+        run: |
+          D="simdjson-go-$VER-${{ matrix.os }}-${{ matrix.arch }}"
+          BIN="$D/simdjson${{ matrix.exe }}"
+          mkdir -p "$D" dist
+          go build -trimpath -ldflags "-s -w -X main.version=$VER" -o "$BIN" ./cmd/simdjson
+          if [ "${{ matrix.os }}" = macos ]; then
+            # Universal: this arm64 build plus an x86_64 one, which has no NEON.
+            GOARCH=amd64 GOEXPERIMENT= go build -trimpath -ldflags "-s -w -X main.version=$VER" -o x86_64.bin ./cmd/simdjson
+            lipo -create -output universal.bin "$BIN" x86_64.bin
+            mv universal.bin "$BIN"
+            lipo "$BIN" -verify_arch arm64 x86_64
+            # Ad-hoc signature only (not Developer ID): Apple Silicon refuses
+            # arm64 code with no signature at all.
+            codesign --force --sign - "$BIN"
+          fi
+          cp LICENSE LICENSE-MIT LICENSE-GO NOTICE "$D/"
+          "$BIN" help > "$D/README.txt"
+          echo "STAGE=$D" >> "$GITHUB_ENV"
+          echo "BIN=$BIN" >> "$GITHUB_ENV"
+      - name: Smoke test
+        run: |
+          test "$("$BIN" version)" = "$VER"
+          test "$(printf '{ "a" : [1, 2] }' | "$BIN" minify)" = '{"a":[1,2]}'
+          printf '{"a":[1,2]}' | "$BIN" validate
+          if printf '{"a":' | "$BIN" validate 2>/dev/null; then
+            echo "::error::invalid JSON was accepted"; exit 1
+          fi
+      - name: Archive
+        run: |
+          case "${{ matrix.os }}" in
+            linux) tar czf "dist/$STAGE.tar.gz" "$STAGE" ;;
+            macos) ditto -c -k --keepParent "$STAGE" "dist/$STAGE.zip" ;;
+            windows) powershell -NoProfile -Command "Compress-Archive -Path '$STAGE' -DestinationPath 'dist/$STAGE.zip'" ;;
+          esac
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum -- *.zip *.tar.gz > SHA256SUMS && cat SHA256SUMS
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          pre=""
+          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease" ;; esac
+          # The command's own help as a preformatted block.
+          { echo '```text'; tar xzOf dist/simdjson-go-*-linux-x64.tar.gz --wildcards '*/README.txt'; echo '```'; } > notes.md
+          gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes \
+            --notes-file notes.md $pre dist/*

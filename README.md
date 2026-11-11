@@ -92,6 +92,18 @@ for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
 
 **Lifetime:** a yielded document is valid until the loop's next step, or the next parse on the same `Parser`. After its step, an On-Demand document returns `ErrOutOfOrderIteration`. A second stream on the same `Parser` ends the first.
 
+### Command line
+
+[Releases](https://github.com/felipe-dos-santos81/simdjson-go/releases) carry a `simdjson` binary for Linux, macOS and Windows (x64 and arm64; the arm64 ones use the NEON kernel). Or build it: `make build`.
+
+```sh
+simdjson validate data.json             # exit 0 if it is valid JSON
+simdjson minify < data.json             # without white space
+simdjson get /user/ids/0 data.json      # the value at a JSON Pointer
+```
+
+The input is one document, from a file or standard input. The exit status is 0 on success, 1 for invalid JSON or a pointer that finds nothing, 2 for a usage error.
+
 ### Data binding
 
 ```go
@@ -203,7 +215,10 @@ make bench neon=1 bench=Unmarshal/
 make bench neon=1 pkg=./ondemand bench=Tasks
 make bench-cpp   # Go vs C++ simdjson, as a table (needs a C++20 compiler)
 make oracle      # record the C++ results again (needs a C++20 compiler)
+make build neon=1  # the simdjson command, into ./simdjson
 ```
+
+To release, push a version tag: `git tag v1.2.3 && git push origin v1.2.3`. The [`release`](.github/workflows/release.yml) workflow builds and smoke-tests the command on Linux, macOS and Windows runners and publishes the archives with `SHA256SUMS`. A tag with a suffix (`v1.2.3-rc1`) becomes a pre-release.
 
 The corpora come from [simdjson-data](https://github.com/simdjson/simdjson-data), pinned to one commit. The designs and plans are in [`docs/superpowers/`](docs/superpowers/). [`AGENTS.md`](AGENTS.md) has guidance for contributors and agents.
 
