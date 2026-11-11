@@ -21,8 +21,7 @@ C++ is the oracle, and parsing behaviour changes only together with evidence fro
 ### 1. Fix the range
 
 - `BASE` is the tag in `scripts/fetch-simdjson.sh` (the download URL and the
-  `SIMDJSON_VERSION` check). The core spec names a local clone a few commits past that tag;
-  the range still starts at the tag.
+  `SIMDJSON_VERSION` check).
 - `TARGET` is the tag you were given, else the latest release:
   `gh release list -R simdjson/simdjson --limit 1`.
 - `TARGET` is a release tag. `scripts/fetch-simdjson.sh` downloads
@@ -72,8 +71,9 @@ Give each commit one **verdict**. Read the diff of every commit that touches a p
   §3 and the streams spec §4.3 list them. A change to one of those is `none` or `ask`.
 - Check each commit against the **quirk records**, the places where this repository writes
   down C++ behaviour it copies or declines. Start with core spec §5.5 and §9, On-Demand spec
-  §4, streams spec §4.3, `knownDifference` in `ondemand/dom_test.go`, and the adjustments
-  `fuzz_test.go` makes to `encoding/json`. Then search the specs and the test files for the
+  §4, streams spec §4.3, `knownDifference` in `ondemand/dom_test.go`, the adjustments
+  `fuzz_test.go` makes to `encoding/json`, and `TestMaxDepth` in package `ondemand`, which
+  holds results of C++'s development build. Then search the specs and the test files for the
   C++ identifiers and error codes the commit touches: a test helper that models a difference
   is a record too. When upstream fixes a recorded quirk, the Go port follows C++ and the
   record changes in the same package.
@@ -111,9 +111,12 @@ compiler, `curl` and `python3`. If one is missing, say so in the ledger and mark
    program. The DOM and stages 1 and 2 have no recorded oracle: run their inputs through
    `dom::parser` in a scratch program. Run one process per input, because C++ at `BASE` may
    crash; a crash is a result.
-5. Run the same inputs through Go at `HEAD`. A scratch `_test.go` in the worktree's
+5. A commit that touches a development check (`SIMDJSON_DEVELOPMENT_CHECKS`) changes no
+   recorded case, because the oracle is the release build. Measure it with the
+   development-build recipe in `scripts/ondemand-oracle/README.md`.
+6. Run the same inputs through Go at `HEAD`. A scratch `_test.go` in the worktree's
    `ondemand/` can call the oracle tests' own runners (`runScript`, `streamOut`).
-6. Remove the worktree.
+7. Remove the worktree.
 
 Done when every `port` and `verify` commit has at least one input with three results beside
 it: C++ at `BASE`, C++ at `TARGET`, Go today. A commit with no input that separates `BASE`
@@ -128,8 +131,11 @@ each package builds on finished work:
 
 1. **Pin.** Move every pin to `TARGET` and regenerate the oracles. The pins are
    `scripts/fetch-simdjson.sh`, the simdjson-data commit in `scripts/fetch-testdata.sh` (it
-   follows upstream's `dependencies/CMakeLists.txt`), and every version string that
-   `rg -n '<BASE without the v>'` finds outside `testdata/` and `docs/superpowers/plans/`.
+   follows upstream's `dependencies/CMakeLists.txt`), and the version strings that say which
+   C++ version the library follows. Find them with `rg -n '<BASE without the v>'` outside
+   `testdata/`, `docs/superpowers/plans/` and `docs/upstream/`. A sentence about what one
+   version did ("since v5.1.1 C++ returns 0", "v5.0.2 crashed here") is history: keep its
+   version.
 2. Stage 1, then stage 2 and the DOM, then On-Demand, then streams.
 3. `perf` packages.
 4. **Close.** Compare `scripts/cpp-bench/bench.cpp` with `TARGET`'s
@@ -137,7 +143,8 @@ each package builds on finished work:
 
 The sync lands as one branch. After the pin package, the only failing tests are the oracle
 cases the ledger assigns to later packages; each prompt lists the cases it turns green.
-Name a case by its document and script, because line numbers move when `gen.py` grows. A
+Name a recorded case by its line number, and keep the numbers valid: every prompt that adds
+cases to `gen.py` puts them in a function of their own, called after the existing groups. A
 case that two commits change turns green with the later package. `make check` passes at the
 close.
 
