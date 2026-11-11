@@ -230,15 +230,14 @@ func domWalk(p *simdjson.Parser, in []byte) (string, error) {
 var bom = []byte{0xEF, 0xBB, 0xBF}
 
 // knownDifference reports C++'s known differences between On-Demand and
-// the DOM when one fails and the other does not. On-Demand alone fails on
-// an exponent of more than 19 digits and by the root-buffer rule below;
-// On-Demand alone succeeds on a root number followed by RS (C++ drops it
-// with the white space after the number, as a stream's delimiter) and on an
-// integer too long for 64 bits that it does not validate (read with Raw; see
-// walkInfo.badBigInt).
+// the DOM when one fails and the other does not. On-Demand alone fails by the
+// root-buffer rule below; it alone succeeds on a root number followed by RS
+// (C++ drops it with the white space after the number, as a stream's
+// delimiter) and on an integer too long for 64 bits that it does not validate
+// (read with Raw; see walkInfo.badBigInt).
 func knownDifference(in []byte, info walkInfo, errOD, errDOM error) bool {
 	if errOD != nil && errDOM == nil {
-		return exponentTooLong(in) || rootBufferDifference(in)
+		return rootBufferDifference(in)
 	}
 	root := bytes.TrimLeft(bytes.TrimPrefix(in, bom), " \t\n\r")
 	tail := bytes.TrimRight(root, " \t\n\r")
@@ -266,38 +265,6 @@ var (
 	rootInteger = regexp.MustCompile(`^-?[0-9]+$`)
 	rootNumber  = regexp.MustCompile(`^-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$`)
 )
-
-func exponentTooLong(in []byte) bool {
-	n := 0
-	for i := 0; i < len(in); i++ {
-		switch c := in[i]; {
-		case c == '"': // a string: its contents are not numbers
-			for i++; i < len(in) && in[i] != '"'; i++ {
-				if in[i] == '\\' {
-					i++
-				}
-			}
-			n = 0
-		case c >= '0' && c <= '9':
-			n++
-		case c == 'e' || c == 'E':
-			n = 0
-			for i+1 < len(in) && (in[i+1] == '+' || in[i+1] == '-') {
-				i++
-			}
-			for i+1 < len(in) && in[i+1] >= '0' && in[i+1] <= '9' {
-				i++
-				n++
-			}
-			if n > 19 {
-				return true
-			}
-		default:
-			n = 0
-		}
-	}
-	return false
-}
 
 // agree checks that a full On-Demand walk gives what the DOM gives.
 func agree(t *testing.T, od *ondemand.Parser, dom *simdjson.Parser, in []byte) {

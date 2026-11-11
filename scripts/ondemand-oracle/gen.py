@@ -194,6 +194,15 @@ def false_cases():
             yield case(s, script=[op])
 
 
+def exponent_cases():
+    # v5.1.1: Float64 reads an exponent of any length (20 or more digits was NUMBER_ERROR).
+    for s in ("1e000000000000000000001", "5E-0000000000000000000001", "0e9999999999999999999999999999",
+              "-0e+99999999999999999999", "1.5e-99999999999999999999", "1e99999999999999999999"):
+        yield case(s, script=["double"])
+        yield case(s, script=["walk"])
+        yield case("[%s]" % s, script=["arr", "at 0", "double"])
+
+
 RS_ = random.Random(20261008)  # separate, so the On-Demand cases stay byte-identical
 SFORMATS = ["whitespace", "newline", "sequence", "comma", "array"]
 SDOCS = ["1", "-2.5", "1e400", '"a\\"b"', '"é"', "true", "nul", "null", "[]", "{}", "[1,[2,{\"a\":3}]]",
@@ -266,7 +275,7 @@ def stream_cases():
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
-                false_cases, stream_cases):
+                false_cases, exponent_cases, stream_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

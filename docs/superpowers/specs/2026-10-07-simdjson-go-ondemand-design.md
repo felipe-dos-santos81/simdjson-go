@@ -147,8 +147,8 @@ marked **Go**.
   pointer is the root on the `Document` and `ErrInvalidJSONPointer` elsewhere. A missing field is
   `ErrNoSuchField`. `Array.At` counts an element whose read failed as an element.
 - **Numbers.** `Int64`/`Uint64` reject fractions, exponents and out-of-range values with
-  `ErrIncorrectType`; `Float64` accepts any number but rejects an exponent of more than 19 digits
-  and overflow (`ErrNumber`); `NumberType` classifies from the digits without validating, and a
+  `ErrIncorrectType`; `Float64` accepts any number, whatever the length of its exponent, but
+  rejects overflow (`ErrNumber`); `NumberType` classifies from the digits without validating, and a
   `BigInt` is read with `Raw`, unvalidated.
 - **Scalar documents.** A root scalar is read with the document's getters (`Value` is
   `ErrScalarDocumentAsValue`); content after it is `ErrTrailingContent`. As C++ copies a root
@@ -160,8 +160,7 @@ marked **Go**.
   `BigInt` (read with `Raw`), as C++'s `check_if_integer` does. A number of exactly 1083 bytes
   fills C++'s buffer and is followed there by NUL, not a space: `Float64` is `ErrNumber`, and
   `NumberType` reads the NUL as a non-terminator, so 1083 digits are `Float64`.
-- **Differences from the DOM** (all C++'s own): the exponent, `BigInt` and root-buffer rules
-  above. Of the root-buffer rule, only `Float64`'s limit shows in a full walk: a root number
+- **Differences from the DOM** (all C++'s own): the `BigInt` and root-buffer rules above. Of the root-buffer rule, only `Float64`'s limit shows in a full walk: a root number
   of 1083 bytes, or a longer one that is not an integer, fails, where the DOM reads it; a root
   number followed by RS is read, where the DOM rejects it. Everything else a full walk accepts,
   the DOM accepts, with the same values.

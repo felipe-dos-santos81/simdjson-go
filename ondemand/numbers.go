@@ -155,7 +155,7 @@ func parseDouble(s []byte, pad byte) (float64, error) {
 			}
 			p++
 		}
-		if p == expStart || p-expStart > 19 {
+		if p == expStart {
 			return 0, jsonerr.ErrNumber
 		}
 		if expNeg {
