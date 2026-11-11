@@ -114,7 +114,7 @@ type Document struct {
 	depth  int      // depth of the cursor (the root value is at depth 1)
 	limit  int      // Parser.MaxDepth: no array or object starts at this depth or deeper
 	err    error    // a fatal error; reads fail with it from then on
-	dead   bool     // abandoned after a fatal error (C++ !is_alive)
+	dead   bool     // abandoned by a fatal error (C++ !is_alive); implies err != nil
 	gen    uint32   // incremented by every Iterate, to detect stale handles
 	strs   []byte   // unescaped strings, until the next Iterate or Rewind
 	starts []int    // starts[depth]: start of the container open at depth (misuse checks)
@@ -179,17 +179,29 @@ func (d *Document) fail(err error) error {
 	return err
 }
 
-// abandon stops all further iteration after a fatal error.
+// abandon stops all further iteration after a fatal error (C++ is_alive is
+// false from then on): Rewind cannot bring d back. Callers record the error
+// with fail; ErrTape stands in if one did not, so a dead document always has
+// an error to report. A recorded error alone does not abandon d: after
+// ErrDepth, C++ leaves the document alive, even once a read has taken its
+// cursor to depth 0.
 func (d *Document) abandon() {
 	d.depth = 0
 	d.dead = true
+	if d.err == nil {
+		d.err = jsonerr.ErrTape
+	}
 }
 
-// abandoned reports whether a fatal error abandoned d (C++ is_alive is
-// false): Rewind cannot bring it back. A recorded error alone does not
-// abandon d: after ErrDepth, C++ leaves the document alive, even once a
-// read has taken its cursor to depth 0.
-func (d *Document) abandoned() bool { return d.dead }
+// rawTo skips the rest of the array or object open above parentDepth and
+// returns its text from offset start (the end of C++ raw_json).
+func (d *Document) rawTo(parentDepth, start int) ([]byte, error) {
+	if err := d.skipChild(parentDepth); err != nil {
+		d.abandon()
+		return nil, err
+	}
+	return d.rawText(start)
+}
 
 func (d *Document) setStart(depth, pos int) {
 	for len(d.starts) <= depth {
@@ -319,7 +331,7 @@ func (d *Document) copyString(mark int, b []byte) string {
 // fatal error, which iteration, Count and Reset report again. A document
 // that a fatal error abandoned is left as it is (C++ v5.1.1).
 func (d *Document) Rewind() {
-	if d.n == 0 || d.abandoned() {
+	if d.n == 0 || d.dead {
 		return
 	}
 	d.pos = 0

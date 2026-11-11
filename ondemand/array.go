@@ -95,12 +95,7 @@ func (a Array) Raw() ([]byte, error) {
 		return nil, err
 	}
 	it := a.it
-	start := it.startOff()
-	if err := it.d.skipChild(it.depth - 1); err != nil {
-		it.d.abandon()
-		return nil, err
-	}
-	return it.d.rawText(start)
+	return it.d.rawTo(it.depth-1, it.startOff())
 }
 
 // AtPointer returns the value at the RFC 6901 JSON Pointer ptr below the

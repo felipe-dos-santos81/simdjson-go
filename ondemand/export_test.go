@@ -2,4 +2,4 @@ package ondemand
 
 // Abandoned reports whether a read error abandoned d (C++
 // json_iterator::abandon, after which document::is_alive is false).
-func Abandoned(d *Document) bool { return d.abandoned() }
+func Abandoned(d *Document) bool { return d.dead }

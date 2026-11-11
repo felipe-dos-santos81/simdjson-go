@@ -1,8 +1,6 @@
 package ondemand
 
 import (
-	"cmp"
-
 	"simdjson-go/internal/jsonerr"
 	"simdjson-go/internal/number"
 	"simdjson-go/internal/stream"
@@ -279,11 +277,7 @@ func (d *Document) Raw() ([]byte, error) {
 	start := int(d.idx[0])
 	switch d.root().typ() {
 	case TypeArray, TypeObject:
-		if err := d.skipChild(0); err != nil {
-			d.abandon()
-			return nil, err
-		}
-		return d.rawText(start)
+		return d.rawTo(0, start)
 	}
 	if d.depth > 0 { // C++ consume: step over the scalar, unless a read did
 		d.advance()
@@ -304,16 +298,7 @@ func (d *Document) scalarText(start int) []byte {
 	next = max(next, start) // C++ is undefined below start
 	buf, end := d.buf, start+1
 	if buf[start] == '"' {
-		for end < next {
-			c := buf[end]
-			end++
-			if c == '\\' {
-				end++
-			} else if c == '"' {
-				break
-			}
-		}
-		end = min(end, next)
+		end = start + stream.StringEnd(buf[start:], next-start)
 	} else {
 		for end < next && !number.IsStructuralOrSpace[buf[end]] && buf[end] != '"' && buf[end] != stream.RS && buf[end] != 0 {
 			end++
@@ -330,23 +315,28 @@ func (d *Document) AtPointer(ptr string) (Value, error) {
 	if err := d.check(); err != nil {
 		return Value{}, err
 	}
-	if d.abandoned() { // ErrTape if no error was recorded (C++: UNINITIALIZED)
-		return Value{}, cmp.Or(d.err, jsonerr.ErrTape)
+	if d.dead {
+		return Value{}, d.err
 	}
 	d.Rewind()
 	if ptr == "" {
 		return d.Value()
 	}
+	// As C++, through get_array or get_object: they step past the bracket
+	// before the root check, so that a Raw after a failed check ends on it.
 	switch d.root().typ() {
-	case TypeArray, TypeObject:
-		v, err := d.Value() // checks the root container, as C++'s get_array/get_object do
+	case TypeArray:
+		a, err := d.Array()
 		if err != nil {
-			if d.abandoned() { // they step past the bracket first: Raw then ends on it
-				d.advance()
-			}
 			return Value{}, err
 		}
-		return atPointer(v, ptr)
+		return a.AtPointer(ptr)
+	case TypeObject:
+		o, err := d.Object()
+		if err != nil {
+			return Value{}, err
+		}
+		return o.AtPointer(ptr)
 	}
 	return Value{}, jsonerr.ErrInvalidJSONPointer
 }

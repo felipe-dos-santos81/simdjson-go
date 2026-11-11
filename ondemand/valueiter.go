@@ -1,6 +1,10 @@
 package ondemand
 
-import "simdjson-go/internal/jsonerr"
+import (
+	"bytes"
+
+	"simdjson-go/internal/jsonerr"
+)
 
 // valueIter is C++ value_iterator: a value of the document, known by the
 // token position where it starts and its depth. Methods keep C++'s names
@@ -193,22 +197,22 @@ func (it valueIter) keyEquals(off int, key string) bool {
 		return false
 	}
 	if len(key) > 8 {
-		// Past SIMDJSON_PADDING (64), C++ compares with is_equal, which
-		// stops at an unescaped quote in key: such a key never matches,
-		// even where the raw text runs on into the next field.
 		if string(b[off+1:end]) != key {
 			return false
 		}
-		if len(key) > 64 {
-			return !hasUnescapedQuote(key)
+	} else {
+		seg := b[off+1 : end] // short keys: a loop beats the memequal call
+		for i := range seg {
+			if seg[i] != key[i] {
+				return false
+			}
 		}
-		return !escapesQuote(key)
 	}
-	seg := b[off+1 : end] // short keys: a loop beats the memequal call
-	for i := range seg {
-		if seg[i] != key[i] {
-			return false
-		}
+	if len(key) > 64 {
+		// Past SIMDJSON_PADDING, C++ compares with is_equal, which stops at
+		// an unescaped quote in key: such a key never matches, even where
+		// the raw text runs on into the next field.
+		return !hasUnescapedQuote(key)
 	}
 	return !escapesQuote(key)
 }
@@ -484,20 +488,14 @@ func (it valueIter) advanceScalar() {
 // and ends it with NUL: a scalar that fills the buffer is followed by NUL.
 func (it valueIter) rootScalar(n int) (s []byte, pad byte, ok bool) {
 	off := it.scalarStart()
-	l := it.d.rootTokenLen(it.start)
-	for l > 0 {
-		if c := it.d.buf[off+l-1]; c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != ',' && c != 0x1E {
-			break
-		}
-		l--
-	}
-	if l > n {
+	s = bytes.TrimRight(it.d.buf[off:off+it.d.rootTokenLen(it.start)], " \t\n\r,\x1e")
+	if len(s) > n {
 		return nil, 0, false
 	}
-	if l == n {
-		return it.d.buf[off : off+l], 0, true
+	if len(s) == n {
+		return s, 0, true
 	}
-	return it.d.buf[off : off+l], ' ', true
+	return s, ' ', true
 }
 
 // trailing reports C++ TRAILING_CONTENT: a root scalar followed by more

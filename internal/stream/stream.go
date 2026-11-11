@@ -311,14 +311,14 @@ func (r *Reader) finish(unclosed bool) {
 		r.hasHeld = false
 		if unclosed && (r.format != JSONSequence || r.Buf[r.held] == '"') {
 			scanLen = int(r.held)
-		} else if unclosed {
-			// C++ drop_json_sequence_unclosed_string: the quote follows a
-			// scalar byte such as an RS, so it is not indexed. Keep the last
-			// index; the dropped tail starts at the quote.
-			r.push(r.held)
-			scanLen = int(r.held) + bytes.IndexByte(r.Buf[r.held:], '"')
 		} else {
 			r.push(r.held)
+			if unclosed {
+				// C++ drop_json_sequence_unclosed_string: the quote follows a
+				// scalar byte such as an RS, so it is not indexed. Keep the
+				// last index; the dropped tail starts at the quote.
+				scanLen = int(r.held) + bytes.IndexByte(r.Buf[r.held:], '"')
+			}
 		}
 	}
 	if r.insert >= 0 && r.insert < scanLen {
@@ -506,6 +506,22 @@ func (r *Reader) SkipTo(pos int, delim byte) (int, bool) {
 	return pos, true
 }
 
+// StringEnd returns the offset just past the closing quote of the string
+// that starts at s[0], or limit if the string does not close before it.
+func StringEnd(s []byte, limit int) int {
+	i := 1
+	for i < limit {
+		c := s[i]
+		i++
+		if c == '\\' {
+			i++
+		} else if c == '"' {
+			break
+		}
+	}
+	return min(i, limit)
+}
+
 // ScalarSource is the scalar case of C++ document_stream::iterator::source:
 // the token at start, bounded by the next document at next, without
 // trailing whitespace, NUL and RS (and, for CommaDelimited, commas).
@@ -514,16 +530,7 @@ func ScalarSource(buf []byte, start, next int, comma bool) []byte {
 	n := next - start
 	tok := 0
 	if s[0] == '"' {
-		tok = 1
-		for tok < n {
-			c := s[tok]
-			tok++
-			if c == '\\' {
-				tok++
-			} else if c == '"' {
-				break
-			}
-		}
+		tok = StringEnd(s, n)
 	} else {
 		for tok < n {
 			if c := s[tok]; isCSpace(c) || c == ',' || c == '{' || c == '[' || c == 0 || c == RS {

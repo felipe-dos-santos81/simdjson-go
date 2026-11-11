@@ -119,7 +119,7 @@ func (p *Parser) IterateMany(b []byte, f Format) iter.Seq2[*Document, error] {
 			// to start). C++ v5.1.1 ends the stream there instead (spec §4.3).
 			cur, depth := pos, 1
 			if d.gen == mine {
-				if d.err == nil && !d.abandoned() {
+				if d.err == nil {
 					cur, depth = pos+d.pos, d.depth
 				}
 				// The document's step is over; Compact may move the indices
@@ -201,18 +201,15 @@ func (d *Document) Source() []byte {
 		return stream.ScalarSource(d.buf, start, int(d.idx[1]), d.comma)
 	}
 	for i := 1; ; i++ {
-		if i >= d.n && (!d.more() || i >= d.n) {
+		if i >= d.n {
+			d.more() // index further, if the stream has more
+		}
+		if i >= d.n {
 			// Never closes: C++'s walk reaches the end of its one batch and
 			// stops there, not one byte past it.
 			return d.buf[start:len(d.buf):len(d.buf)]
 		}
-		switch d.peekAt(i) {
-		case '{', '[':
-			depth++
-		case '}', ']':
-			depth--
-		}
-		if depth == 0 {
+		if depth += int(stream.DepthDelta[d.peekAt(i)]); depth == 0 {
 			end := int(d.idx[i]) + 1
 			return d.buf[start:end:end]
 		}

@@ -133,11 +133,7 @@ func (o Object) Raw() ([]byte, error) {
 			return nil, err
 		}
 	}
-	if err := it.d.skipChild(it.depth - 1); err != nil {
-		it.d.abandon()
-		return nil, err
-	}
-	return it.d.rawText(start)
+	return it.d.rawTo(it.depth-1, start)
 }
 
 // AtPointer returns the value at the RFC 6901 JSON Pointer ptr below the
