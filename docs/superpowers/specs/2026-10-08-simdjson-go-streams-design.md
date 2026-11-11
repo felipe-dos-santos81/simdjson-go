@@ -43,8 +43,8 @@ document that holds the bad byte instead of failing the whole input.
 ### Results
 
 - **Oracle.** `testdata/stream/oracle.jsonl` has 2,911 cases. 106 are skipped for a stage 1 error
-  (covered by the stage 1 tests and the fuzzers) and 4 are compared up to the DOM document that
-  closes on the array's `]`.
+  (covered by the stage 1 tests and the fuzzers) and 4 were compared up to the DOM document that
+  closed on the array's `]` (none since v5.1.1, §4.2).
 - **Fuzzing** (Task 6). `FuzzParseMany`: 600 s pure Go (60.3M execs) and 300 s NEON after a fix
   (61.2M). `FuzzIterateMany`: 600 s (41.0M), and again on the final code (f8b4886, reads past
   abandoned documents compared too): 600 s (104.1M). `FuzzStream` (`internal/stage1`, NEON
@@ -56,12 +56,12 @@ document that holds the bad byte instead of failing the whole input.
   NEON, 10 alternating runs, load average 5–10): `BenchmarkParse` +1.81% and the On-Demand tasks
   +1.24% (geometric mean), within the 2% bar. The cost comes from `Index` running on
   `stage1.Stream` and stage 2's streaming checks; `Parse` itself takes no stream path.
-- **Added since the plan:** `CommaDelimitedArray` documents read the array's own `]` (both APIs);
+- **Added since the plan:** `CommaDelimitedArray` documents read the array's own `]` (On-Demand;
+  the DOM did too until v5.1.1, §4.2);
   an On-Demand read that runs past the decided indices (a malformed root, or out of order) first
   indexes the whole input (§5.5); bytes On-Demand's delimiter skip passes over are checked by
-  stage 1; `ParseMany` waits after a failed walk in `CommaDelimitedArray` (§5.4); after a read
-  that meets a fatal error, the next step ends the stream at that document (§3, C++ v5.1.1);
-  the stage 1 worker's state sits on its own cache lines (§5.2).
+  stage 1; after a read that meets a fatal error, the next step ends the stream at that document
+  (§3, C++ v5.1.1); the stage 1 worker's state sits on its own cache lines (§5.2).
 
 ## 2. Decisions
 
@@ -196,9 +196,11 @@ where a stage 1 error is the first and only item and a bad tail is dropped witho
   `Whitespace` rules apply. RS-only input yields nothing.
 - `NewlineDelimited`: as `Whitespace` in the DOM. In On-Demand, a document not read to its end is
   skipped to the next `\n` without validating the rest, as C++'s `skip_to_delimiter`.
-- In `CommaDelimitedArray`, a document still open at the end of the array's contents reads the
-  array's own `]` there, as C++ does (C++ strips the brackets by moving its pointers, so the byte
-  after its input is that `]`).
+- In `ParseMany`, a document still open where the stream's indices end reads 0 there, in every
+  format, and fails at its own offset (`ErrTape`), as C++ v5.1.1 bounds the walk of its last
+  batch: nothing reads a `CommaDelimitedArray`'s own `]`, and a cut-short last element is the
+  stream's error. In `IterateMany`, such a document reads that `]` there, as C++ On-Demand does
+  (C++ strips the brackets by moving its pointers, so the byte after its input is that `]`).
 - A number or literal that ends the input inside a container fails as C++'s does (`ErrNumber`,
   `ErrTAtom`, …): C++ parses it in place, before a `\0` padding byte.
 - `BatchSize` below 64 becomes 64, and above 1 GiB becomes 1 GiB; at most `min(BatchSize, len(b))`
@@ -212,9 +214,6 @@ All of it is a consequence of C++'s windows or threads:
 - A stage 1 error failing every document of its batch.
 - `json_sequence` silently skipping a window without RS.
 - The fallback kernel's narrower UTF-8 check (Go has one checker, equal to NEON).
-- After the DOM's last document closes on that `]` (§4.2), C++ goes on parsing past its own
-  end-of-input sentinel, into indices its comma filter left behind and then stale memory; Go
-  stops there.
 - `trim_partial_utf8`: C++ drops a UTF-8 character cut at the end of every window, the final one
   included, without an error. In Go a character cut at the end of the input is invalid UTF-8
   (§4.1); a character cut at a window's end is completed by the next window.
@@ -271,12 +270,8 @@ document).
 no trailing-content check, and it returns where it stopped, which is where the next document
 starts. It never reads past a boundary candidate inside a document without failing first: inside
 a container, a value start where `,`, `]` or `}` was expected is `ErrTape`. So parsing from the
-decided prefix gives the same result as one window. One exception: in a `CommaDelimitedArray`
-stream, a walk that fails before the input is done may have read 0 at the decided limit where, had
-that candidate turned out to start the dropped tail, it would have read the array's `]` (C++'s
-sentinel, §4.2). So after any failed walk the stream loads until the limit moves or the input is
-done and, if the limit is then the end of the indices, walks again reading `]`. The fuzzer (§8)
-checks this.
+decided prefix gives the same result as one window: a walk reads 0 at the decided limit, whether
+or not the input is done (§4.2).
 
 ### 5.5 On-Demand
 
@@ -339,10 +334,9 @@ past the entry after it.
   `testdata/stream/oracle.jsonl` beside the On-Demand file. `TestStreamOracle` (package `ondemand`,
   covering both APIs) replays it, translating indices to offsets and `~n` to the final
   `ErrTrailingContent`. Cases whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
-  where C++ reports `UNESCAPED_CHARS` are skipped there and covered by `TestStreamStage1Errors` and `TestStreamStage1Formats`. DOM
-  `CommaDelimitedArray` cases where C++ goes on after a document that closed on the array's `]`
-  (§4.3) are compared only up to that document, and counted apart. A read that abandons a stream
-  document prints `x<code> dead`; the stream then ends with `@<current_index> !<code>`.
+  where C++ reports `UNESCAPED_CHARS` are skipped there and covered by `TestStreamStage1Errors` and `TestStreamStage1Formats`.
+  A read that abandons a stream document prints `x<code> dead`; the stream then ends with
+  `@<current_index> !<code>`.
 - **Cases** (`gen.py`): the C++ tests' inputs (`issue2181`, `issue2170`, `test_naked_iterators`,
   `issue1977`, `issue2137`, `fuzzaccess`, `truncated_bytes_filtered_formats`,
   `source_scalar_before_truncated`, the comma and RS runs); corpus scalars and containers joined

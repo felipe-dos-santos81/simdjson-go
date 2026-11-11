@@ -332,11 +332,17 @@ def dead_cases():
         yield scase(doc, fmt=fmt, api="ondemand", script=["obj", "keys"])
 
 
+def open_last_cases():
+    # v5.1.1: a document still open at the end of an array stream fails; it
+    # does not close on the array's ']' (this one crashed v5.0.2).
+    yield scase('[[2[["]', fmt="array")
+
+
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
                 false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases, stream_end_cases,
-                rs_quote_cases, dead_cases):
+                rs_quote_cases, dead_cases, open_last_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

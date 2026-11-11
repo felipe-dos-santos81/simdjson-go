@@ -89,31 +89,6 @@ func TestParseMany(t *testing.T) {
 			t.Errorf("%q: got %s, want %s", in, got, want)
 		}
 	}
-	// A document still open at the end of a CommaDelimitedArray's contents
-	// reads the array's own ']' there, as C++ (its sentinel
-	// structural_indexes[n] = len points at the byte after its input). C++
-	// then parses on past that sentinel; Go stops (spec §4.3).
-	var items []string
-	for doc, err := range p.ParseMany([]byte("[[1 2]]"), CommaDelimitedArray) {
-		if err != nil {
-			items = append(items, err.Error())
-			continue
-		}
-		items = append(items, fmt.Sprintf("%d:%s:%s", doc.Offset(), doc.Source(), doc.Root().AppendJSON(nil)))
-	}
-	if got := strings.Join(items, " "); got != "1:[1 2]]:[1] "+(&StreamError{Offset: 4, Err: ErrTrailingContent}).Error() {
-		t.Errorf("[[1 2]]: %s", got)
-	}
-	// The same when the document's last index is decided in an earlier
-	// window than the one showing that what follows is dropped.
-	long := "[[[][" + strings.Repeat("0", 100) + "]"
-	for _, bs := range []int{0, 64} {
-		p.BatchSize = bs
-		if got := manyItems(&p, []byte(long), CommaDelimitedArray); got != "1:"+long[1:]+" !4 trailing" {
-			t.Errorf("BatchSize %d, %q: %s", bs, long, got)
-		}
-	}
-	p.BatchSize = 0
 	doc, err := p.Parse([]byte(`[1]`))
 	if err != nil {
 		t.Fatal(err)

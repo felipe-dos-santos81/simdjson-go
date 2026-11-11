@@ -29,7 +29,6 @@ type builder struct {
 	bigIntAsString bool
 	binding        bool     // see Parser.binding
 	streaming      bool     // one document of a stream (C++ walk_document<true>): no outer-bracket or trailing check
-	pad            byte     // what the index after idx reads: 0, or CommaDelimitedArray's ']' at the end of a stream
 	offs           []uint32 // binding mode: offs[i] is the input offset behind tape word i
 	dups           []uint32 // binding mode: first repeated name per object (see checkNames)
 	keys           []uint32 // binding mode: tape indices of the names of the open objects, innermost last
@@ -52,16 +51,10 @@ func (b *builder) markAt(i, off int) {
 func (b *builder) advance() (byte, int) {
 	if b.pos >= len(b.idx) {
 		// Every current caller fails on the 0 byte, but counting the overrun
-		// keeps it safe regardless: documentEnd accepts a walk that read past
-		// the end of idx only in a stream, and only by one index. A stream
-		// reads pad at that first overrun: CommaDelimitedArray's ']' can
-		// close an array there, as in C++; later overruns read 0.
-		c := byte(0)
-		if b.pos == len(b.idx) {
-			c = b.pad
-		}
+		// keeps it safe regardless: documentEnd rejects a walk that read past
+		// the end of idx.
 		b.pos++
-		return c, len(b.buf)
+		return 0, len(b.buf)
 	}
 	off := int(b.idx[b.pos])
 	b.pos++
@@ -70,9 +63,6 @@ func (b *builder) advance() (byte, int) {
 
 func (b *builder) peek() byte {
 	if b.pos >= len(b.idx) {
-		if b.pos == len(b.idx) {
-			return b.pad
-		}
 		return 0
 	}
 	return b.buf[b.idx[b.pos]]
@@ -202,7 +192,7 @@ documentEnd:
 	b.tape = append(b.tape, word(tagRoot, 0))
 	b.tape[0] = word(tagRoot, uint64(len(b.tape)))
 	if b.streaming {
-		if b.pos > len(b.idx)+1 { // read past pad: never a document
+		if b.pos > len(b.idx) { // read past the end of idx: never a document
 			return ErrTape
 		}
 	} else if b.pos != len(b.idx) { // more than one root value, or trailing content
