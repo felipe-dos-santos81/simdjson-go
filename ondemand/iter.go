@@ -219,9 +219,6 @@ func (d *Document) reach() {
 // root before yielding it, so that reading the root never extends the view.
 const reachAhead = 4
 
-// depthDelta is each structural character's change of depth.
-var depthDelta = [256]int8{'[': 1, '{': 1, ']': -1, '}': -1}
-
 // skipChild is C++ json_iterator::skip_child: it skips the rest of the
 // value the cursor is in, until the cursor is back at parentDepth.
 func (d *Document) skipChild(parentDepth int) error {
@@ -253,7 +250,7 @@ func (d *Document) skipChild(parentDepth int) error {
 	for {
 		idx := d.idx[:d.n] // every index below n is inside the input
 		for ; pos < len(idx); pos++ {
-			depth += int(depthDelta[buf[idx[pos]]])
+			depth += int(stream.DepthDelta[buf[idx[pos]]])
 			if depth <= parentDepth {
 				d.pos, d.depth = pos+1, depth
 				d.reach() // it may have walked far: what follows reads on

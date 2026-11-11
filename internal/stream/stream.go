@@ -474,7 +474,7 @@ func (r *Reader) Skip(pos, depth int) (int, bool) {
 		}
 	}
 	for ; !r.exhausted(pos); pos++ {
-		depth += int(depthDelta[r.Buf[r.Idx[pos]]])
+		depth += int(DepthDelta[r.Buf[r.Idx[pos]]])
 		if depth <= 0 {
 			return pos + 1, true
 		}
@@ -482,8 +482,9 @@ func (r *Reader) Skip(pos, depth int) (int, bool) {
 	return r.N, false
 }
 
-// depthDelta is each structural character's change of depth.
-var depthDelta = [256]int8{'[': 1, '{': 1, ']': -1, '}': -1}
+// DepthDelta is each structural character's change of depth. Skip and
+// On-Demand's skipChild share it, so they agree on where a value ends.
+var DepthDelta = [256]int8{'[': 1, '{': 1, ']': -1, '}': -1}
 
 // SkipTo is C++ document_stream::skip_to_delimiter: the position of the
 // first index at or after the first delim byte from the token at pos (N if
