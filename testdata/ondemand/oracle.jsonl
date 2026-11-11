@@ -30773,3 +30773,7 @@
 {"doc": "7b2261223b312c2262223a327d", "out": "!3 !3 !3", "script": ["pint /a", "pint /b", "pint "]}
 {"doc": "7b2261223a31202262223a327d", "out": "i1 !3 !3", "script": ["pint /a", "pint /b", "pint /a"]}
 {"doc": "7b2261223a312c2262223a32", "out": "!28 !28", "script": ["pint /a", "pint /b"]}
+{"doc": "7b2261223a312c2262223a32", "out": "!28 r{", "script": ["pint /a", "raw"]}
+{"doc": "5b312c32", "out": "!28 r[", "script": ["pint /a", "raw"]}
+{"doc": "7b2261223b312c2262223a327d", "out": "!3 r{\"a\";", "script": ["pint /a", "raw"]}
+{"doc": "7b2261223a31202262223a327d", "out": "!3 !3", "script": ["pint /b", "rewind", "get a", "int64"]}
