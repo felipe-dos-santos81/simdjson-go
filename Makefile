@@ -10,6 +10,8 @@ BENCHSTAT = $(GO) run golang.org/x/perf/cmd/benchstat@v0.0.0-20260929162123-4060
 target ?= FuzzParse
 time   ?= 60s
 count  ?= 6
+# short=1 skips TestCountSaturation, which allocates about 0.5 GB.
+SHORT   = $(if $(short),-short)
 
 # The package of each fuzz target (the root package by default).
 # The stage 1 targets compare the NEON and portable kernels, so they run on the NEON build.
@@ -50,21 +52,21 @@ vet: ## Vet pure Go and NEON; type-check 386 and wasm
 	GOOS=linux GOARCH=386 $(GO) vet ./...
 	GOOS=wasip1 GOARCH=wasm $(GO) vet ./...
 
-check: fmt vet test test-purego test-neon test-amd64 test-race ## All checks; run before you commit
+check: fmt vet test test-purego test-neon test-amd64 test-race ## All checks; run before you commit [short=1]
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
 test: testdata ## Pure-Go build [short=1]
-	$(GO) test $(if $(short),-short) ./...
+	$(GO) test $(SHORT) ./...
 
 test-neon: testdata ## NEON build [short=1]
-	$(SIMD) $(GO) test $(if $(short),-short) ./...
+	$(SIMD) $(GO) test $(SHORT) ./...
 
 test-purego: testdata ## -tags purego [short=1]
-	$(GO) test -tags purego $(if $(short),-short) ./...
+	$(GO) test -tags purego $(SHORT) ./...
 
 test-amd64: testdata ## amd64 (Rosetta 2 on Apple silicon) [short=1]
-	GOARCH=amd64 $(GO) test $(if $(short),-short) ./...
+	GOARCH=amd64 $(GO) test $(SHORT) ./...
 
 test-race: testdata ## Race detector, short mode
 	$(GO) test -race -short ./...
@@ -81,8 +83,8 @@ bench: testdata ## Benchmarks [bench=regex count=6 neon=1 pkg=./ondemand out=fil
 benchstat: ## Compare two benchmark files [old=a.txt new=b.txt]
 	$(BENCHSTAT) $(old) $(new)
 
-bench-cpp: testdata ## Go vs C++ simdjson v5.1.1, as a table (needs a C++20 compiler) [count=6 file="a.json b.json"]
+bench-cpp: testdata ## Go vs the pinned C++ simdjson, as a table (needs a C++20 compiler) [count=6 file="a.json b.json"]
 	BENCHSTAT='$(BENCHSTAT)' ./scripts/cpp-bench/run.sh $(count) $(file)
 
-oracle: testdata ## Record C++ simdjson's results in testdata/{ondemand,stream}/ (needs a C++20 compiler)
+oracle: testdata ## Record the pinned C++ simdjson's results in testdata/{ondemand,stream}/ (needs a C++20 compiler)
 	./scripts/ondemand-oracle/regen.sh

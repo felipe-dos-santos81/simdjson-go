@@ -13,6 +13,7 @@ bench-cpp/
 
 # Local agent workspaces
 .superpowers/
+.claude/worktrees/
 
 # OS and editors
 .DS_Store

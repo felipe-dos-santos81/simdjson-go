@@ -6,7 +6,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 
 - **C++ simdjson v5.1.1 is the oracle.** The tape format, the error returned for each bad input, and the edge cases must match C++. Some of those cases look like bugs but are intended, so don't "fix" them: the design spec lists them (§5.5, §9). Change parsing behaviour only together with evidence from C++.
 - **Go 1.27, standard library only.** No cgo, no third-party modules in the library or its tests. Dev tooling run through `go run` (the pinned `benchstat` in the Makefile) is the only exception.
-- **Recorded C++ results are generated, never edited by hand.** C++ v5.1.1's release build is the oracle for package `ondemand` and for the streams. `testdata/ondemand/oracle.jsonl` holds ~30,000 scripted reads (`TestOracle`); `testdata/stream/oracle.jsonl` holds ~3,000 streams through `parse_many`/`iterate_many` in one batch (`TestStreamOracle`). To change them, edit `scripts/ondemand-oracle/` and run `make oracle`.
+- **Recorded C++ results are generated, never edited by hand.** C++ v5.1.1's release build is the oracle for package `ondemand` and for the streams. `testdata/ondemand/oracle.jsonl` holds ~30,000 scripted reads (`TestOracle`); `testdata/stream/oracle.jsonl` holds ~3,000 streams through `parse_many`/`iterate_many` in one batch (`TestStreamOracle`). To change them, edit `scripts/ondemand-oracle/` and run `make oracle`. Put new cases in a function of their own, called after the existing groups in `gen.py`: the sync plans name cases by number, and appending keeps the numbers valid.
 - **`encoding/json/v2` is the oracle for data binding.** `Unmarshal` and `Marshal` must agree with the installed v2 on values, output bytes and error classes; the one allowed difference is listed in the binding spec (§1, §6).
 - **The spec is the authority.** Read the spec before you change behaviour. If the code and the spec disagree, fix one of them in the same change.
   - [`2026-10-06-simdjson-go-core-design.md`](docs/superpowers/specs/2026-10-06-simdjson-go-core-design.md): parser, DOM
@@ -40,6 +40,7 @@ This file guides coding agents (and humans) working in this repo. Start with [`R
 | `methods.go`, `time.go`, `strcache.go` | `MarshalJSON`/`UnmarshalJSON`/text methods, `time.Time`, the string cache |
 | `*_test.go` | Unit, corpus (`corpus_test.go`), fuzz (`fuzz_test.go`) and benchmark tests; data binding against v2 in `bind_test.go`, `bind_fuzz_test.go`, `bind_bench_test.go`; stage 2 binding mode in `binding_test.go` |
 | `scripts/fetch-testdata.sh` | Downloads the pinned corpora (`make testdata`) |
+| `docs/upstream-sync-prompt.md`, `docs/upstream/` | The prompt that plans a sync with a new C++ release, and each sync's plan: a ledger of the upstream commits and one porting prompt per package |
 
 ## Commands
 
@@ -67,6 +68,12 @@ Add `short=1` to the test targets to skip `TestCountSaturation`, which allocates
 - **If a fuzzer fails, investigate the parser first.** Do not loosen the oracle in `fuzz_test.go` to make it pass. Each adjustment the oracle makes to `encoding/json` models a documented difference from C++.
 - **Never skip the corpus tests.** They `t.Fatal` when `testdata/` is missing, and that's deliberate.
 - `Parse` must not read past `len(b)`, must not keep or modify `b`, and must not allocate once the `Parser` has grown its buffers. `BenchmarkParse` reports allocs/op.
+
+## Following a new C++ release
+
+- Give [`docs/upstream-sync-prompt.md`](docs/upstream-sync-prompt.md) to an agent. It writes the plan, `docs/upstream/<BASE>..<TARGET>.md`; other agents run the plan's prompts, one package each.
+- **A sync lands as one branch.** Its first package moves the pin and regenerates the oracles, so `TestOracle` and `TestStreamOracle` fail on the cases that later packages own. Those commits are the one exception to "`make check` must pass before committing": it must pass at the plan's closing package, and the branch is merged as one unit.
+- **Packages built in parallel** each put the regenerated oracle files in a commit of their own, apart from the code. After each merge, run `make oracle` again and commit its output.
 
 ## Writing tests
 

@@ -56,12 +56,19 @@ for tweet, err := range arr.All() {
 
 Package `ondemand` is C++'s lazy, forward-only reader: `Iterate` only finds the structural characters, and each value is parsed when read, as the type it is read as. It suits reading some fields of large documents; it is 1.3–2× faster than `Parse` plus the DOM on C++'s benchmark tasks and allocates nothing once warm.
 
-- **`Parser`**: `Iterate(b)` returns the `*Document`. `MaxDepth` (default 1024) limits nesting: a read that starts an array or object at depth `MaxDepth` or deeper (the root is at depth 1), empty ones included, fails with `ErrDepth`, as C++ built with development checks does; values skipped without being read do not count. **This limit is new:** before, `ondemand` had none, as C++'s release build has none, so a document nested 1024 levels or more, read with a zero `Parser`, now fails with `ErrDepth`. To read deeper documents, raise it: `ondemand.Parser{MaxDepth: 100_000}`. Documents from `IterateMany` obey the same limit.
+- **`Parser`**: `Iterate(b)` returns the `*Document`. `MaxDepth` (default 1024) limits nesting, also for `IterateMany` documents: a read that starts an array or object at depth `MaxDepth` or deeper fails with `ErrDepth`, as C++ built with development checks does. The root is at depth 1, empty arrays and objects count, and skipped values don't. For deeper documents, raise it: `ondemand.Parser{MaxDepth: 100_000}`. The limit came with the sync to C++ v5.1.1; before it, `ondemand` read any depth.
 - **`Document`** (the root): `Get`, `FindNext`, `Object`, `Array`, `Value`, typed getters for a scalar root, `AtPointer`, `Raw`, `Rewind`, `AtEnd`.
 - **`Value`**: `Type`, `NumberType`, `Int64`, `Uint64`, `Float64`, `Bool`, `IsNull`, `String`, `StringBytes`, `Raw`, `Object`, `Array`, `Get`, `FindNext`, `AtPointer`.
 - **`Object`**: `Get` (searches forward, then wraps around once), `FindNext` (forward only), `All` (`iter.Seq2[Field, error]`), `Count`, `Reset`, `Raw`, `AtPointer`. **`Field`**: `Key`, `RawKey`, `Value`. **`Array`**: `All`, `At`, `Count`, `Reset`, `Raw`, `AtPointer`.
 
-As in C++: values are validated only when read ("validate what you use"); objects and arrays are read once, in order (`Count`, `Reset`, `Rewind` and `AtPointer` go back); a scalar `Value` may be read later; field names are compared as written, without decoding escapes; and nothing checks what follows a root array or object unless you call `AtEnd`. Reading out of order, or a handle after the next `Iterate`, returns `ErrOutOfOrderIteration` (C++ leaves it undefined); the `*Document` itself is reused by its `Parser`, so an old one reads the new document. Everything read is valid until the next `Iterate` (`StringBytes` until the next `Rewind` too). Errors are the `simdjson` package's sentinels.
+As in C++:
+
+- Values are validated only when read ("validate what you use"), and nothing checks what follows a root array or object unless you call `AtEnd`.
+- Objects and arrays are read once, in order; `Count`, `Reset`, `Rewind` and `AtPointer` go back. A scalar `Value` may be read later.
+- Field names are compared as written, without decoding escapes.
+- A fatal error (`ErrTape`, `ErrIncompleteArrayOrObject`) kills the document: `AtPointer` returns the error again, and `Rewind` does not revive it.
+
+Reading out of order, or a handle after the next `Iterate`, returns `ErrOutOfOrderIteration` (C++ leaves it undefined). The `*Document` itself is reused by its `Parser`, so an old one reads the new document. Everything read is valid until the next `Iterate` (`StringBytes` until the next `Rewind` too). Errors are the `simdjson` package's sentinels.
 
 ### Streams
 
@@ -138,20 +145,22 @@ Typed structs (`bind_bench_test.go`), speed-up over `encoding/json/v2`:
 | `Unmarshal` | 1.42× | 1.22× | 2.00× |
 | `Marshal` | 1.19× | 1.51× | 1.02× |
 
+The next two tables come from the Go column of the C++ comparison below.
+
 On-Demand against `Parse` plus the DOM, on C++ simdjson's benchmark tasks (`ondemand/bench_test.go`):
 
 | `partial_tweets` | `distinct_user_id` | `find_tweet` | `top_tweet` | `kostya` | `large_random` |
 |---|---|---|---|---|---|
-| 1.68× | 1.71× | 2.01× | 1.68× | 1.43× | 1.31× |
+| 1.75× | 1.77× | 2.02× | 1.75× | 1.45× | 1.27× |
 
 Streams on `large_amazon_cellphones` (C++'s 10 MiB build of `amazon_cellphones.ndjson`), one window against the default `BatchSize`:
 
 | | One window | Default (pipelined) | Speed-up |
 |---|---|---|---|
-| `ParseMany` | 769 MiB/s | 1079 MiB/s | 1.40× |
-| `IterateMany` | 931 MiB/s | 1392 MiB/s | 1.50× |
+| `ParseMany` | 769 MiB/s | 1082 MiB/s | 1.41× |
+| `IterateMany` | 923 MiB/s | 1401 MiB/s | 1.52× |
 
-Against C++ simdjson v5.1.1 on the same machine and inputs (`make bench-cpp`: C++ built with `-O3` and threads, NEON Go build, median of 6 alternating runs, Apple M3 Max with 14 cores). The load average was 3.74 / 9.37 / 12.01 before the run and 1.71 / 3.98 / 8.17 after it, so the machine was still settling from earlier work; the confidence intervals stay within ±3% on every row except `Tasks/top_tweet/dom` (C++ ±8%). Go runs at 0.20–0.49× of C++'s throughput, 0.29× on the geometric mean:
+Against C++ simdjson v5.1.1 on the same machine and inputs (`make bench-cpp`): C++ built with `-O3` and threads, NEON Go build, median of 6 alternating runs. The load average was 3.7 before the run and 1.7 after it; the confidence intervals stay within ±3% on every row except `Tasks/top_tweet/dom` (C++ ±8%). Go runs at 0.20–0.49× of C++'s throughput, 0.29× on the geometric mean:
 
 | Benchmark | C++ | Go | Go / C++ |
 |---|---|---|---|
@@ -198,9 +207,11 @@ make oracle      # record the C++ results again (needs a C++20 compiler)
 
 The corpora come from [simdjson-data](https://github.com/simdjson/simdjson-data), pinned to one commit. The designs and plans are in [`docs/superpowers/`](docs/superpowers/). [`AGENTS.md`](AGENTS.md) has guidance for contributors and agents.
 
+To follow a new C++ release, give [`docs/upstream-sync-prompt.md`](docs/upstream-sync-prompt.md) to an agent. It triages every upstream commit since the pinned version, measures what C++ returns before and after, and writes one porting prompt per change. Each sync's plan is kept in [`docs/upstream/`](docs/upstream/).
+
 ## Status
 
-Done: core and DOM (sub-project 1), streams (2), the On-Demand API (3a), data binding (4). `Unmarshal` on On-Demand (3b) was prototyped and dropped: with v2's full validation it gained only 1.13–1.26×. amd64 uses the portable kernel (no x86 SIMD yet).
+Follows C++ simdjson v5.1.1. Done: core and DOM (sub-project 1), streams (2), the On-Demand API (3a), data binding (4). `Unmarshal` on On-Demand (3b) was prototyped and dropped: with v2's full validation it gained only 1.13–1.26×. amd64 uses the portable kernel (no x86 SIMD yet).
 
 ## License
 
