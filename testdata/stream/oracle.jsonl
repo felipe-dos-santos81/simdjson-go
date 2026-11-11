@@ -2930,3 +2930,9 @@
 {"doc": "33202c205b312c325d2c7b2261223a317d", "out": "@0 h33 x17 @4 h5b312c325d x17 @10 h7b2261223a317d i1 r{\"a\":1} ~0", "script": ["get a", "int64", "raw"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "33202c205b312c325d2c7b2261223a317d", "out": "@0 h33 r3 r3 @4 h5b312c325d r[1,2] r[1,2] @10 h7b2261223a317d r{\"a\":1} r{\"a\":1} ~0", "script": ["raw", "raw"], "stream": {"api": "ondemand", "format": "comma"}}
 {"doc": "1e7d1e7b22223a22", "out": "@1 h7d1e7b22223a22 x17 @3 h7b22223a22 r @3 !28", "script": ["obj", "get ", "raw"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e310a1e320a1e202022616263", "out": "@1 h31 wi1 @4 h32 wi2 ~4", "script": [], "stream": {"api": "dom", "format": "sequence"}}
+{"doc": "1e310a1e320a1e202022616263", "out": "@1 h31 @4 h32 ~4", "script": [], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e310a1e320a1e202022616263", "out": "@1 h31 i1 @4 h32 i2 ~4", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e310a1e203222616263", "out": "@1 h31 wi1 @5 !9", "script": [], "stream": {"api": "dom", "format": "sequence"}}
+{"doc": "1e310a1e203222616263", "out": "@1 h31 @5 h3222616263 ~4", "script": [], "stream": {"api": "ondemand", "format": "sequence"}}
+{"doc": "1e310a1e203222616263", "out": "@1 h31 i1 @5 h3222616263 i2 ~4", "script": ["walk"], "stream": {"api": "ondemand", "format": "sequence"}}
