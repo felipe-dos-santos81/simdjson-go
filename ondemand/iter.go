@@ -141,7 +141,7 @@ func (d *Document) exhausted() bool { return d.pos == d.n }
 
 // tokenLen is C++ peek_length: the distance to the next structural index.
 // At the end of a stream, C++'s sentinels can make it negative (the dropped
-// tail starts before len(buf)), which C++ reads as huge: Go reads 0.
+// tail starts before len(buf)). C++ returns 0 then since v5.1.1; so does Go.
 func (d *Document) tokenLen(i int) int { return max(int(d.idx[i+1])-int(d.idx[i]), 0) }
 
 // rootTokenLen is C++ peek_root_length.

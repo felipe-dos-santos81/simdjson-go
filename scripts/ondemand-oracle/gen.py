@@ -303,10 +303,16 @@ def rawkey_cases():
     yield case('{"name":"Alice","tags":["x","y"],"age" :42,"obj":{"a":1}}', script=["obj", "keyread string raw int64 raw"])
 
 
+def stream_end_cases():
+    # v5.1.1: a value at the end of a last batch's indices has an empty raw token
+    # (v5.0.2 took the length from a smaller next index and crashed).
+    yield scase("\x1e}\x1e{\"\":\"", fmt="sequence", api="ondemand", script=["obj", "get ", "raw"])
+
+
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
-                false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases):
+                false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases, stream_end_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:

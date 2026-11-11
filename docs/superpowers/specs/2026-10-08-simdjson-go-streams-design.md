@@ -298,7 +298,7 @@ not, the view grows to the whole input (`more`), as one window would see it. Rea
 order never grows the view, since the decided prefix runs `reachAhead` past it. A view whose
 stream has ended (`Release`) or been replaced cannot grow. `peekAt` and `advance` carry no
 check, so they stay inlined. Past the last document, C++'s sentinels (`len`, where the dropped tail
-starts, 0) can make `peek_length` negative, which C++ reads as a huge `size_t`: Go reads 0.
+starts, 0) can make `peek_length` negative. C++ v5.0.2 read that as a huge `size_t` (and crashed on `\x1e}\x1e{"":"`); since v5.1.1 it returns 0, as Go does.
 
 `Source` of a document whose brackets never balance within the batch (`[1 2` or `[1 2]`, whose
 tail `2]` is dropped) is the input from its first byte to the end of the batch (for
