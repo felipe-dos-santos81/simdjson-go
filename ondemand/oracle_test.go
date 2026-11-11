@@ -457,6 +457,27 @@ func runOps(doc *ondemand.Document, script []string, toks *[]string) error {
 			}
 			*toks = append(*toks, "k"+b.String())
 			st = st[:len(st)-1]
+		case "keyread":
+			if top.k != kObject {
+				return jsonerr.ErrIncorrectType
+			}
+			reads := strings.Fields(arg)
+			var b strings.Builder
+			i := 0
+			for f, err := range top.o.All() {
+				if err != nil {
+					return err
+				}
+				s, err := read(f.Value(), reads[i%len(reads)])
+				if err != nil {
+					return err
+				}
+				*toks = append(*toks, s)
+				b.WriteString(esc(f.RawKey()) + ",")
+				i++
+			}
+			*toks = append(*toks, "k"+b.String())
+			st = st[:len(st)-1]
 		case "each":
 			if top.k != kArray {
 				return jsonerr.ErrIncorrectType

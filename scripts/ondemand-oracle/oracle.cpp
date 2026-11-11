@@ -19,6 +19,9 @@
 //   count / reset    count / reset the top object or array (it stays)
 //   rewind           rewind the document; drop everything above it
 //   keys             iterate the top object, print each raw key, skip values; pop
+//   keyread R...     like keys, but each value is read first, field i with
+//                    R[i mod n] (int64 string raw ...), then its key is printed
+//                    after the value's own token; pop
 //   each             iterate the top array without reading elements, print the count; pop
 //   walk             read the top (document or value) completely, print it; pop
 // An error prints !<code> and ends the script. Output tokens are joined by
@@ -295,6 +298,22 @@ template <typename D> static error_code run(D &doc, const std::vector<std::strin
       for (auto f : top.o) {
         ondemand::field field;
         TRY(std::move(f).get(field));
+        s += esc(field.escaped_key()) + ",";
+      }
+      out.add("k" + s);
+      st.pop_back();
+    } else if (op == "keyread") {
+      if (top.k != K_OBJECT) { return INCORRECT_TYPE; }
+      std::vector<std::string> reads;
+      std::istringstream rs(arg);
+      for (std::string r; rs >> r;) { reads.push_back(r); }
+      std::string s;
+      size_t i = 0;
+      for (auto f : top.o) {
+        ondemand::field field;
+        TRY(std::move(f).get(field));
+        ondemand::value v = field.value();
+        TRY(read(v, reads[i++ % reads.size()], out));
         s += esc(field.escaped_key()) + ",";
       }
       out.add("k" + s);

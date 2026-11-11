@@ -297,10 +297,16 @@ def raw_cases():
             yield scase(doc, fmt=fmt, api="ondemand", script=script)
 
 
+def rawkey_cases():
+    # v5.1.1: escaped_key() of a field whose value was read first is the key, not
+    # the key run on into the value (v5.0.2 read the ':' at the token before the cursor).
+    yield case('{"name":"Alice","tags":["x","y"],"age" :42,"obj":{"a":1}}', script=["obj", "keyread string raw int64 raw"])
+
+
 def main():
     seen = set()
     for gen in (scalar_cases, container_cases, long_name_cases, corpus_cases, mutation_cases, root_buffer_cases,
-                false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases):
+                false_cases, exponent_cases, backslash_cases, stream_cases, raw_cases, rawkey_cases):
         for c in gen():
             line = json.dumps(c, ensure_ascii=False, sort_keys=True)
             if line not in seen:
