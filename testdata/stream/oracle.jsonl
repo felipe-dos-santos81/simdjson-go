@@ -2940,3 +2940,4 @@
 {"doc": "7b22612220317d0a7b2262223a327d0a7b2262223a327d0a7b2262223a327d0a", "out": "@0 h7b22612220317d x3 dead @0 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "newline"}}
 {"doc": "1e7b22612220317d0a1e7b2262223a327d0a1e7b2262223a327d0a1e7b2262223a327d0a", "out": "@1 h7b22612220317d x3 dead @1 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "sequence"}}
 {"doc": "7b22612220317d2c7b2262223a327d2c7b2262223a327d2c7b2262223a327d2c", "out": "@0 h7b22612220317d x3 dead @0 !3", "script": ["obj", "keys"], "stream": {"api": "ondemand", "format": "comma"}}
+{"doc": "5b5b325b5b225d", "out": "@0 !3", "script": [], "stream": {"api": "dom", "format": "array"}}
