@@ -191,8 +191,8 @@ marked **Go**.
   reports it (Depth below). An abandoned document is not rewound: `Rewind` leaves it as it is,
   so reads go on from where the error left the cursor, and `AtPointer` returns the recorded
   error again (`ErrTape` if none was recorded; C++ has `UNINITIALIZED`). `Raw` returns the text
-  up to the token before the cursor (Raw above). In `IterateMany`, the next step ends the stream at such a document with its
-  error at the document's start (streams spec §3).
+  up to the token before the cursor (Raw above). In `IterateMany`, the next step skips such a document from its root and
+  yields the next one, where C++ ends the stream (streams spec §4.3).
 - **Differences from the DOM** (all C++'s own): the `BigInt` and root-buffer rules above. Of the root-buffer rule, only `Float64`'s limit shows in a full walk: a root number
   of 1083 bytes, or a longer one that is not an integer, fails, where the DOM reads it; a root
   number followed by RS is read, where the DOM rejects it. Depth counts differently: with default
@@ -215,7 +215,9 @@ marked **Go**.
   document (Abandoned documents above): `Rewind` and `AtPointer` still work, and lookups go on
   from the cursor, which stays just after the refused container's opening bracket. Iterating an array or object (`All`,
   `At`, `Count`) then reports `ErrDepth` and abandons the document, and `Reset` reports it, as
-  for any recorded error. In a stream, the next step ends the stream with `ErrDepth` at the document's start.
+  for any recorded error. In a stream, the next step skips the document from its root, where C++ ends
+  the stream with `DEPTH_ERROR` (streams spec §4.3): the cursor, inside a container that was
+  never started, cannot say where the document ends.
   **This changes a default:** `ondemand` had no limit before (C++'s release build still has
   none), so a document nested 1024 levels or more, read with a zero `Parser`, now fails with
   `ErrDepth`; raise `MaxDepth` to read it.

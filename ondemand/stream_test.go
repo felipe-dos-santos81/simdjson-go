@@ -1,6 +1,7 @@
 package ondemand_test
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"iter"
@@ -262,6 +263,25 @@ func TestStreamStage1Errors(t *testing.T) {
 			}
 		}
 		dp.BatchSize, op.BatchSize = 0, 0
+	}
+}
+
+// TestIterateManyAbandoned: after a read that abandons a document (a fatal
+// error), the next step skips the document from its root and the stream
+// goes on, where C++ v5.1.1 ends it (streams spec §4.3). At BatchSize 64 the
+// dead document crosses the first window's end.
+func TestIterateManyAbandoned(t *testing.T) {
+	pad := `{"p":"` + strings.Repeat("x", 50) + `"}`
+	in := []byte(pad + "\n{\"a\":}\n{\"a\":3}")
+	want := "@0 h" + hex.EncodeToString([]byte(pad)) + " {p:s" + strings.Repeat("x", 50) +
+		",} @59 h7b2261223a7d x3 dead @66 h7b2261223a337d {a:i3,} ~0"
+	for _, f := range []simdjson.Format{simdjson.NewlineDelimited, simdjson.Whitespace} {
+		for _, bs := range []int{0, 64} {
+			p := ondemand.Parser{BatchSize: bs}
+			if got := streamOut(nil, &p, "ondemand", in, f, []string{"walk"}); got != want {
+				t.Errorf("format %d, BatchSize %d:\n got  %s\n want %s", f, bs, got, want)
+			}
+		}
 	}
 }
 

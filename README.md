@@ -86,8 +86,8 @@ for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
 
 - **Formats:** `Whitespace` (NDJSON, concatenated JSON), `NewlineDelimited`, `JSONSequence` (RFC 7464), `CommaDelimited`, and `CommaDelimitedArray` (the elements of one top-level array).
 - **`BatchSize`** (default 1,000,000 bytes) sets how much input stage 1 indexes at a time. A goroutine indexes the next window while you read the current one. The batch size changes speed and memory, never the result.
-- **Results** are C++'s results with the whole input in one batch, with two differences. An incomplete last document ends the stream with `ErrTrailingContent` (C++ drops it silently). Invalid UTF-8 or a control character in a string is reported at the document that holds it, after the documents before it.
-- **Read errors in `IterateMany`:** a wrong type, a bad number or a missing field belongs to the read, and the stream goes on. A read that meets a fatal error (`ErrTape`, `ErrIncompleteArrayOrObject`) or `ErrDepth` ends the stream at that document, with that error, as in C++ v5.1.1.
+- **Results** are C++'s results with the whole input in one batch, with three differences. An incomplete last document ends the stream with `ErrTrailingContent` (C++ drops it silently). Invalid UTF-8 or a control character in a string is reported at the document that holds it, after the documents before it. A read error never ends an `IterateMany` stream (next bullet).
+- **Read errors in `IterateMany`:** a wrong type, a bad number or a missing field belongs to the read, and the stream goes on. After a read that meets a fatal error (`ErrTape`, `ErrIncompleteArrayOrObject`) or `ErrDepth`, the stream skips the rest of that document and yields the next one; C++ v5.1.1 ends the stream there, so one bad record would cost every record after it.
 - **`Document.Offset` and `Source`** give each document's position and bytes in the input.
 
 **Lifetime:** a yielded document is valid until the loop's next step, or the next parse on the same `Parser`. After its step, an On-Demand document returns `ErrOutOfOrderIteration`. A second stream on the same `Parser` ends the first.

@@ -18,9 +18,10 @@ On-Demand (`IterateMany`). C++ is the reference for *what* is read; the API and 
 Go's own. Stage 1 of the next window runs in a goroutine while the caller reads the current one.
 
 The governing rule: **the batch size is a tuning knob and never changes results.** Every stream
-yields what C++ yields when its whole input fits in one batch, with two deliberate differences
-(§4.1): a bad tail is reported instead of dropped silently, and a stage 1 error is reported at the
-document that holds the bad byte instead of failing the whole input.
+yields what C++ yields when its whole input fits in one batch, with three deliberate differences:
+a bad tail is reported instead of dropped silently, a stage 1 error is reported at the
+document that holds the bad byte instead of failing the whole input (§4.1), and a read error
+never ends an On-Demand stream (§4.3).
 
 ### Success criteria
 
@@ -44,7 +45,8 @@ document that holds the bad byte instead of failing the whole input.
 
 - **Oracle.** `testdata/stream/oracle.jsonl` has 2,944 cases. 106 are skipped for a stage 1 error
   (covered by the stage 1 tests and the fuzzers) and 4 were compared up to the DOM document that
-  closed on the array's `]` (none since v5.1.1, §4.2).
+  closed on the array's `]` (none since v5.1.1, §4.2). 115 are compared up to the On-Demand
+  document after whose fatal read error C++ ends the stream (§4.3).
 - **Fuzzing** (Task 6). `FuzzParseMany`: 600 s pure Go (60.3M execs) and 300 s NEON after a fix
   (61.2M). `FuzzIterateMany`: 600 s (41.0M), and again on the final code (f8b4886, reads past
   abandoned documents compared too): 600 s (104.1M). `FuzzStream` (`internal/stage1`, NEON
@@ -60,8 +62,8 @@ document that holds the bad byte instead of failing the whole input.
   the DOM did too until v5.1.1, §4.2);
   an On-Demand read that runs past the decided indices (a malformed root, or out of order) first
   indexes the whole input (§5.5); bytes On-Demand's delimiter skip passes over are checked by
-  stage 1; after a read that meets a fatal error, the next step ends the stream at that document
-  (§3, C++ v5.1.1); the stage 1 worker's state sits on its own cache lines (§5.2).
+  stage 1; after a read that meets a fatal error, the next step skips from the document's root
+  (§3, §4.3); the stage 1 worker's state sits on its own cache lines (§5.2).
 
 ## 2. Decisions
 
@@ -152,8 +154,8 @@ for doc, err := range p.ParseMany(data, simdjson.Whitespace) {
   with the end of the batch). Read errors (wrong type, bad number, missing field) belong to the
   read and do not end the stream; the next step skips the rest of the document, as in C++.
   After a fatal error (`ErrTape`, `ErrIncompleteArrayOrObject`, `ErrDepth`), which may abandon
-  the document, the next step ends the stream with that error at the document's start (C++
-  v5.1.1).
+  the document, the next step skips from the document's root, as for an unread document; C++
+  v5.1.1 ends the stream there (§4.3).
   Handles from an earlier document return `ErrOutOfOrderIteration`.
 
 ## 4. Behaviour
@@ -168,7 +170,6 @@ Every error ends the stream, as in C++. `Offset` is C++'s `current_index` transl
 | Invalid UTF-8, or a control character in a string | `ErrUTF8` / `ErrUnescapedChars` | start of the document holding the first bad byte |
 | DOM stage 2 failure | what `Parse` reports for that document | document start |
 | On-Demand skip whose brackets never balance | `ErrIncompleteArrayOrObject` | as C++ |
-| On-Demand document that met a fatal error in a read | that error | document start |
 | Tail dropped by C++'s final trim (§5.3) | `ErrTrailingContent` | start of the dropped region: `len − truncated_bytes` in C++ terms |
 | `CommaDelimitedArray` input not `[`…`]` after trimming whitespace | `ErrTape`, as the only item | 0 |
 
@@ -209,7 +210,7 @@ where a stage 1 error is the first and only item and a bad tail is dropped witho
 
 ### 4.3 C++ behaviour deliberately not ported
 
-All of it is a consequence of C++'s windows or threads:
+All of it but the last entry is a consequence of C++'s windows or threads:
 
 - `CAPACITY` for a document longer than `batch_size`, and for a scalar touching the window edge.
 - A stage 1 error failing every document of its batch.
@@ -218,6 +219,11 @@ All of it is a consequence of C++'s windows or threads:
 - `trim_partial_utf8`: C++ drops a UTF-8 character cut at the end of every window, the final one
   included, without an error. In Go a character cut at the end of the input is invalid UTF-8
   (§4.1); a character cut at a window's end is completed by the next window.
+- The end of an On-Demand stream at a document whose read met a fatal error (`TAPE_ERROR`,
+  `INCOMPLETE_ARRAY_OR_OBJECT`, and `DEPTH_ERROR` with development checks), with that error.
+  Go skips that document from its root and yields the next one, as it did before v5.1.1 (where
+  C++ dereferenced a null parser there): one bad record must not cost the rest of the input.
+  The read still returns its error, and the document stays dead.
 
 ## 5. Internals
 
@@ -337,7 +343,9 @@ past the entry after it.
   `ErrTrailingContent`. Cases whose input is not valid UTF-8 (which covers every input C++'s `trim_partial_utf8` changes) or
   where C++ reports `UNESCAPED_CHARS` are skipped there and covered by `TestStreamStage1Errors` and `TestStreamStage1Formats`.
   A document a read abandoned prints `dead`, after `x<code>` if the script ended on the error
-  (`pint` goes on); the stream then ends with `@<current_index> !<code>`.
+  (`pint` goes on); C++ then ends the stream with `@<current_index> !<code>`, as it does after a
+  fatal error that did not abandon the document. Go goes on (§4.3), so those cases are compared
+  up to that document's last token and counted apart.
 - **Cases** (`gen.py`): the C++ tests' inputs (`issue2181`, `issue2170`, `test_naked_iterators`,
   `issue1977`, `issue2137`, `fuzzaccess`, `truncated_bytes_filtered_formats`,
   `source_scalar_before_truncated`, the comma and RS runs); corpus scalars and containers joined
@@ -348,8 +356,8 @@ past the entry after it.
   holding p, then a `StreamError` at that document's start.
 - **Fuzzing.** `FuzzParseMany` and `FuzzIterateMany` take bytes, a format and a batch size from 64
   to a few KB. Items (offsets, sources, errors, the DOM's `AppendJSON` or a full On-Demand walk)
-  must equal those of a single window, and the stream must end at the same document after a
-  fatal error. Each DOM document must equal `Parse(doc.Source())`
+  must equal those of a single window, also past a document a read abandoned (where the oracle
+  stops). Each DOM document must equal `Parse(doc.Source())`
   whenever that `Parse` succeeds.
 - **Lifecycle.** `testing/synctest` tests break out of the loop at many positions, including
   while the worker is blocked, and check no goroutine is left; with `iter.Pull2`, a second stream

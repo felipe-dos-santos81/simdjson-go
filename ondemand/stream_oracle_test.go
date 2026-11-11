@@ -140,7 +140,7 @@ func TestStreamOracle(t *testing.T) {
 	sc.Buffer(nil, 1<<26)
 	var dp simdjson.Parser
 	var op ondemand.Parser
-	n, skipped, failed := 0, 0, 0
+	n, skipped, fatalCut, failed := 0, 0, 0, 0
 	for sc.Scan() {
 		var c streamCase
 		if err := json.Unmarshal(sc.Bytes(), &c); err != nil {
@@ -159,6 +159,13 @@ func TestStreamOracle(t *testing.T) {
 			continue
 		}
 		got := streamOut(&dp, &op, c.Stream.API, in, f, c.Script)
+		if want, ok := cutFatalEnd(c.Out); ok {
+			fatalCut++
+			c.Out = want
+			if strings.HasPrefix(got, want+" ") {
+				got = want
+			}
+		}
 		if got != c.Out {
 			failed++
 			if failed <= 20 {
@@ -173,12 +180,39 @@ func TestStreamOracle(t *testing.T) {
 	if failed > 0 {
 		t.Errorf("%d of %d cases differ", failed, n)
 	}
-	t.Logf("%d cases, %d skipped (stage 1 errors)", n, skipped)
+	t.Logf("%d cases, %d skipped (stage 1 errors), %d compared only up to C++ ending the stream after a fatal read error", n, skipped, fatalCut)
+}
+
+// cutFatalEnd recognizes C++ output whose stream ends at its last document
+// because a read on it met a fatal error: "@n h… … dead @n !code", or, when
+// the error did not abandon the document (skip_child's), "@n h… … xcode @n
+// !code". Go yields the documents after it instead (streams spec §4.3, a
+// documented difference). It returns the output up to that document's last
+// token, "dead" included.
+func cutFatalEnd(out string) (string, bool) {
+	toks := strings.Fields(out)
+	k := len(toks)
+	if k < 4 || toks[k-2][0] != '@' || toks[k-1][0] != '!' {
+		return "", false
+	}
+	if last := toks[k-3]; last != "dead" {
+		if last[0] != 'x' && last[0] != '!' || last[1:] != toks[k-1][1:] {
+			return "", false
+		}
+		i := k - 3
+		for i >= 0 && toks[i][0] != '@' {
+			i--
+		}
+		if i < 0 || toks[i] != toks[k-2] { // the error is not the last document's
+			return "", false
+		}
+	}
+	return strings.Join(toks[:k-2], " "), true
 }
 
 // FuzzIterateMany checks that no batch size changes what either stream
 // yields, with an arbitrary script of reads run on every On-Demand document,
-// and that the stream ends at the same document after a fatal error.
+// also past a document a read abandoned.
 func FuzzIterateMany(f *testing.F) {
 	for _, s := range []string{"1 2 34", `[1,23] "x" {"k":"v}`, `{"a":1},{"b":`, "\x1e1\n\x1e2",
 		`[{"a":1},2]`, "[1,23 [1,23]", "{\"a\":1,\n\"b\":2}\n[3]", "{\"a\":1}\n{\"a\":}\n{\"a\":3}"} {

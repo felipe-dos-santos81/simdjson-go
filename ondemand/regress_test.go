@@ -225,10 +225,11 @@ func TestMaxDepth(t *testing.T) {
 		}
 	}
 
-	// A stream document obeys the limit, and the error ends the stream there.
+	// A stream document obeys the limit. C++'s development build then ends
+	// the stream ("x4 @4 !4"); Go yields the next document (streams spec §4.3).
 	p := ondemand.Parser{MaxDepth: 16}
 	deep := arr(16, "1")
-	want := "@0 h5b315d [i1,] @4 h" + hex.EncodeToString([]byte(deep)) + " x4 @4 !4"
+	want := "@0 h5b315d [i1,] @4 h" + hex.EncodeToString([]byte(deep)) + " x4 @38 h5b325d [i2,] ~0"
 	if got := streamOut(nil, &p, "ondemand", []byte("[1]\n"+deep+"\n[2]\n"), simdjson.Whitespace, []string{"walk"}); got != want {
 		t.Errorf("stream: got %s, want %s", got, want)
 	}
