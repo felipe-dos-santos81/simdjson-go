@@ -20,7 +20,7 @@ ONDEMAND_FUZZ = FuzzOnDemand FuzzIterateMany
 FUZZ_PKG = $(if $(filter $(target),$(STAGE1_FUZZ)),./internal/stage1/,$(if $(filter $(target),$(ONDEMAND_FUZZ)),./ondemand/,.))
 FUZZ_ENV = $(if $(or $(neon),$(filter $(target),$(STAGE1_FUZZ))),$(SIMD))
 
-.PHONY: help testdata clean fmt vet check \
+.PHONY: help testdata clean build fmt vet check \
         test test-neon test-purego test-amd64 test-race \
         fuzz bench benchstat bench-cpp oracle
 
@@ -40,6 +40,9 @@ testdata: ## Download the pinned test corpora (once)
 
 clean: ## Delete the downloaded corpora
 	rm -rf testdata/jsonchecker testdata/jsonexamples
+
+build: ## Build the simdjson command into ./simdjson [neon=1]
+	$(if $(neon),$(SIMD)) $(GO) build -o simdjson ./cmd/simdjson
 
 # ── Checks ───────────────────────────────────────────────────────────────────
 

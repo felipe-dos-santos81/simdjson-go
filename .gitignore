@@ -7,6 +7,8 @@ testdata/jsonexamples/
 *.test
 *.prof
 *.out
+/simdjson
+/simdjson.exe
 
 # make bench-cpp output
 bench-cpp/
